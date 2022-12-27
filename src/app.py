@@ -59,6 +59,19 @@ import numpy as np
 #from dash_extensions.callback import CallbackCache, DiskCache
 
 import base64
+
+external_stylesheets = [
+{
+    'href': 'https://fonts.googleapis.com/icon?family=Material+Icons',
+    'rel': 'stylesheet',
+},
+]
+
+app = dash.Dash(__name__,external_stylesheets=external_stylesheets,suppress_callback_exceptions=True)
+server = app.server
+
+app.css.config.serve_locally = True
+
 BeautifulSignalColor="#f3f6d0"
 Highlightcardcolor="#f3f6d0"
 graphcolor="#243b55" #8EC5FC #tbv export
@@ -267,17 +280,6 @@ css_directory = os.getcwd()
 stylesheets = ['stylesheet.css']
 static_css_route = '/static/'
 
-external_stylesheets = [
-{
-    'href': 'https://fonts.googleapis.com/icon?family=Material+Icons',
-    'rel': 'stylesheet',
-},
-]
-
-app = dash.Dash(__name__,external_stylesheets=external_stylesheets,suppress_callback_exceptions=True)
-server = app.server
-
-app.css.config.serve_locally = True
 
 bgcolor = "#f3f3f1"
 template = {"layout": {"paper_bgcolor": bgcolor, "plot_bgcolor": bgcolor}}
