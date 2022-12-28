@@ -59,19 +59,6 @@ import numpy as np
 #from dash_extensions.callback import CallbackCache, DiskCache
 
 import base64
-
-external_stylesheets = [
-{
-    'href': 'https://fonts.googleapis.com/icon?family=Material+Icons',
-    'rel': 'stylesheet',
-},
-]
-
-app = dash.Dash(__name__,external_stylesheets=external_stylesheets,suppress_callback_exceptions=True)
-server = app.server
-
-app.css.config.serve_locally = True
-
 BeautifulSignalColor="#f3f6d0"
 Highlightcardcolor="#f3f6d0"
 graphcolor="#243b55" #8EC5FC #tbv export
@@ -240,6 +227,7 @@ KPINameColor = dict(d_kpi.set_index('d_kpi_id')['KPIName'].to_dict())
 Level0NameColor = dict(d_level0.set_index('Level0Name')['Level0Color'].to_dict())
 Level1NameColor = dict(d_level1.set_index('Level1Name')['Level1Color'].to_dict())
 Level2NameColor = dict(d_level2.set_index('Level2Name')['Level2Color'].to_dict())
+HigherIs = dict(d_kpi.set_index('KPIName')['HigherIs(1=positive)'].to_dict())
 KPINotation = dict(d_kpi.set_index('KPIName')['Notation'].to_dict())
 KPICalculation = dict(d_kpi.set_index('KPIName')['Calculation'].to_dict())
 KPICum = dict(d_kpi.set_index('KPIName')['IsCum'].to_dict())
@@ -280,6 +268,18 @@ css_directory = os.getcwd()
 stylesheets = ['stylesheet.css']
 static_css_route = '/static/'
 
+external_stylesheets = [
+{
+    'href': 'https://fonts.googleapis.com/icon?family=Material+Icons',
+    'rel': 'stylesheet',
+},
+]
+
+app = dash.Dash(__name__,external_stylesheets=external_stylesheets,suppress_callback_exceptions=True)
+
+server = app.server
+
+app.css.config.serve_locally = True
 
 bgcolor = "#f3f3f1"
 template = {"layout": {"paper_bgcolor": bgcolor, "plot_bgcolor": bgcolor}}
@@ -553,19 +553,19 @@ navbar = html.Nav([html.Header([
                             html.Li(html.A(
                                 [html.I("lan",className='material-icons icon'),
                                  html.Span("Drill down",className='text nav-text')
-                                ],href='#',id='NavItem1'
+                                ],href='/drilldown',id='NavItem1'
                                 ),className='nav-link')
                             ,
                             html.Li(html.A(
                                 [html.I("balance",className='material-icons icon'),
                                  html.Span("Compare",className='text nav-text')
-                                ],href='#',id='NavItem2'
+                                ],href='/compare',id='NavItem2'
                                 ),className='nav-link'
                             ),
                             html.Li(html.A(
                                 [html.I("bolt",className='material-icons icon'),
                                 html.Span("Predict",className='text nav-text')
-                                ],href='#',id='NavItem3'
+                                ],href='/predict',id='NavItem3'
                                 ),className='nav-link'
                             ),
                     ],className='menu-links'
@@ -613,6 +613,17 @@ PercentageTotalSwitch = html.Div([
     html.Div('Percentage of total ',className='h6'),
     daq.BooleanSwitch(
         id='PercentageTotalSwitch',
+        on=False,
+        color="#01002a",
+        label="Dark",
+        labelPosition="left",
+    )
+])
+
+ShowValueSwitch = html.Div([
+    html.Div('Show values',className='h6'),
+    daq.BooleanSwitch(
+        id='ShowValueSwitch',
         on=False,
         color="#01002a",
         label="Dark",
@@ -997,6 +1008,13 @@ def update_output(on):
 def update_output(on):
     return format(on)
 
+@app.callback(
+    dash.dependencies.Output('ShowValueSwitch', 'label'),
+    [dash.dependencies.Input('ShowValueSwitch', 'on')])
+
+def update_output(on):
+    return format(on)
+
 
 @app.callback([Output('Level1DD','style'),
               Output('Level2DD','style')],
@@ -1140,7 +1158,7 @@ tabs = html.Div(
 ),className="row-cols-sm-12 row-cols-md-12 row-cols-lg-11 row-cols-xl-11 pretty_tab"
 )],id="Tab2drilldown"),
             ],id="tabsdrilldown",active_tab="tab-0")
-),
+)
 
 
 tabscompare = dbc.Tabs(
@@ -1238,6 +1256,7 @@ app.layout = html.Div([
                         dbc.Col([CumulativeSwitch], className="col-sm-12 col-md-12 col-lg-12 col-xl-12"),
                         dbc.Col([TargetSwitch], className="col-sm-12 col-md-12 col-lg-12 col-xl-12"),
                         dbc.Col([PercentageTotalSwitch], className="col-sm-12 col-md-12 col-lg-12 col-xl-12"),
+                        dbc.Col([ShowValueSwitch], className="col-sm-12 col-md-12 col-lg-12 col-xl-12"),
                     ], id='Graphsettingpopfooter', className='h6'),
                 ],
                 target="graphset",
@@ -1253,11 +1272,12 @@ app.layout = html.Div([
                      ),
                     ],className="col-sm-11 col-md-11 col-lg-10 col-xl-10 pretty_bigtab",style={"margin": '0 auto','margin-top':'20px'}
                     ),
-            html.Div(navbar),
+            
           #  html.Div(KPI_Group,className="col-sm-11 col-md-11 col-lg-4 col-xl-3"),
 
     ]
     ),
+    html.Div(navbar),
     html.Span(html.I(''),style={'margin-top': '5em','display': 'block'}),
     dcc.Store(id='dfl0',data=[],storage_type='memory'),
     dcc.Store(id='dfl1',data=[],storage_type='memory'),
@@ -1419,6 +1439,7 @@ datefromtmp = []
 datetotmp = []
 datefromtmp.append(str(dfl2['Period_int'].min())[0:10])
 datetotmp.append(str(dfl2['Period_int'].max())[0:10])
+
 
 @app.callback([
               Output('dfl0', 'data'),
@@ -1676,7 +1697,7 @@ def updatekpiindicator(compareset,dfl0,dffcomparefilter,tabsdrilldown,KPIGroupSe
     Cardstyle = []
     popbody = []
     carddivstyle = []
-    outputlasttxtlogo = []
+   # outputlasttxtlogo = []
     arrow= []
     outputactual.clear()
     outputactualtxt.clear()
@@ -1685,7 +1706,7 @@ def updatekpiindicator(compareset,dfl0,dffcomparefilter,tabsdrilldown,KPIGroupSe
     carddivstyle.clear()
     arrow.clear()
     popbody.clear()
-    outputlasttxtlogo.clear()
+  #  outputlasttxtlogo.clear()
     for i,kpi in enumerate(KPINameList2):
         enum = str(i + 1)
         dataCompare1 = dftouse[
@@ -1702,9 +1723,9 @@ def updatekpiindicator(compareset,dfl0,dffcomparefilter,tabsdrilldown,KPIGroupSe
             Displayprevious.append("none")
         else:
             Displayprevious.append("block")
-        style = {'display': Displayprevious[0]}
-        logopositive = {"color": "green"}
-        logonegative = {'color' : 'red'}
+        logopositive = "green"
+        logonegative = "red"
+        logoneutral = "grey"
         value = []
         value_lp = []
         valueNum =[]
@@ -1760,7 +1781,7 @@ def updatekpiindicator(compareset,dfl0,dffcomparefilter,tabsdrilldown,KPIGroupSe
             value_lp.append(CalculationStringlp)
         if value_lp[0]==value[0]:
             arrow = "'arrow_right'"
-        elif value_lp[0]==value[0]:
+        elif value_lp[0]<value[0]:
             arrow = "'arrow_drop_up'"
         else:
             arrow = "'arrow_drop_down'"
@@ -1778,12 +1799,10 @@ def updatekpiindicator(compareset,dfl0,dffcomparefilter,tabsdrilldown,KPIGroupSe
         outputlasttxt = str(eval(Notationlist).format(value[0])) #value[0]#eval(Notationlist).format(value[0]),
         Card.append(kpi)
         Cardstyle.append(style222)
+        style = {'display': Displayprevious[0] , 'color' : logopositive if HigherIs[kpi]==1 else logonegative if HigherIs[kpi]==2 else logoneutral}
         popbody.append(kpi)
-        outputlasttxtlogo = logopositive
-        if kpi==kpi:   #KPISelect:
-            carddivstyle.append(style111)
-        else:
-            carddivstyle.append(stylempty)
+     #   outputlasttxtlogo = logopositive
+        carddivstyle.append(stylempty)
         value.clear()
         value_lp.clear()
         notation.clear()
@@ -1915,16 +1934,16 @@ def update_df_KPI(KPISelect,KPIGroupSelect,*args):
      Input("KPISelect", "value"),
      Input("CumulativeSwitch", "label"),
      Input("PercentageTotalSwitch", "label"),
+     Input("ShowValueSwitch", "label"),
      eval(kpigrouplistinput3[0]),  
    #  eval(carddivnclicks3[0]),
    #  eval(kpigrouplistinput3[0])
  #    Input('graphoveralltime', 'relayoutData'),
  #    Input('graph-with-slider', 'relayoutData'),
    #  Input("graphlevel0","relayoutData"),
-     
 )
 
-def update_kpiagg(data00,GrainSelect,KPISelect,CumulativeSwitch,PercentageTotalSwitch,*args):  # ,Level2NameSelect,toggle, relayoutData
+def update_kpiagg(data00,GrainSelect,KPISelect,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch,*args):  # ,Level2NameSelect,toggle, relayoutData
     data0 = pd.read_json(data00, orient='split')
     dff = data0 #update_filter_l0(data0, GrainSelect, KPISelect)  # ,Level2NameSelect
     traces3 = []
@@ -1952,8 +1971,7 @@ def update_kpiagg(data00,GrainSelect,KPISelect,CumulativeSwitch,PercentageTotalS
             cumulative_enabled=True,
             color=eval(dataframe[0]).Period_int,
             y=y,
-            text=y,
-            text_auto=True,
+            text=y if ShowValueSwitch == 'True' else '',
             mode=linesormarkers(GrainSelect),
             opacity=1,
             customdata=eval(dataframe[0]).Level0Name,
@@ -2091,11 +2109,12 @@ def update_kpiagg(data00,GrainSelect,KPISelect,CumulativeSwitch,PercentageTotalS
      Input("Totaalswitch", "label"),
      Input("CumulativeSwitch", "label"),
      Input("PercentageTotalSwitch", "label"),
+     Input("ShowValueSwitch", "label"),
      eval(kpigrouplistinput3[0]),  
    #  Input("DBColorVar", "value"),
      ]
 )
-def update_mainfigure(data00,data11,data22,GrainSelect,KPISelect,Totaalswitch,CumulativeSwitch,PercentageTotalSwitch,*args):#
+def update_mainfigure(data00,data11,data22,GrainSelect,KPISelect,Totaalswitch,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch,*args):#
     data0 = pd.read_json(data00, orient='split')
     data1 = pd.read_json(data11, orient='split')
     data2 = pd.read_json(data22, orient='split')
@@ -2129,7 +2148,7 @@ def update_mainfigure(data00,data11,data22,GrainSelect,KPISelect,Totaalswitch,Cu
                x=eval(dataframe1[0]).Period_int, 
                cumulative_enabled=True,
                y=y,
-               text=y,
+               text=y if ShowValueSwitch == 'True' else '',
                text_auto=True,
                mode=linesormarkers(GrainSelect),
                opacity=1,
@@ -2463,13 +2482,14 @@ def update_level1Graph(data00,data11,KPISelect,clickData,Totaalswitch,*args): #,
      Input("Totaalswitch", "label"),
      Input("CumulativeSwitch", "label"),
      Input("PercentageTotalSwitch", "label"),
+     Input("ShowValueSwitch", "label"),
      eval(kpigrouplistinput3[0]),  
      ]
 
 )
 
 
-def update_figure(data11,data22,GrainSelect, KPISelect,Totaalswitch,CumulativeSwitch,PercentageTotalSwitch,*args):
+def update_figure(data11,data22,GrainSelect, KPISelect,Totaalswitch,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch,*args):
     data1 = pd.read_json(data11, orient='split')
     data2 = pd.read_json(data22, orient='split')
     dff = data2 
@@ -2499,7 +2519,7 @@ def update_figure(data11,data22,GrainSelect, KPISelect,Totaalswitch,CumulativeSw
                 eval(dataframe2[0]),
                 x=eval(dataframe2[0]).Period_int, 
                 y=y,  
-                text=y,
+                text=y if ShowValueSwitch == 'True' else '',
                 text_auto=True,
                 customdata=eval(dataframe2[0]).Level2Name,
                 line=dict(
