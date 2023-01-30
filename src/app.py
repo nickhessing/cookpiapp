@@ -1,5 +1,4 @@
 
-#notes: toevoegen dash_breakpoints dash_breakpoints-0.1.0
 """
 from azure.storage.blob import BlobServiceClient
 from azure.identity import DefaultAzureCredential
@@ -177,7 +176,10 @@ d_kpi_tmp = pd.read_excel(open('assets/Attributes/dashboard_data/cookpi_per_pi.x
 #d_kpi_tmp = pd.DataFrame(
 #    pd.read_csv("assets/Attributes/dashboard_data/d_kpi_synthetix.csv", sep=';',
 #                index_col=False));
+kpilevelcount = cookpi_attributestmp.groupby(['d_kpi_id'])['d_kpi_id'].count().reset_index(name="kpilevelcount")
 d_kpi = d_kpi_tmp[(d_kpi_tmp.live == 1)] #& (df.carrier == "B6")
+d_kpi = d_kpi.merge(kpilevelcount)
+
 d_kpi.sort_values(by=['Sorting'])
 
 # use on_demand=True to avoid loading worksheet data into memory
@@ -700,7 +702,10 @@ def update_df_KPIGroup(KPIGroupSelect,*args):
     print('execute update_df_KPIGroup')    
     tmpchangedlist=dash.callback_context.triggered
     tmpchangedlist2 = [item for item in tmpchangedlist if item['value'] is not None]
-    changed_id = [p['prop_id'] for p in tmpchangedlist2][0].split('.')[0]
+    if not tmpchangedlist2:
+        changed_id ='tmp'
+    else:
+        changed_id = [p['prop_id'] for p in tmpchangedlist2][0].split('.')[0]
     #changed_id2 = [p['prop_id'] for p in dash.callback_context.triggered][0]
     #changed_id3 = ctx.triggered#[0]['prop_id'].split('.')[0]
     print(changed_id)
@@ -1307,7 +1312,8 @@ def definefilterlevel(tabsdrilldown):
 
 tabs = html.Div(
     dbc.Tabs(children=
-    [dbc.Tab(label=Level0Name, children=[dbc.CardBody(
+    [
+    dbc.Tab(label=Level0Name, children=[dbc.CardBody(
         dbc.Row([
         dbc.Col(
             dcc.Graph(id='graphlevel0',
@@ -1328,73 +1334,31 @@ tabs = html.Div(
         ),
         ],className="row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12"
         ),className="row-cols-sm-12 row-cols-md-12 row-cols-lg-11 row-cols-xl-11 pretty_tab"
-    )],id="Tab0drilldown"),
-    dbc.Tab(label=Level1Name, children=[dbc.CardBody(
-    dbc.Row([
-    dbc.Col(
-        dcc.Graph(id='graphoveralltime',
-                  config=dict(
-                      modeBarButtonsToAdd=['customButton'],
-                      modeBarButtonsToRemove=['pan', 'lasso2d', 'select', 'zoom2d', 'zoomIn', 'zoomOut',
-                                              'hoverCompareCartesian', 'logo', 'autoScale'],
-                      displaylogo=False,
-                      scrollZoom=True,
-                      toImageButtonOptions=dict(
-                          width=550,
-                          height=300,
-                          format='png',
-                          scale=10,
-                          filename='Plotlygraph'),
-                  ),
-                  className="row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12 pretty_graph"
-                  ),className="col-12 col-sm-12 col-md-12 col-lg-8 col-xl-8 empty_tab"
-    ),
-    dbc.Col(html.Div([
-        html.I("delete_sweep",n_clicks=0,id='sweepl1',className="material-icons md-48",style={'position':'absolute','top':'1px','right':'12px','z-index': '1'}),
-        dcc.Graph(id='graph-level1compare',
-                  config=dict(
-                      modeBarButtonsToAdd=['customButton'],
-                      modeBarButtonsToRemove=['pan', 'lasso2d', 'select', 'zoom2d', 'zoomIn', 'zoomOut',
-                                              'hoverCompareCartesian', 'logo', 'autoScale'],
-                      displaylogo=False,
-                      scrollZoom=True,
-                      toImageButtonOptions=dict(
-                          width=500,
-                          height=300,
-                          format='png',
-                          scale=10,
-                          filename='Plotlygraph'),
-                  )
-                  )
-    ],className="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 pretty_graph2"
-    ),className="col-12 col-sm-12 col-md-12 col-lg-4 col-xl-4 empty_tab2"
-    )
-    ],className="row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12"
-    ),className="row-cols-sm-12 row-cols-md-12 row-cols-lg-11 row-cols-xl-11 pretty_tab"
-)
-],id="Tab1drilldown"),
-    dbc.Tab(label=Level2Name, children=[dbc.CardBody(
-    dbc.Row([
-    dbc.Col(
-        dcc.Graph(id='graph-with-slider',
-                  config=dict(
-                      modeBarButtonsToAdd=['customButton'],
-                      modeBarButtonsToRemove=['pan', 'lasso2d', 'select', 'zoom2d', 'zoomIn', 'zoomOut',
-                                              'hoverCompareCartesian', 'logo', 'autoScale'],
-                      displaylogo=False,
-                      scrollZoom=True,
-                      toImageButtonOptions=dict(
-                          width=550,
-                          height=300,
-                          format='png',
-                          scale=10,
-                          filename='Plotlygraph'),
-                  ),
-                  className="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 pretty_graph",
-                  ),className="col-12 col-sm-12 col-md-12 col-lg-8 col-xl-8 empty_tab",
-    ),
-    html.I("delete_sweep",n_clicks=0,id='sweepl2',className="material-icons md-48",style={'position':'absolute','top':'1px','right':'12px','z-index': '1'}),
-    dbc.Col(dcc.Graph(id='graph-level2compare',
+    )]
+,id="Tab0drilldown"),
+    dbc.Tab(label=Level1Name,children=[dbc.CardBody(
+        dbc.Row([
+        dbc.Col(
+            dcc.Graph(id='graphoveralltime',
+                      config=dict(
+                          modeBarButtonsToAdd=['customButton'],
+                          modeBarButtonsToRemove=['pan', 'lasso2d', 'select', 'zoom2d', 'zoomIn', 'zoomOut',
+                                                  'hoverCompareCartesian', 'logo', 'autoScale'],
+                          displaylogo=False,
+                          scrollZoom=True,
+                          toImageButtonOptions=dict(
+                              width=550,
+                              height=300,
+                              format='png',
+                              scale=10,
+                              filename='Plotlygraph'),
+                      ),
+                      className="row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12 pretty_graph"
+                      ),className="col-12 col-sm-12 col-md-12 col-lg-8 col-xl-8 empty_tab"
+        ),
+        dbc.Col(html.Div([
+            html.I("delete_sweep",n_clicks=0,id='sweepl1',className="material-icons md-48",style={'position':'absolute','top':'1px','right':'12px','z-index': '1'}),
+            dcc.Graph(id='graph-level1compare',
                       config=dict(
                           modeBarButtonsToAdd=['customButton'],
                           modeBarButtonsToRemove=['pan', 'lasso2d', 'select', 'zoom2d', 'zoomIn', 'zoomOut',
@@ -1407,12 +1371,56 @@ tabs = html.Div(
                               format='png',
                               scale=10,
                               filename='Plotlygraph'),
+                      )
+                      )
+        ],className="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 pretty_graph2"
+        ),className="col-12 col-sm-12 col-md-12 col-lg-4 col-xl-4 empty_tab2"
+        )
+        ],className="row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12"
+        ),className="row-cols-sm-12 row-cols-md-12 row-cols-lg-11 row-cols-xl-11 pretty_tab"
+    )
+    ]
+,id="Tab1drilldown"),
+    dbc.Tab(label=Level2Name, children=[dbc.CardBody(
+        dbc.Row([
+        dbc.Col(
+            dcc.Graph(id='graph-with-slider',
+                      config=dict(
+                          modeBarButtonsToAdd=['customButton'],
+                          modeBarButtonsToRemove=['pan', 'lasso2d', 'select', 'zoom2d', 'zoomIn', 'zoomOut',
+                                                  'hoverCompareCartesian', 'logo', 'autoScale'],
+                          displaylogo=False,
+                          scrollZoom=True,
+                          toImageButtonOptions=dict(
+                              width=550,
+                              height=300,
+                              format='png',
+                              scale=10,
+                              filename='Plotlygraph'),
                       ),
-                 className="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12  pretty_graph2"
-                ),className="col-12 col-sm-12 col-md-12 col-lg-4 col-xl-4 empty_tab2"
-),
-],className="row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12"
-),className="row-cols-sm-12 row-cols-md-12 row-cols-lg-11 row-cols-xl-11 pretty_tab"
+                      className="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 pretty_graph",
+                      ),className="col-12 col-sm-12 col-md-12 col-lg-8 col-xl-8 empty_tab",
+        ),
+        html.I("delete_sweep",n_clicks=0,id='sweepl2',className="material-icons md-48",style={'position':'absolute','top':'1px','right':'12px','z-index': '1'}),
+        dbc.Col(dcc.Graph(id='graph-level2compare',
+                          config=dict(
+                              modeBarButtonsToAdd=['customButton'],
+                              modeBarButtonsToRemove=['pan', 'lasso2d', 'select', 'zoom2d', 'zoomIn', 'zoomOut',
+                                                      'hoverCompareCartesian', 'logo', 'autoScale'],
+                              displaylogo=False,
+                              scrollZoom=True,
+                              toImageButtonOptions=dict(
+                                  width=500,
+                                  height=300,
+                                  format='png',
+                                  scale=10,
+                                  filename='Plotlygraph'),
+                          ),
+                     className="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12  pretty_graph2"
+                    ),className="col-12 col-sm-12 col-md-12 col-lg-4 col-xl-4 empty_tab2"
+    ),
+    ],className="row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12"
+    ),className="row-cols-sm-12 row-cols-md-12 row-cols-lg-11 row-cols-xl-11 pretty_tab"
 )],id="Tab2drilldown"),
             ],id="tabsdrilldown",active_tab="tab-0")
 )
@@ -1730,6 +1738,7 @@ datetotmp.append(str(dfl0['Period_int'].max())[0:10])
               Input('graphlevel0', 'relayoutData'),
               Input('graphoveralltime', 'relayoutData'),
               Input('graph-with-slider', 'relayoutData'),
+              Input('graph-with-slider', 'restyleData'),
               Input('graphlevel0', 'clickData'),
               Input('graphoveralltime', 'clickData'),
               Input('graph-with-slider', 'clickData'),
@@ -1739,9 +1748,8 @@ datetotmp.append(str(dfl0['Period_int'].max())[0:10])
               Input('graph-level1compare', 'selectedData'),
               Input('graph-level2compare', 'selectedData'),
               )
-def clean_data(GrainSelect,KPISelect,relayoutDatal0,relayoutDatal1,relayoutDatal2,clickdatal0,clickdatal1,clickdatal2,tabsdrilldown,Level1NameSelect,Level2NameSelect,selecteddatal1bar,selecteddatal2bar):#,*args,sweepl1 relayoutl1barclickdatal2bar
+def clean_data(GrainSelect,KPISelect,relayoutDatal0,relayoutDatal1,restyleDatal1,relayoutDatal2,clickdatal0,clickdatal1,clickdatal2,tabsdrilldown,Level1NameSelect,Level2NameSelect,selecteddatal1bar,selecteddatal2bar):#,*args,sweepl1 relayoutl1barclickdatal2bar
     print('execute clean_data')
-    #print(clickdatal1bar['points'][0]['y'])#
     selectedlistl1= []
     selectedlistl2= []
     if selecteddatal1bar is None:
@@ -1953,8 +1961,6 @@ datetotmp.clear()
 
 def updatekpiindicator(compareset,dffcomparefilter,KPISelect,KPIGroupSelect,widthBreakpoint,window_width): #,*args,tabsdrilldown,clickData0,clickDatal1,clickDatal2,dfl0
     print('execute updatekpiindicator')
-    print(widthBreakpoint)
-    print(window_width)
    # dfl0 = pd.read_json(dfl0, orient='split')
     dffcomparefilter = pd.read_json(dffcomparefilter, orient='split')
    # dfl2 = pd.read_json(dfl2click, orient='split')
@@ -2423,11 +2429,12 @@ def update_kpiagg(data00,GrainSelect,KPISelect,KPIGroupSelect,CumulativeSwitch,P
      Input("CumulativeSwitch", "label"),
      Input("PercentageTotalSwitch", "label"),
      Input("ShowValueSwitch", "label"),
+     Input("breakpoints", "widthBreakpoint"),
      #eval(kpigrouplistinput3[0]),  
    #  Input("DBColorVar", "value"),
      ]
 )
-def update_mainfigure(data00,data11,data22,GrainSelect,KPISelect,KPIGroupSelect,Level1NameSelect,Level2NameSelect,Totaalswitch,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch):#,*args
+def update_mainfigure(data00,data11,data22,GrainSelect,KPISelect,KPIGroupSelect,Level1NameSelect,Level2NameSelect,Totaalswitch,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch,widthBreakpoint):#,*args
     print('execute update_mainfigure')
     data0 = pd.read_json(data00, orient='split')
     data1 = pd.read_json(data11, orient='split')
@@ -2448,6 +2455,35 @@ def update_mainfigure(data00,data11,data22,GrainSelect,KPISelect,KPIGroupSelect,
     dataframe1 = Cumloop1(CumulativeSwitch)
     Notation = KPISelectedStyle(KPISelect)
     Calculation = CalculationDEF(KPISelect)
+    if widthBreakpoint=='sm':
+        title = ''
+    else:
+        title = dict(text=str(KPISelect) + ' per ',# + Level2Entitytype,
+                       # +' -     selected: '+str(Level2NameSelect),
+                       font=dict(#family='Montserrat',
+                                 size=22,
+                                 color=fontcolor,
+                        ),
+        ) 
+    if widthBreakpoint=='sm':
+        legend=dict(
+                    font=dict(
+                        size=15,
+                        color=fontcolor,
+                    ),
+                    orientation="h"
+                )
+    else:
+        legend=dict(
+                    font=dict(
+                        size=15,
+                        color=fontcolor,
+                    ),
+                    yanchor="top",
+                    y=1,
+                    x=1.01,
+                    xanchor="left",
+                )
     for z in appendList1:
         for i in dff1.LevelName_1.unique():
            df_by_Level1Name = dff1[dff1['LevelName_1'] == i]
@@ -2593,16 +2629,7 @@ def update_mainfigure(data00,data11,data22,GrainSelect,KPISelect,KPIGroupSelect,
                        )
                        ),
             margin={'l': 60, 'b': 45, 't': 33, 'r': 40},
-            legend=dict(
-                font=dict(
-                    size=15,
-                    color=fontcolor,
-                ),
-                yanchor="top",
-                y=1,
-                x=1.01,
-                xanchor="left",
-            ),
+            legend=legend,
             autosize=True,
             plot_bgcolor=graphcolor,
             paper_bgcolor=graphcolor,
@@ -2620,11 +2647,7 @@ def update_mainfigure(data00,data11,data22,GrainSelect,KPISelect,KPIGroupSelect,
                 sizex=0.2, sizey=0.2,
                 xanchor="right", yanchor="bottom"
             ),
-            title=dict(text=str(KPISelect) + ' per '+str(Level1Name[0]),  # +' -     selected: '+str(Level2NameSelect),
-                       font=dict(size=22,
-                                 color=fontcolor,
-                           ),
-                       ),
+            title=title,
             hovermode='closest',
             transition={'duration': 500},
         )
@@ -2641,10 +2664,11 @@ def update_mainfigure(data00,data11,data22,GrainSelect,KPISelect,KPIGroupSelect,
      Input("Level2NameSelect", "value"),
      Input('graphoveralltime', 'clickData'),
      Input("Totaalswitch", "label"),
+     Input("breakpoints", "widthBreakpoint"),
     # eval(kpigrouplistinput3[0]),  
      ]
 )
-def update_level1Graph(data00,data11,KPISelect,KPIGroupSelect,Level1NameSelect,Level2NameSelect,clickData,Totaalswitch): #,hoverData,*args
+def update_level1Graph(data00,data11,KPISelect,KPIGroupSelect,Level1NameSelect,Level2NameSelect,clickData,Totaalswitch,widthBreakpoint): #,hoverData,*args
     data0 = pd.read_json(data00, orient='split')
     data1 = pd.read_json(data11, orient='split')
     dff1tmp = data1 
@@ -2664,6 +2688,16 @@ def update_level1Graph(data00,data11,KPISelect,KPIGroupSelect,Level1NameSelect,L
     tracestotal = []
     traces = []
     traces2 = []
+    if widthBreakpoint=='sm':
+        title = ''
+    else:
+        title = dict(text=str(KPISelect) + ' per ',# + Level2Entitytype,
+                       # +' -     selected: '+str(Level2NameSelect),
+                       font=dict(#family='Montserrat',
+                                 size=22,
+                                 color=fontcolor,
+                        ),
+        ) 
     totaaljanee = Totaalloop(Totaalswitch)
     appendList1 = [tracestotal, traces]
     appendList2 = eval(totaaljanee)
@@ -2771,10 +2805,7 @@ def update_level1Graph(data00,data11,KPISelect,KPIGroupSelect,Level1NameSelect,L
             font=dict(
                 size=15,
             ),
-            title=dict(text='Compare over level 2',
-                       font=dict(size=22,
-                                 color=fontcolor,
-                           )),
+            title=title,
             hovermode='closest',
             transition={'duration': 500},
         )
@@ -2802,17 +2833,47 @@ def update_level1Graph(data00,data11,KPISelect,KPIGroupSelect,Level1NameSelect,L
      Input("CumulativeSwitch", "label"),
      Input("PercentageTotalSwitch", "label"),
      Input("ShowValueSwitch", "label"),
+     Input("breakpoints", "widthBreakpoint"),
      #eval(kpigrouplistinput3[0]),  
      ]
 
 )
 
 
-def update_figure(data11,data22,GrainSelect, KPISelect,KPIGroupSelect,Totaalswitch,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch):#,*args
+def update_figure(data11,data22,GrainSelect, KPISelect,KPIGroupSelect,Totaalswitch,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch,widthBreakpoint):#,*args
     data1 = pd.read_json(data11, orient='split')
     data2 = pd.read_json(data22, orient='split')
     dff2 = data2 
     dff1 = data1
+    if widthBreakpoint=='sm':
+        title = ''
+    else:
+        title = dict(text=str(KPISelect) + ' per ',# + Level2Entitytype,
+                       # +' -     selected: '+str(Level2NameSelect),
+                       font=dict(#family='Montserrat',
+                                 size=22,
+                                 color=fontcolor,
+                        ),
+    )
+    if widthBreakpoint=='sm':
+        legend=dict(
+                    font=dict(
+                        size=15,
+                        color=fontcolor,
+                    ),
+                    orientation="h"
+                )
+    else:
+        legend=dict(
+                    font=dict(
+                        size=15,
+                        color=fontcolor,
+                    ),
+                    yanchor="top",
+                    y=1,
+                    x=1.01,
+                    xanchor="left",
+                )
     Level2NameList = dff2['LevelName_2'].unique().tolist()
     options = [{'label': str(i), 'value': str(i)} for i in Level2NameList]
     tracestotal = []
@@ -2914,6 +2975,7 @@ def update_figure(data11,data22,GrainSelect, KPISelect,KPIGroupSelect,Totaalswit
     return {
         'data': tracestotal,
         'layout': dict(
+            clickmode='event+select',
             barmode='stack',
             barnorm=eval(PercentageTotalSwitchDEF(PercentageTotalSwitch)),
             activeselection = dict(color='red'
@@ -2971,16 +3033,7 @@ def update_figure(data11,data22,GrainSelect, KPISelect,KPIGroupSelect,Totaalswit
                        ),
             margin={'l': 60, 'b': 55, 't': 33, 'r': 40},
             autosize=True,
-            legend=dict(
-                font=dict(
-                    size=15,
-                    color=fontcolor,
-                ),
-                yanchor="top",
-                y=1,
-                x=1.01,
-                xanchor="left",
-            ),
+            legend=legend,
             plot_bgcolor=graphcolor,
             paper_bgcolor=graphcolor,
             modebar=dict(
@@ -2998,13 +3051,7 @@ def update_figure(data11,data22,GrainSelect, KPISelect,KPIGroupSelect,Totaalswit
                 sizex=0.2, sizey=0.2,
                 xanchor="right", yanchor="bottom"
             ),
-            title=dict(text=str(KPISelect) + ' per ',# + Level2Entitytype,
-                       # +' -     selected: '+str(Level2NameSelect),
-                       font=dict(#family='Montserrat',
-                                 size=22,
-                                 color=fontcolor,
-                        ),
-                       ),
+            title=title,
             hovermode='closest',
             transition={'duration': 500},
             fixedrange=False,
@@ -3025,10 +3072,11 @@ def update_figure(data11,data22,GrainSelect, KPISelect,KPIGroupSelect,Totaalswit
     # Input("Level1NameSelect", "value"),
     # Input("Level2NameSelect", "value"),
      Input("Totaalswitch", "label"),
+     Input("breakpoints","widthBreakpoint")
     # eval(kpigrouplistinput3[0]),  
      ]
 )
-def update_level2Graph(data11,data22,KPISelect,KPIGroupSelect,clickData,Totaalswitch):#,*args
+def update_level2Graph(data11,data22,KPISelect,KPIGroupSelect,clickData,Totaalswitch,widthBreakpoint):#,*args
     data1 = pd.read_json(data11, orient='split')
     data2 = pd.read_json(data22, orient='split')
     dff2tmp = data2 
@@ -3048,6 +3096,16 @@ def update_level2Graph(data11,data22,KPISelect,KPIGroupSelect,clickData,Totaalsw
     tracestotal = []
     traces = []
     traces2 = []
+    if widthBreakpoint=='sm':
+        title = ''
+    else:
+        title = dict(text=str(KPISelect) + ' per ',# + Level2Entitytype,
+                       # +' -     selected: '+str(Level2NameSelect),
+                       font=dict(#family='Montserrat',
+                                 size=22,
+                                 color=fontcolor,
+                        ),
+    )
     totaaljanee = Totaalloop(Totaalswitch)
     appendList1 = [tracestotal, traces]
     appendList2 = eval(totaaljanee)
@@ -3155,10 +3213,7 @@ def update_level2Graph(data11,data22,KPISelect,KPIGroupSelect,clickData,Totaalsw
             font=dict(
                 size=15,
             ),
-            title=dict(text='Compare over level 2',
-                       font=dict(size=22,
-                                 color=fontcolor,
-                           )),
+            title=title,
             hovermode='closest',
             transition={'duration': 500},
         )
