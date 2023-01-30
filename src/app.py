@@ -40,7 +40,6 @@ print(pd.read_csv(LOCALFILENAME))
 
 """
 import openpyxl
-import xlrd
 import pandas as pd
 import datetime
 #import "./constants2.css"
