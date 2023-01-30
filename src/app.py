@@ -1,5 +1,5 @@
 
-
+#notes: toevoegen dash_breakpoints dash_breakpoints-0.1.0
 """
 from azure.storage.blob import BlobServiceClient
 from azure.identity import DefaultAzureCredential
@@ -40,6 +40,7 @@ print(pd.read_csv(LOCALFILENAME))
 
 """
 import openpyxl
+import xlrd
 import pandas as pd
 import datetime
 #import "./constants2.css"
@@ -55,6 +56,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.io as pio
 import numpy as np
+from dash_breakpoints import WindowBreakpoints
 
 #from dash_extensions.callback import CallbackCache, DiskCache
 
@@ -632,7 +634,6 @@ def KPIgrouplighter(*args):
         for i in range(len(KPIGroupList)):
             KPIGrouptmp3.append(KPIGroupList[i])
         KPIGroup.append(KPIGrouptmp3)
-    if not kpicountout:
         kpicountout.append(len(KPINameList))
     KPIGroup2 = KPIGroup[-1]
     kpigrouparray = np.asarray(KPIGroup) 
@@ -1542,6 +1543,13 @@ app.layout = html.Div([html.I("filter_alt", id='dropdowncontrol', className="mat
     dcc.Store(id='dffcomparefilter',data=[],storage_type='memory'),
     dcc.Store(id='dflcomparekpi',data=[],storage_type='memory'),
     dcc.Store(id='selectedkpigroup',data=[],storage_type='memory'),
+    WindowBreakpoints(
+            id="breakpoints",
+            # Define the breakpoint thresholds
+            widthBreakpointThresholdsPx=[800, 1200],
+            # And their name, note that there is one more name than breakpoint thresholds
+            widthBreakpointNames=["sm", "md", "lg"],
+    ),
     dbc.Row([
         #html.Div([dcc.DatePickerRange(
         #            id='my-date-picker-range',
@@ -1563,8 +1571,6 @@ app.clientside_callback(
     Output('nav','n_clicks'),
     Input('nav','children')
 )
-
-
 
 @app.callback(
     Output('sweepl1', 'n_clicks'),
@@ -1937,6 +1943,8 @@ datetotmp.clear()
   #  Input('tabsdrilldown','active_tab'),
     Input("KPISelect", "value"),
     Input("KPIGroupSelect", "value"),
+    Input("breakpoints", "widthBreakpoint"),
+    State("breakpoints", "width"),
     #Input("Perioddropdown", "value"),
     #Input('graphlevel0', 'clickData'),
     #Input('graphoveralltime', 'clickData'),
@@ -1944,8 +1952,10 @@ datetotmp.clear()
    # eval(kpigrouplistinput3[0]),  
 )
 
-def updatekpiindicator(compareset,dffcomparefilter,KPISelect,KPIGroupSelect): #,*args,tabsdrilldown,clickData0,clickDatal1,clickDatal2,dfl0
+def updatekpiindicator(compareset,dffcomparefilter,KPISelect,KPIGroupSelect,widthBreakpoint,window_width): #,*args,tabsdrilldown,clickData0,clickDatal1,clickDatal2,dfl0
     print('execute updatekpiindicator')
+    print(widthBreakpoint)
+    print(window_width)
    # dfl0 = pd.read_json(dfl0, orient='split')
     dffcomparefilter = pd.read_json(dffcomparefilter, orient='split')
    # dfl2 = pd.read_json(dfl2click, orient='split')
@@ -2132,10 +2142,16 @@ def updatekpiindicator(compareset,dffcomparefilter,KPISelect,KPIGroupSelect): #,
         ) 
     carousellist2=','.join(carousellist)
     carousellist3.append(carousellist2)
+    if widthBreakpoint =='sm':
+        slides_to_showfinal = 1
+        slides_to_scrollfinal = 1
+    else:
+        slides_to_showfinal = slides_to_show
+        slides_to_scrollfinal = slides_to_scroll
     return [html.Div(dtc.Carousel(eval(carousellist3[0])
         ,
-        slides_to_scroll=slides_to_scroll,
-        slides_to_show=slides_to_show,
+        slides_to_scroll=slides_to_scrollfinal,
+        slides_to_show=slides_to_showfinal,
         center_padding='10px',
         swipe_to_slide=True,
         autoplay=False,

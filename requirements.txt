@@ -11,3 +11,4 @@ requests==2.28.1
 gunicorn
 dash-tools
 openpyxl==3.0.10
+dash_breakpoints=0.1.0
