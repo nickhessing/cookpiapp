@@ -370,20 +370,28 @@ GrainNameList = dfl0['Grain'].unique()
 Level1NameList = dfl1['LevelName_1'].unique()
 Level2NameList = dfl2['LevelName_2'].unique().tolist()
 
-Level0Name = dfl0['LevelEntitytype_0'].unique()
-Level1Name = dfl1['LevelEntitytype_1'].unique()
-Level2Name = dfl2['LevelEntitytype_2'].unique()
+Level0Name = dfl0[['LevelEntitytype_0','LevelName_0','LevelColor_0','KPIName']]
+Level1Name = dfl1[['LevelEntitytype_1','LevelName_1','LevelColor_1','KPIName']]
+Level2Name = dfl2[['LevelEntitytype_2','LevelName_2','LevelColor_2','KPIName']]
+Level0Name = Level0Name.drop_duplicates()
+Level1Name = Level1Name.drop_duplicates()
+Level2Name = Level2Name.drop_duplicates()
 
-KPINameListCompare = d_kpi['KPIName'].unique()
 GrainNameListCompare = dfl0Compare['Grain'].unique()
 Level1NameListCompare = dfl1Compare['LevelName_1'].unique()
 Level2NameListCompare = dfl2['LevelName_2'].unique().tolist()
 
-KPINameColor = dict(d_kpi.set_index('d_kpi_id')['KPIName'].to_dict())
-Level0NameColor = dict(dfl0.set_index('LevelName_0')['LevelColor_0'].to_dict())
-Level1NameColor = dict(dfl1.set_index('LevelName_1')['LevelColor_1'].to_dict())
-Level2NameColor = dict(dfl2.set_index('LevelName_2')['LevelColor_2'].to_dict())
 
+Level0NameColor = dict(Level0Name.set_index('LevelName_0')['LevelColor_0'].to_dict())
+Level1NameColor = dict(Level1Name.set_index('LevelName_1')['LevelColor_1'].to_dict())
+Level2NameColor = dict(Level2Name.set_index('LevelName_2')['LevelColor_2'].to_dict())
+Level0attr = dict(Level0Name.set_index('KPIName')['LevelEntitytype_0'].to_dict())
+Level1attr = dict(Level1Name.set_index('KPIName')['LevelEntitytype_1'].to_dict())
+Level2attr = dict(Level2Name.set_index('KPIName')['LevelEntitytype_2'].to_dict())
+
+
+KPINameListCompare = d_kpi['KPIName'].unique()
+KPINameColor = dict(d_kpi.set_index('d_kpi_id')['KPIName'].to_dict())
 KPINameList =  d_kpi['KPIName'].unique()
 KPIGroupList = d_kpi['KPIGroup'].unique()
 HigherIs = dict(d_kpi.set_index('KPIName')['HigherIs(1=positive)'].to_dict())
@@ -392,12 +400,14 @@ KPICalculation = dict(d_kpi.set_index('KPIName')['Calculation'].to_dict())
 KPICum = dict(d_kpi.set_index('KPIName')['IsCum'].to_dict())
 KPIColor = dict(d_kpi.set_index('KPIName')['kpicolor'].to_dict())
 visual = dict(d_kpi.set_index('KPIName')['visual'].to_dict())
-Level0attr = dict(d_kpi.set_index('KPIName')['Level0_Attribuut'].to_dict())
-Level1attr = dict(d_kpi.set_index('KPIName')['Level1_Attribuut'].to_dict())
-Level2attr = dict(d_kpi.set_index('KPIName')['Level2_Attribuut'].to_dict())
+
+
+
+
 KPIGroupImage = dict(d_kpi.set_index('KPIGroup')['GroupImage'].to_dict())
 GroupImage = d_kpi['GroupImage'].unique()
 KPICountPerGroup = dict(d_kpi.groupby('KPIGroup')['KPIName'].count().to_dict())
+KPILevelCountList = dict(d_kpi.set_index('KPIName')['kpilevelcount'].to_dict())
 
 columnsdftotal = KPIFramework.columns.tolist()
 columnsdftotal.remove('d_level0_id')
@@ -615,7 +625,6 @@ def KPIgrouplighter(*args):
     print('execute KPIgrouplighter')
     kpicountout.clear() 
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
-    print(changed_id)
     KPIGroupList = d_kpi['KPIGroup'].unique().tolist()
     if changed_id =='kpigroup0.n_clicks':
         KPIGrouptmp1 = []
@@ -708,7 +717,6 @@ def update_df_KPIGroup(KPIGroupSelect,*args):
         changed_id = [p['prop_id'] for p in tmpchangedlist2][0].split('.')[0]
     #changed_id2 = [p['prop_id'] for p in dash.callback_context.triggered][0]
     #changed_id3 = ctx.triggered#[0]['prop_id'].split('.')[0]
-    print(changed_id)
   #  print(changed_id3)
     dffKPISelect = d_kpi[
         (d_kpi["KPIGroup"].isin(KPIGroupSelect))
@@ -1313,9 +1321,9 @@ def definefilterlevel(tabsdrilldown):
 tabs = html.Div(
     dbc.Tabs(children=
     [
-    dbc.Tab(label=Level0Name, children=[dbc.CardBody(
+    dbc.Tab(children=[dbc.CardBody(
         dbc.Row([
-        dbc.Col(
+        dbc.Col(dbc.Spinner(children=[#,spinner_class_name='loading'
             dcc.Graph(id='graphlevel0',
                       config=dict(
                         modeBarButtonsToAdd =  ['customButton'],
@@ -1330,15 +1338,35 @@ tabs = html.Div(
                             filename = 'Plotlygraph'),
                       ),
                       className="row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12 pretty_graph"
-                      ),className="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 empty_tab"
+                      )],spinnerClassName="loader1"),className="col-12 col-sm-12 col-md-12 col-lg-8 col-xl-8 empty_tab"
         ),
+        dbc.Col(html.Div([
+            html.I("delete_sweep",n_clicks=0,id='sweepl0',className="material-icons md-48",style={'position':'absolute','top':'1px','right':'12px','z-index': '1'}),
+            dbc.Spinner(children=[dcc.Graph(id='graph-level0compare',
+                      config=dict(
+                          modeBarButtonsToAdd=['customButton'],
+                          modeBarButtonsToRemove=['pan', 'lasso2d', 'select', 'zoom2d', 'zoomIn', 'zoomOut',
+                                                  'hoverCompareCartesian', 'logo', 'autoScale'],
+                          displaylogo=False,
+                          scrollZoom=True,
+                          toImageButtonOptions=dict(
+                              width=500,
+                              height=300,
+                              format='png',
+                              scale=10,
+                              filename='Plotlygraph'),
+                      )
+                      )])
+        ],className="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 pretty_graph2"
+        ),className="col-12 col-sm-12 col-md-12 col-lg-4 col-xl-4 empty_tab2"
+        )
         ],className="row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12"
         ),className="row-cols-sm-12 row-cols-md-12 row-cols-lg-11 row-cols-xl-11 pretty_tab"
     )]
 ,id="Tab0drilldown"),
-    dbc.Tab(label=Level1Name,children=[dbc.CardBody(
+    dbc.Tab(children=[dbc.CardBody(
         dbc.Row([
-        dbc.Col(
+        dbc.Col(dbc.Spinner(children=[
             dcc.Graph(id='graphoveralltime',
                       config=dict(
                           modeBarButtonsToAdd=['customButton'],
@@ -1354,11 +1382,11 @@ tabs = html.Div(
                               filename='Plotlygraph'),
                       ),
                       className="row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12 pretty_graph"
-                      ),className="col-12 col-sm-12 col-md-12 col-lg-8 col-xl-8 empty_tab"
+                      )],spinnerClassName="loader1"),className="col-12 col-sm-12 col-md-12 col-lg-8 col-xl-8 empty_tab"
         ),
         dbc.Col(html.Div([
             html.I("delete_sweep",n_clicks=0,id='sweepl1',className="material-icons md-48",style={'position':'absolute','top':'1px','right':'12px','z-index': '1'}),
-            dcc.Graph(id='graph-level1compare',
+            dbc.Spinner(children=[dcc.Graph(id='graph-level1compare',
                       config=dict(
                           modeBarButtonsToAdd=['customButton'],
                           modeBarButtonsToRemove=['pan', 'lasso2d', 'select', 'zoom2d', 'zoomIn', 'zoomOut',
@@ -1372,7 +1400,7 @@ tabs = html.Div(
                               scale=10,
                               filename='Plotlygraph'),
                       )
-                      )
+                      )])
         ],className="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 pretty_graph2"
         ),className="col-12 col-sm-12 col-md-12 col-lg-4 col-xl-4 empty_tab2"
         )
@@ -1381,9 +1409,9 @@ tabs = html.Div(
     )
     ]
 ,id="Tab1drilldown"),
-    dbc.Tab(label=Level2Name, children=[dbc.CardBody(
+    dbc.Tab(children=[dbc.CardBody(
         dbc.Row([
-        dbc.Col(
+        dbc.Col(dbc.Spinner(children=[
             dcc.Graph(id='graph-with-slider',
                       config=dict(
                           modeBarButtonsToAdd=['customButton'],
@@ -1399,10 +1427,10 @@ tabs = html.Div(
                               filename='Plotlygraph'),
                       ),
                       className="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 pretty_graph",
-                      ),className="col-12 col-sm-12 col-md-12 col-lg-8 col-xl-8 empty_tab",
+                      )]),className="col-12 col-sm-12 col-md-12 col-lg-8 col-xl-8 empty_tab",
         ),
         html.I("delete_sweep",n_clicks=0,id='sweepl2',className="material-icons md-48",style={'position':'absolute','top':'1px','right':'12px','z-index': '1'}),
-        dbc.Col(dcc.Graph(id='graph-level2compare',
+        dbc.Col(dbc.Spinner(children=[dcc.Graph(id='graph-level2compare',
                           config=dict(
                               modeBarButtonsToAdd=['customButton'],
                               modeBarButtonsToRemove=['pan', 'lasso2d', 'select', 'zoom2d', 'zoomIn', 'zoomOut',
@@ -1417,7 +1445,7 @@ tabs = html.Div(
                                   filename='Plotlygraph'),
                           ),
                      className="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12  pretty_graph2"
-                    ),className="col-12 col-sm-12 col-md-12 col-lg-4 col-xl-4 empty_tab2"
+                    )]),className="col-12 col-sm-12 col-md-12 col-lg-4 col-xl-4 empty_tab2"
     ),
     ],className="row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12"
     ),className="row-cols-sm-12 row-cols-md-12 row-cols-lg-11 row-cols-xl-11 pretty_tab"
@@ -1431,7 +1459,7 @@ tabscompare = dbc.Tabs(
     dbc.Row([
         dbc.Col(KPIdropdownCompare,
                 id='KPICompare'),
-        dbc.Col(
+        dbc.Col(dbc.Spinner(children=[
             dcc.Graph(id='graph-compare-kpi',
                       config={
                           'modeBarButtonsToRemove': ['pan', 'lasso2d', 'select', 'zoom2d', 'zoomIn', 'zoomOut',
@@ -1439,7 +1467,7 @@ tabscompare = dbc.Tabs(
                           'displaylogo': False,
                           'scrollZoom': True,
                       }, className="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 pretty_graph",
-                      ), className="col-12 col-sm-11 col-md-11 col-lg-12 col-xl-12 empty_tab2",
+                      )]), className="col-12 col-sm-11 col-md-11 col-lg-12 col-xl-12 empty_tab2",
         ),
     ], className="row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12"
     ), className="row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12 pretty_tab"
@@ -1451,14 +1479,14 @@ tabscompare = dbc.Tabs(
         #dbc.Col(KPIdropdownCompare,
         #        id='KPICompare'),
         dbc.Col(
-            dcc.Graph(id='graph-compare-kpi2',
+            dbc.Spinner(children=[dcc.Graph(id='graph-compare-kpi2',
                       config={
                           'modeBarButtonsToRemove': ['pan', 'lasso2d', 'select', 'zoom2d', 'zoomIn', 'zoomOut',
                                                      'hoverCompareCartesian', 'logo', 'autoScale'],
                           'displaylogo': False,
                           'scrollZoom': True,
                       }, className="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 pretty_graph",
-                      ), className="col-12 col-sm-11 col-md-11 col-lg-12 col-xl-12 empty_tab2",
+                      )]), className="col-12 col-sm-11 col-md-11 col-lg-12 col-xl-12 empty_tab2",
         ),
     ], className="row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12"
     ), className="row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12 pretty_tab"
@@ -1557,6 +1585,7 @@ app.layout = html.Div([html.I("filter_alt", id='dropdowncontrol', className="mat
             # And their name, note that there is one more name than breakpoint thresholds
             widthBreakpointNames=["sm", "md", "lg"],
     ),
+    
     dbc.Row([
         #html.Div([dcc.DatePickerRange(
         #            id='my-date-picker-range',
@@ -1595,15 +1624,37 @@ def upon_click(n_clicks):
              Output('graph-compare-kpi', 'style'),
              Output('NavItem1', 'style'),
              Output('NavItem2', 'style'),
-             Output('NavItem3', 'style')],
+             Output('NavItem3', 'style'),
+             Output('Tab0drilldown', 'label'),
+             Output('Tab1drilldown', 'label'),
+             Output('Tab2drilldown', 'label'),
+             Output('Tab0drilldown', 'tab_class_name'),
+             Output('Tab1drilldown', 'tab_class_name'),
+             Output('Tab2drilldown', 'tab_class_name')             
+             ],
              [Input('NavItem1','n_clicks'),
               Input('NavItem2','n_clicks'),
               Input('NavItem3','n_clicks'),
-              Input('KPISelect','value'),
+              Input('KPISelect','value')
               ])
 def hide_graph(NavItem1,NavItem2,NavItem3,KPISelect):
     print('execute hide_graph')
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+    tab_class_name=[]
+    Levelattrr = []
+    for i in range(3):
+        if KPILevelCountList[KPISelect]>i:
+            tab_class_name.append('showntab')
+        else:
+            tab_class_name.append('hiddentab') 
+        if  tab_class_name[i]=='showntab':
+            Levelattrr.append(eval(f'Level{i}attr[KPISelect]'))
+        else:
+            Levelattrr.append('')
+    #Level0attrr ='' if not Level0attr[KPISelect] else Level0attr[KPISelect]
+    #Level1attrr ='' if not Level1attr[KPISelect] else Level1attr[KPISelect]
+    #Level2attrr ='' if not Level2attr[KPISelect] else Level2attr[KPISelect]
+
     if 'NavItem1' in changed_id:
         kpicolor = kpicolorDEF(KPISelect)
         msg = {'display': 'block'}
@@ -1634,7 +1685,7 @@ def hide_graph(NavItem1,NavItem2,NavItem3,KPISelect):
         color1 = {'color':buttonlogocolor, 'background-color': buttoncolor}
         color2 = {}
         color3 = {}
-    return msg,msg,msg,msg2,msg2,color1,color2,color3
+    return msg,msg,msg,msg2,msg2,color1,color2,color3,Levelattrr[0],Levelattrr[1],Levelattrr[2],tab_class_name[0],tab_class_name[1],tab_class_name[2]
 
 """
 
@@ -2052,7 +2103,6 @@ def updatekpiindicator(compareset,dffcomparefilter,KPISelect,KPIGroupSelect,widt
         agnumlp = "df_by_LevelName['Numerator_LP']." + str(eval(AggregateNum)) +"("+meannum[0]+")"
         agdenomlp = "df_by_LevelName['Denominator_LP']." + str(eval(AggregateDenom)) +"("+meandenom[0]+")"
         df_by_LevelName = df_by_LevelName.assign(Aggnum=eval(agnum))
-
         valueNum.append(df_by_LevelName['Aggnum'].iloc[0])
         df_by_LevelName = df_by_LevelName.assign(Aggdenom=eval(agdenom))
         valueDenom.append(df_by_LevelName['Aggdenom'].iloc[0])
@@ -2153,7 +2203,7 @@ def updatekpiindicator(compareset,dffcomparefilter,KPISelect,KPIGroupSelect,widt
     else:
         slides_to_showfinal = slides_to_show
         slides_to_scrollfinal = slides_to_scroll
-    return [html.Div(dtc.Carousel(eval(carousellist3[0])
+    return [html.Div(dbc.Spinner(size='md',delay_hide=1500,children=[dtc.Carousel(eval(carousellist3[0])
         ,
         slides_to_scroll=slides_to_scrollfinal,
         slides_to_show=slides_to_showfinal,
@@ -2168,7 +2218,7 @@ def updatekpiindicator(compareset,dffcomparefilter,KPISelect,KPIGroupSelect,widt
         className='col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12',
         responsive=[
             ],
-    ))
+    )]))
     ]
 
 
@@ -2252,12 +2302,6 @@ def update_df_KPI(KPISelect,KPIGroupSelect,*args):#,
      Input("CumulativeSwitch", "label"),
      Input("PercentageTotalSwitch", "label"),
      Input("ShowValueSwitch", "label"),
-   #  eval(kpigrouplistinput3[0]),  
-   #  eval(carddivnclicks3[0]),
-   #  eval(kpigrouplistinput3[0])
- #    Input('graphoveralltime', 'relayoutData'),
- #    Input('graph-with-slider', 'relayoutData'),
-   #  Input("graphlevel0","relayoutData"),
 )
 
 def update_kpiagg(data00,GrainSelect,KPISelect,KPIGroupSelect,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch):  #,*args ,Level2NameSelect,toggle, relayoutData
@@ -2401,6 +2445,123 @@ def update_kpiagg(data00,GrainSelect,KPISelect,KPIGroupSelect,CumulativeSwitch,P
                        font=dict(color=fontcolor,
                                  ),
                        ),
+            hovermode='closest',
+            transition={'duration': 500},
+        )
+    }
+
+
+@app.callback(
+    Output('graph-level0compare', 'figure'),
+    [Input('dfl0', 'data'),
+    # Input('dfl1', 'data'),
+     Input("KPISelect", "value"),
+     Input("KPIGroupSelect", "value"),
+     Input("Level1NameSelect", "value"),
+     Input("Level2NameSelect", "value"),
+     Input('graphlevel0', 'clickData'),
+     Input("Totaalswitch", "label"),
+     Input("breakpoints", "widthBreakpoint"),
+    # eval(kpigrouplistinput3[0]),  
+     ]
+)
+def update_level1Graph(data00,KPISelect,KPIGroupSelect,Level1NameSelect,Level2NameSelect,clickData,Totaalswitch,widthBreakpoint): #,hoverData,*args
+    data0 = pd.read_json(data00, orient='split')
+    dff0tmp = data0 
+    dff0tmp['Period_int'] = pd.to_datetime(dff0tmp['Period_int']).dt.tz_localize(None)
+    dff0 = []
+    if clickData == "{'autosize': True}" or clickData == None:
+        dff0.append(dff0tmp)
+    else:
+        dff0.append(dff0tmp[dff0tmp['Period_int'] == clickData['points'][0]['x']])
+    dff0 = dff0[0]
+    traces = []
+    if widthBreakpoint=='sm':
+        title = ''
+    else:
+        title = dict(text=str(KPISelect) + ' per ',# + Level2Entitytype,
+                       # +' -     selected: '+str(Level2NameSelect),
+                       font=dict(#family='Montserrat',
+                                 size=22,
+                                 color=fontcolor,
+                        ),
+        ) 
+    Notation = KPISelectedStyle(KPISelect)
+    Calculation = CalculationDEF(KPISelect)
+    AggregateNum = NumaggregateDEF(KPISelect)
+    AggregateDenom = DenomaggregateDEF(KPISelect)
+    for j in dfl0.LevelName_0.unique():
+        df_by_Level0Name = dff0[dff0['LevelName_0'] == j]
+        x2 = eval(CalculationLogic0(Calculation))
+        traces.append(dict(
+            df_by_Level0Name,
+            y=df_by_Level0Name.LevelName_0,
+            x=x2,
+            text=x2,
+            text_auto=True,
+            texttemplate="%{value:" + eval(Notation[0]) + "}",  # "%{value:.01%}",
+            textformat=eval(Notation[0]),
+            type='bar',
+            marker=dict(
+                opacity=1,
+                color=df_by_Level0Name.LevelColor_0,
+                color_discrete_map='identity',
+                line=dict(width=0.1,
+                          color=df_by_Level0Name.LevelColor_0,
+                          color_discrete_map='identity',
+                          opacity=1,
+                          ),
+            ),
+            orientation="h",
+            name=j,
+            transforms=[dict(
+                type='aggregate',
+                groups=df_by_Level0Name.LevelName_0,
+                aggregations=[
+                    dict(target='Numerator', func=AggregateNumDenom(AggregateNum)),  
+                    dict(target='Denominator', func=AggregateNumDenom(AggregateDenom))  
+                ]
+            ),
+            ]
+        ))
+    return {
+        'data': traces,
+        'layout': dict(
+            clickmode='event+select',
+            type='bar',
+            xaxis=dict(type='string',
+                       title='',
+                       showgrid=False,
+                       gridwidth=0,
+                       fixedrange=True,
+                       showline=False,
+                       tickformat=eval(Notation[0]),
+                       visible=False,
+                       color=fontcolor,
+                       font=dict(
+                           size=14,
+                       )
+                       ),
+            yaxis=dict(title='',
+                       showline=False,
+                       showgrid=False,
+                       categoryorder="total ascending",
+                       gridwidth=0,
+                       color=fontcolor,
+                       ),
+            margin={'l': 140, 'b': 25, 't': 37, 'r': 40},
+            showlegend=False,
+            autosize=True,
+            plot_bgcolor=graphcolor,
+            paper_bgcolor=graphcolor,
+            modebar=dict(
+                bgcolor='transparent',
+                color=BeautifulSignalColor,
+            ),
+            font=dict(
+                size=15,
+            ),
+            title=title,
             hovermode='closest',
             transition={'duration': 500},
         )

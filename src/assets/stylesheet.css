@@ -49,6 +49,14 @@ top: 0;
 font-size: 45px;
 }
 
+.hiddentab {
+display : none
+}
+
+.showntab {
+	display : block
+	}
+
 .carddiv:hover .icon i {
     font-size: 60px;
     transition: 1s;
