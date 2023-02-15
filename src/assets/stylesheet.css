@@ -19,6 +19,52 @@ body {
 background-color : var(--bodybackgroundcolor);
 }
 
+.trich_carousel .slick-dots button:before {
+	color:var(--bulletcolor);
+	opacity:0.6;
+	}
+	
+	
+.trich_carousel .slick-dots button:hover {
+color:purple
+}
+
+.slick-dots li.slick-active button:before, .slick-dots li button:before {
+	color: #FFF;
+	opacity: 1;
+	font-size: 16px;
+}
+.slick-dots li.slick-active button {
+	border: 5px solid var(--bulletcolor);
+	border-radius: 100%;
+}
+.slick-dots li.slick-active button:before {
+	color: transparent;
+}
+	
+
+.slick-prev {
+	background-color: var(--bodycolor);
+	border-color: red;
+	opacity: 70%;
+	}
+	
+.slick-next {
+	background-color: var(--bodycolor);
+	border-color: red;
+	opacity: 70%;
+	}
+.slick-prev:hover {
+	background-color: var(--bodycolor);
+	border-color: red;
+	opacity: 100%;
+	}
+	
+.slick-next:hover {
+	background-color: var(--bodycolor);
+	border-color: red;
+	opacity: 100%;
+	}
 
 .carddiv {
     position: relative;
@@ -99,6 +145,58 @@ display : none
     color : transparent;
 }
 
+.date-group-items {
+	border-top-left-radius: 10px;
+	border-top-right-radius: 10px;
+	margin:10px;
+	margin-left:0px;
+  }
+  
+  .date-group-labels {
+	border-radius: 6px;
+	font: bold 22px ;
+	padding: 12px 12px 12px 12px;
+	color: #16181b;
+	opacity : 100%;
+	background-color: rgb(243, 246, 208,.12);
+	cursor: pointer;
+  }
+  
+  .date-group-labels-checked {
+	background-color: rgb(243, 246, 208);
+	opacity : 100%;
+	color: #001f3d;
+  }
+  
+  .custom-control-label date-group-labels date-group-labels-checked {
+	background-color: #23395d;
+  }
+  
+  .custom-radio:first-child .date-group-labels {
+  }
+  
+  .custom-radio:last-child .date-group-labels {
+  }
+  
+  .custom-radio:not(:last-child) .date-group-labels {
+	border-right: none;
+  }
+  
+  
+  .date-group-labels:hover {
+	background-color: #FFA500;
+	color: #2e3233;
+  }
+  
+  .custom-control:hover {
+	background-color: transparent;
+	color: #2e3233;
+	border-left-radius: 10px;
+  }
+  .custom-control:checked {
+	background-color: #b37400;
+	border-left-radius: 10px;
+  }
 
 .slick-slide {
 padding-top: 20px;
@@ -12390,58 +12488,6 @@ li.menu_list:hover .front {
   margin-right: 0;
 }
 
-.date-group-items {
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
-  margin:10px;
-  margin-left:0px;
-}
-
-.date-group-labels {
-  border-radius: 6px;
-  font: bold 22px ;
-  padding: 12px 12px 12px 12px;
-  color: #16181b;
-  opacity : 100%;
-  background-color: rgb(243, 246, 208,.12);
-  cursor: pointer;
-}
-
-.date-group-labels-checked {
-  background-color: rgb(243, 246, 208);
-  opacity : 100%;
-  color: #001f3d;
-}
-
-.custom-control-label date-group-labels date-group-labels-checked {
-  background-color: #23395d;
-}
-
-.custom-radio:first-child .date-group-labels {
-}
-
-.custom-radio:last-child .date-group-labels {
-}
-
-.custom-radio:not(:last-child) .date-group-labels {
-  border-right: none;
-}
-
-
-.date-group-labels:hover {
-  background-color: #FFA500;
-  color: #2e3233;
-}
-
-.custom-control:hover {
-  background-color: transparent;
-  color: #2e3233;
-  border-left-radius: 10px;
-}
-.custom-control:checked {
-  background-color: #b37400;
-  border-left-radius: 10px;
-}
 
 
 #style-1::-webkit-scrollbar-track
@@ -13210,30 +13256,6 @@ li.menu_list:hover .front {
 background-color: transparent;
 }
 
-.trich_carousel .slick-dots button:before {
-color:var(--bulletcolor);
-opacity:0.6;
-}
-
-
-.trich_carousel .slick-dots button:hover {
-color:purple
-}
-
-.slick-dots li.slick-active button:before, .slick-dots li button:before {
-    color: #FFF;
-    opacity: 1;
-    font-size: 16px;
-}
-.slick-dots li.slick-active button {
-    border: 5px solid var(--bulletcolor);
-    border-radius: 100%;
-}
-.slick-dots li.slick-active button:before {
-    color: transparent;
-}
-
-
 * {
   transition: all .2s ease;
 }
@@ -13282,19 +13304,7 @@ z-index: 1
   color: var(--graphonder);
   box-shadow: 0px 0px 55px var(--graphonder);
 }
-#slickthinky {
-slides_to_show : 1;
-}
 
-.slick-prev {
-background-color: var(--bodycolor);
-border-color: red;
-}
-
-.slick-next {
-	background-color: var(--bodycolor);
-	border-color: red;
-	}
 
 #TopImage {
     width: 40%;
@@ -13368,4 +13378,3 @@ border-color: red;
 popupper-title {
 background-color: red
 }
-;

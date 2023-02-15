@@ -95,12 +95,10 @@ lastDayStr = lastDay.strftime('%Y-%m-%d')
 # SQL Retrieve data
 
 KPIFrameworktmp = pd.DataFrame(
-        pd.read_csv(r'assets/Attributes/dashboard_data/KPIFramework_Python.csv',low_memory=False))
-
-# Dataframes
-# f_kpi           = pd.read_sql("select * from kpiframework.f_kpi", dbConnection);
+        pd.read_csv(r'assets/Attributes/dashboard_data/KPIFramework_Python.csv',sep=',', decimal='.',low_memory=False))
+print(KPIFrameworktmp)
 cookpi_attributestmp = pd.read_excel(open('assets/Attributes/dashboard_data/cookpi_per_pi.xlsx', 'rb'),
-              sheet_name='linktable');
+              sheet_name='linktable')
 
 KPIIDList =  cookpi_attributestmp['d_kpi_id'].unique()
 
@@ -123,14 +121,15 @@ for i in KPIIDList:
     KPIFrameworklist.append(KPIFrameworkloop)
 
 KPIFramework = pd.concat(KPIFrameworklist)
-print(KPIFramework.dtypes)
 
 KPIFramework['d_level0_id']=KPIFramework['d_level0_id'].astype(int)
 KPIFramework['d_level1_id']=KPIFramework['d_level1_id'].astype(int)
 KPIFramework['d_level2_id']=KPIFramework['d_level2_id'].astype(int)
 
 
+
 columnsdf0 = KPIFramework.columns.tolist()
+print(columnsdf0)
 columnsdf0.remove('d_level1_id')
 columnsdf0.remove('d_level2_id')
 columnsdf0.remove('Numerator')
@@ -240,6 +239,7 @@ dfl22.clear()
 dfl0Compare2.clear()
 dfl1Compare2.clear()
 dfl2Compare2.clear()
+print(columnsdf0)
 
 for i in KPIIDList:
     KPIFramework_iterate = KPIFramework[(KPIFramework.d_kpi_id ==i)]
@@ -2302,9 +2302,10 @@ def update_df_KPI(KPISelect,KPIGroupSelect,*args):#,
      Input("CumulativeSwitch", "label"),
      Input("PercentageTotalSwitch", "label"),
      Input("ShowValueSwitch", "label"),
+     Input("breakpoints", "widthBreakpoint"),
 )
 
-def update_kpiagg(data00,GrainSelect,KPISelect,KPIGroupSelect,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch):  #,*args ,Level2NameSelect,toggle, relayoutData
+def update_kpiagg(data00,GrainSelect,KPISelect,KPIGroupSelect,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch,widthBreakpoint):  #,*args ,Level2NameSelect,toggle, relayoutData
     print('execute update_kpiagg')
     data0 = pd.read_json(data00, orient='split')
     dff = data0 #update_filter_l0(data0, GrainSelect, KPISelect)  # ,Level2NameSelect
@@ -2314,6 +2315,35 @@ def update_kpiagg(data00,GrainSelect,KPISelect,KPIGroupSelect,CumulativeSwitch,P
     Calculation = CalculationDEF(KPISelect)
     Notation = KPISelectedStyle(KPISelect)
     Calculation = CalculationDEF(KPISelect)
+    if widthBreakpoint=='sm':
+        title = ''
+    else:
+        title = dict(text=str(KPISelect) + ' per ',# + Level2Entitytype,
+                       # +' -     selected: '+str(Level2NameSelect),
+                       font=dict(#family='Montserrat',
+                                 size=22,
+                                 color=fontcolor,
+                        ),
+        ) 
+    if widthBreakpoint=='sm':
+        legend=dict(
+                    font=dict(
+                        size=15,
+                        color=fontcolor,
+                    ),
+                    orientation="h"
+                )
+    else:
+        legend=dict(
+                    font=dict(
+                        size=15,
+                        color=fontcolor,
+                    ),
+                    yanchor="top",
+                    y=1,
+                    x=1.01,
+                    xanchor="left",
+                )
     for i in dff.LevelName_0.unique():
         df_by_Level0Name = dff[dff['LevelName_0'] == i]
         ##df_by_Level0NameCum = dff[dff['Level0Name'] == i]
@@ -2416,16 +2446,6 @@ def update_kpiagg(data00,GrainSelect,KPISelect,KPIGroupSelect,CumulativeSwitch,P
                        )
                        ),
             margin={'l': 60, 'b': 45, 't': 33, 'r': 40},
-            legend=dict(
-                font=dict(
-                    size=15,
-                    color=fontcolor,
-                ),
-                yanchor="top",
-                y=1,
-                x=1.01,
-                xanchor="left",
-            ),
             modebar = dict(
                         bgcolor='transparent',
                         color=BeautifulSignalColor,
@@ -2433,6 +2453,8 @@ def update_kpiagg(data00,GrainSelect,KPISelect,KPIGroupSelect,CumulativeSwitch,P
             autosize=True,
             plot_bgcolor=graphcolor,
             paper_bgcolor=graphcolor,
+            legend=legend,
+            title=title,
             font=dict(
             ),
             images=dict(
@@ -2441,10 +2463,6 @@ def update_kpiagg(data00,GrainSelect,KPISelect,KPIGroupSelect,CumulativeSwitch,P
                 sizex=0.2,
                 sizey=0.2,
             ),
-            title=dict(text=str(KPISelect),  # +' -     selected: '+str(Level2NameSelect),
-                       font=dict(color=fontcolor,
-                                 ),
-                       ),
             hovermode='closest',
             transition={'duration': 500},
         )
