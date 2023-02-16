@@ -85,19 +85,11 @@ lastDay = datetime.datetime(thisYear, 12, 31)
 firstDayStr = firstDay.strftime('%Y-%m-%d')
 lastDayStr = lastDay.strftime('%Y-%m-%d')
 
-
-#openimage = Image.open(r'/assets/Images/synthetix.png')
-
-
-# engine = create_engine('mysql+pymysql://root:Handschoen92@localhost:3306/kpiframework')
-# dbConnection    = engine.connect()
-
-# SQL Retrieve data
-
-KPIFrameworktmp = pd.DataFrame(
-        pd.read_csv(r'assets/Attributes/dashboard_data/KPIFramework_Python.csv',sep=',', decimal='.',low_memory=False))
 cookpi_attributestmp = pd.read_excel(open('assets/Attributes/dashboard_data/cookpi_per_pi.xlsx', 'rb'),
               sheet_name='linktable')
+KPIFrameworktmp = pd.DataFrame(
+        pd.read_csv(r'assets/Attributes/dashboard_data/KPIFramework_Python.csv',sep=',', decimal='.',low_memory=False))
+
 
 KPIIDList =  cookpi_attributestmp['d_kpi_id'].unique()
 
@@ -125,32 +117,13 @@ KPIFramework['d_level0_id']=KPIFramework['d_level0_id'].astype(int)
 KPIFramework['d_level1_id']=KPIFramework['d_level1_id'].astype(int)
 KPIFramework['d_level2_id']=KPIFramework['d_level2_id'].astype(int)
 
+#openimage = Image.open(r'/assets/Images/synthetix.png')
 
 
-columnsdf0 = KPIFramework.columns.tolist()
+# engine = create_engine('mysql+pymysql://root:Handschoen92@localhost:3306/kpiframework')
+# dbConnection    = engine.connect()
 
-columnsdf0.remove('d_level1_id')
-columnsdf0.remove('d_level2_id')
-columnsdf0.remove('Numerator')
-columnsdf0.remove('Denominator')
-columnsdf0.remove('Numerator_LP')
-columnsdf0.remove('Denominator_LP')
-columnsdf0.remove('Period_int_lp')
-
-columnsdf1 = KPIFramework.columns.tolist()
-columnsdf1.remove('d_level2_id')
-columnsdf1.remove('Numerator')
-columnsdf1.remove('Denominator')
-columnsdf1.remove('Numerator_LP')
-columnsdf1.remove('Denominator_LP')
-columnsdf1.remove('Period_int_lp')
-
-columnsdf2 = KPIFramework.columns.tolist()
-columnsdf2.remove('Numerator')
-columnsdf2.remove('Denominator')
-columnsdf2.remove('Numerator_LP')
-columnsdf2.remove('Denominator_LP')
-columnsdf2.remove('Period_int_lp')
+# SQL Retrieve data
 
 #KPIFrameworkl0 = KPIFramework.groupby(columnsdf0, as_index=False).agg(
 #    {'Denominator': 'sum', 'Numerator': 'sum', 'Denominator_LP': 'sum', 'Numerator_LP': 'sum'})
@@ -169,26 +142,6 @@ columnsdf2.remove('Period_int_lp')
 
 
 
-d_kpi_tmp = pd.read_excel(open('assets/Attributes/dashboard_data/cookpi_per_pi.xlsx', 'rb'),
-              sheet_name='d_kpi')
-#d_kpi_tmp = pd.DataFrame(
-#    pd.read_csv("assets/Attributes/dashboard_data/d_kpi_synthetix.csv", sep=';',
-#                index_col=False));
-kpilevelcount = cookpi_attributestmp.groupby(['d_kpi_id'])['d_kpi_id'].count().reset_index(name="kpilevelcount")
-d_kpi = d_kpi_tmp[(d_kpi_tmp.live == 1)] #& (df.carrier == "B6")
-d_kpi = d_kpi.merge(kpilevelcount)
-
-d_kpi.sort_values(by=['Sorting'])
-
-# use on_demand=True to avoid loading worksheet data into memory
-#openpyxl.load_workbook
-wb = openpyxl.load_workbook(r'assets/Attributes/dashboard_data/cookpi_per_pi.xlsx')
-sheetcount = len(wb.sheetnames)
-sheetnames = wb.sheetnames
-sheetnames.remove('d_kpi')
-sheetnames.remove('linktable')
-
-
 #for i in KPIIDList:
 #    sheet = dict(cookpi_attributes[(cookpi_attributes.d_kpi_id==i)].set_index('Join_ID')['Level_ID'].to_dict())
 
@@ -203,6 +156,16 @@ sheetnames.remove('linktable')
 #d_level2 = pd.DataFrame(
 #    pd.read_csv(r'assets/Attributes/dashboard_data/LEVEL2_Synthetix_Library.csv',
 #                sep=';', index_col=False));
+d_kpi_tmp = pd.read_excel(open('assets/Attributes/dashboard_data/cookpi_per_pi.xlsx', 'rb'),
+              sheet_name='d_kpi')
+              
+
+
+kpilevelcount = cookpi_attributestmp.groupby(['d_kpi_id'])['d_kpi_id'].count().reset_index(name="kpilevelcount")
+d_kpi = d_kpi_tmp[(d_kpi_tmp.live == 1)] #& (df.carrier == "B6")
+d_kpi = d_kpi.merge(kpilevelcount)
+
+d_kpi.sort_values(by=['Sorting'])
 
 KPINumAgg = dict(d_kpi.set_index('KPIName')['AggregateNum'].to_dict())
 KPIDenomAgg = dict(d_kpi.set_index('KPIName')['AggregateDenom'].to_dict())
@@ -225,144 +188,21 @@ keysl0 = ['d_kpi_id', 'd_level0_id']
 keysl1 = ['d_kpi_id', 'd_level0_id', 'd_level1_id']
 ListGrain = ['int_day', 'int_month', 'int_quarter', 'int_year']
 
-dfl02 = []
-dfl12 = []
-dfl22 = []
-dfl0Compare2 =[]
-dfl1Compare2= []
-dfl2Compare2= []
+dfl0 = pd.DataFrame(
+        pd.read_csv(r'assets/Attributes/dashboard_data/dfl0.csv',sep=',', decimal='.',low_memory=False))
 
-dfl02.clear()
-dfl12.clear()
-dfl22.clear()
-dfl0Compare2.clear()
-dfl1Compare2.clear()
-dfl2Compare2.clear()
+dfl0Compare = dfl0
 
-for i in KPIIDList:
-    KPIFramework_iterate = KPIFramework[(KPIFramework.d_kpi_id ==i)]
-    
-    KPIFrameworkl0 = KPIFramework_iterate.groupby(columnsdf0, as_index=False).agg(
-    {'Denominator': eval(AggregateNumDenom(KPIDenomAggid[i])), 'Numerator': eval(AggregateNumDenom(KPINumAggid[i])), 'Denominator_LP': eval(AggregateNumDenom(KPIDenomAggid[i])), 'Numerator_LP': eval(AggregateNumDenom(KPINumAggid[i]))})
-    
-    KPIFrameworkl1 = KPIFramework_iterate.groupby(columnsdf1, as_index=False).agg(
-    {'Denominator': eval(AggregateNumDenom(KPIDenomAggid[i])), 'Numerator': eval(AggregateNumDenom(KPINumAggid[i])), 'Denominator_LP': eval(AggregateNumDenom(KPIDenomAggid[i])), 'Numerator_LP': eval(AggregateNumDenom(KPINumAggid[i]))})
-    
-    KPIFrameworkl2 = KPIFramework_iterate.groupby(columnsdf2, as_index=False).agg(
-    {'Denominator': eval(AggregateNumDenom(KPIDenomAggid[i])), 'Numerator': eval(AggregateNumDenom(KPINumAggid[i])), 'Denominator_LP': eval(AggregateNumDenom(KPIDenomAggid[i])), 'Numerator_LP': eval(AggregateNumDenom(KPINumAggid[i]))})
-    
-    cookpi_attributes = cookpi_attributestmp[(cookpi_attributestmp.d_kpi_id == i)]
-    if 'd_level0_id' not in cookpi_attributes['Level_ID_present'].unique().tolist():
-        continue
-    sheettmp = cookpi_attributes[(cookpi_attributes.Level_ID_present =="d_level0_id")] 
-    
-    #df.rename(columns={"A": "a", "B": "c"})
-    sheet = dict(sheettmp.set_index('Level_ID_present')['Join_ID'].to_dict()) 
-    sheetchangeback = dict(sheettmp.set_index('Join_ID')['Level_ID_present'].to_dict()) 
-    keys = ['d_kpi_id']
-    keyslist = list(sheet.values())
-    cols =['LevelName', 'LevelNameShort', 'LevelDescription',
-       'LevelEntitytype', 'LevelColor']
-    for j in keyslist:
-        keys.append(j)
-    d_level0 = pd.read_excel(open('assets/Attributes/dashboard_data/cookpi_per_pi.xlsx', 'rb'),
-              sheet_name=keyslist[0].split('_')[0])
-    d_level0 = d_level0.rename(columns={c: c+'_0' for c in d_level0.columns if c in cols})
-    d_level0[d_level0.columns[0]]=d_level0[d_level0.columns[0]].astype(np.int64)
-    KPIFrameworkl0.rename(columns=sheet, inplace = True)  
-    df_list_l0 = [KPIFrameworkl0, d_kpi, d_level0]
-    dfl0 = df_list_l0[0]
-    for i, x in zip(df_list_l0[1:], range(len(keys))):
-        dfl0 = dfl0.merge(i, how='left', on=keys[x])#,suffixes=(f'', f'_{x-1}')
+dfl1 = pd.DataFrame(
+        pd.read_csv(r'assets/Attributes/dashboard_data/dfl1.csv',sep=',', decimal='.',low_memory=False))
 
-    KPIFrameworkl0.rename(columns=sheetchangeback, inplace = True) 
-    dfl0.rename(columns=sheetchangeback, inplace = True)  
-
-    dfl0["Period_int"] = pd.to_datetime(dfl0["Period_int"])
-    dfl02.append(dfl0)
-    dfl0Compare2.append(dfl0)
-    if 'd_level1_id' not in cookpi_attributes['Level_ID_present'].unique().tolist():
-        continue
-    
-    sheettmpl1 = cookpi_attributes[(cookpi_attributes.Level_ID_present =="d_level1_id")]
-    sheetl1 = dict(sheettmpl1.set_index('Level_ID_present')['Join_ID'].to_dict())
-    sheetchangebackl1 = dict(sheettmpl1.set_index('Join_ID')['Level_ID_present'].to_dict()) 
-    keyslistl1 = list(sheetl1.values())
-    for t in keyslistl1:
-        keys.append(t)
-    d_level1 = pd.read_excel(open('assets/Attributes/dashboard_data/cookpi_per_pi.xlsx', 'rb'),
-              sheet_name=keyslistl1[0].split('_')[0])
-    d_level1 = d_level1.rename(columns={c: c+'_1' for c in d_level1.columns if c in cols})
-    d_level1[d_level1.columns[0]]=d_level1[d_level1.columns[0]].astype(np.int64)
-    df_list_l1 = [KPIFrameworkl1, d_kpi, d_level0, d_level1]
-
-    KPIFrameworkl1.rename(columns=sheet, inplace = True)  
-    KPIFrameworkl1.rename(columns=sheetl1, inplace = True)  
-    dfl1 = df_list_l1[0]
-    for i, x in zip(df_list_l1[1:], range(len(keys))):
-        dfl1 = dfl1.merge(i, how='left', on=keys[x])#,suffixes=(f'_{x-2}', f'_{x-1}')
-    
-    KPIFrameworkl1.rename(columns=sheetchangeback, inplace = True) 
-    KPIFrameworkl1.rename(columns=sheetchangebackl1, inplace = True) 
-    dfl1.rename(columns=sheetchangeback, inplace = True) 
-    dfl1.rename(columns=sheetchangebackl1, inplace = True) 
-   
-    dfl1["Period_int"] = pd.to_datetime(dfl1["Period_int"])
-    dfl12.append(dfl1)
-    dfl1Compare2.append(dfl1)
-    
-    if 'd_level2_id' not in cookpi_attributes['Level_ID_present'].unique().tolist():
-        continue
-    sheettmpl2 = cookpi_attributes[(cookpi_attributes.Level_ID_present =="d_level2_id")]
-    sheetl2 = dict(sheettmpl2.set_index('Level_ID_present')['Join_ID'].to_dict())   
-
-    sheetchangebackl2 = dict(sheettmpl2.set_index('Join_ID')['Level_ID_present'].to_dict()) 
-    keyslistl2 = list(sheetl2.values())
-    for b in keyslistl2:
-        keys.append(b)
-    d_level2 = pd.read_excel(open('assets/Attributes/dashboard_data/cookpi_per_pi.xlsx', 'rb'),
-              sheet_name=keyslistl2[0].split('_')[0])
-    d_level2 = d_level2.rename(columns={c: c+'_2' for c in d_level2.columns if c in cols})
-    d_level2[d_level2.columns[0]]=d_level2[d_level2.columns[0]].astype(np.int64)
-    df_list_l2 = [KPIFrameworkl2, d_kpi, d_level0, d_level1, d_level2]
-    KPIFrameworkl2.rename(columns=sheet, inplace = True)  
-    KPIFrameworkl2.rename(columns=sheetl1, inplace = True)  
-    KPIFrameworkl2.rename(columns=sheetl2, inplace = True) 
-
-    dfl2 = df_list_l2[0]
-    for p, o in zip(df_list_l2[1:], range(len(keys))):
-        dfl2 = dfl2.merge(p, how='left', on=keys[o])#,suffixes=(f'', f'_{o-1}')
-    KPIFrameworkl2.rename(columns=sheetchangeback, inplace = True) 
-    KPIFrameworkl2.rename(columns=sheetchangebackl1, inplace = True) 
-    KPIFrameworkl2.rename(columns=sheetchangebackl2, inplace = True) 
-
-    dfl2.rename(columns=sheetchangeback, inplace = True) 
-    dfl2.rename(columns=sheetchangebackl1, inplace = True) 
-    dfl2.rename(columns=sheetchangebackl2, inplace = True) 
-   
-    dfl2["Period_int"] = pd.to_datetime(dfl2["Period_int"])
-    dfl22.append(dfl2)
-    dfl2Compare2.append(dfl2)
-
-    keys.clear()
+dfl1Compare = dfl1
 
 
+dfl2 = pd.DataFrame(
+        pd.read_csv(r'assets/Attributes/dashboard_data/dfl2.csv',sep=',', decimal='.',low_memory=False))
 
-if len(dfl02)!=0:
-    dfl0 = pd.concat(dfl02)
-    dfl0Compare = pd.concat(dfl0Compare2)
-    dfl0.to_csv(r'assets/Attributes/dashboard_data/dfl0.csv', index=False)
-
-if len(dfl12)!=0:
-    dfl1 = pd.concat(dfl12)
-    dfl1.to_csv(r'assets/Attributes/dashboard_data/dfl1.csv', index=False)
-    dfl1Compare = pd.concat(dfl1Compare2)
-
-if len(dfl22)!=0:
-    dfl2 = pd.concat(dfl22)
-    dfl2.to_csv(r'assets/Attributes/dashboard_data/dfl2.csv', index=False)
-    dfl2Compare = pd.concat(dfl2Compare2)
-
+dfl2Compare = dfl2
 
 GrainNameList = dfl0['Grain'].unique()
 Level0NameList = dfl0['LevelName_0'].unique()
@@ -399,9 +239,6 @@ KPICalculation = dict(d_kpi.set_index('KPIName')['Calculation'].to_dict())
 KPICum = dict(d_kpi.set_index('KPIName')['IsCum'].to_dict())
 KPIColor = dict(d_kpi.set_index('KPIName')['kpicolor'].to_dict())
 visual = dict(d_kpi.set_index('KPIName')['visual'].to_dict())
-
-
-
 
 KPIGroupImage = dict(d_kpi.set_index('KPIGroup')['GroupImage'].to_dict())
 GroupImage = d_kpi['GroupImage'].unique()
@@ -1856,22 +1693,22 @@ def clean_data(GrainSelect,KPISelect,relayoutDatal0,relayoutDatal1,relayoutDatal
         & (dfl2["LevelName_2"].isin(Level2NameSelect))
         ]
     #recalculation the calculated values because for example one attribute of level x+1 can be found under multiple attributes x (for example attribute 'protocol version: V2' can me found both under 'Aave' and 'Compound')
-    testtmp0 = pd.DataFrame(dff1.loc[:,~dff1.columns.str.endswith(('_1'))]).fillna(0)
-    testtmp1 = pd.DataFrame(dff2.loc[:,~dff2.columns.str.endswith(('_2','_0'))]).fillna(0)
-    columnsdff0 = testtmp0.columns.tolist()
-    columnsdff0.remove('Numerator')
-    columnsdff0.remove('Denominator')
-    columnsdff0.remove('Numerator_LP')
-    columnsdff0.remove('Denominator_LP')
-    columnsdff0.remove('d_level1_id')
-    
-    columnsdff1 = testtmp1.columns.tolist()
-    columnsdff1.remove('Numerator')
-    columnsdff1.remove('Denominator')
-    columnsdff1.remove('Numerator_LP')
-    columnsdff1.remove('Denominator_LP')
-    columnsdff1.remove('d_level0_id')
-    columnsdff1.remove('d_level2_id')
+    #testtmp0 = pd.DataFrame(dff1.loc[:,~dff1.columns.str.endswith(('_1'))]).fillna(0)
+    #testtmp1 = pd.DataFrame(dff2.loc[:,~dff2.columns.str.endswith(('_2','_0'))]).fillna(0)
+    #columnsdff0 = testtmp0.columns.tolist()
+    #columnsdff0.remove('Numerator')
+    #columnsdff0.remove('Denominator')
+    #columnsdff0.remove('Numerator_LP')
+    #columnsdff0.remove('Denominator_LP')
+    #columnsdff0.remove('d_level1_id')
+    #
+    #columnsdff1 = testtmp1.columns.tolist()
+    #columnsdff1.remove('Numerator')
+    #columnsdff1.remove('Denominator')
+    #columnsdff1.remove('Numerator_LP')
+    #columnsdff1.remove('Denominator_LP')
+    #columnsdff1.remove('d_level0_id')
+    #columnsdff1.remove('d_level2_id')
     
     #dff0 = testtmp0.groupby(columnsdff0, as_index=False, sort=False).agg(
     #        {'Denominator': eval(AggregateNumDenom(KPIDenomAgg[KPISelect])),'Numerator': eval(AggregateNumDenom(KPINumAgg[KPISelect])), 'Denominator_LP': eval(AggregateNumDenom(KPIDenomAgg[KPISelect])), 'Numerator_LP': eval(AggregateNumDenom(KPINumAgg[KPISelect]))})
