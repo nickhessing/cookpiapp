@@ -19,6 +19,16 @@ body {
 background-color : var(--bodybackgroundcolor);
 }
 
+.sidebar .visible {
+	display: block;
+  }
+  /*cover the whole screen and to detect user click on background */
+.sidebar .blocker { 
+	position: absolute;
+	width: 100%;
+	height: 100%;
+  }
+
 .trich_carousel .slick-dots button:before {
 	color:var(--bulletcolor);
 	opacity:0.6;
@@ -41,29 +51,40 @@ color:purple
 .slick-dots li.slick-active button:before {
 	color: transparent;
 }
-	
+.trich_carousel {
+	background-color: transparent;
+}
+.trich_carousel .slick-prev:before {
+	font-family: "Material Icons";
+	font-weight: 900;
+	content: 'arrow_back_ios_new';
+	opacity: 70%;
+	color: var(--bodycolor);
+	background-color: transparent;
 
-.slick-prev {
-	background-color: var(--bodycolor);
-	border-color: red;
+  }
+  
+.trich_carousel .slick-next:before {
+	font-family: "Material Icons";
+	font-weight: 900;
+	content: 'arrow_forward_ios_new';
 	opacity: 70%;
-	}
-	
-.slick-next {
-	background-color: var(--bodycolor);
-	border-color: red;
-	opacity: 70%;
-	}
+	color: var(--bodycolor);
+	background-color: transparent;
+  }
 .slick-prev:hover {
-	background-color: var(--bodycolor);
+	color: var(--bodycolor);
 	border-color: red;
 	opacity: 100%;
+	background-color: transparent;
 	}
-	
+.slick-prev{background-color: transparent;}
+.slick-next{background-color: transparent;}
 .slick-next:hover {
-	background-color: var(--bodycolor);
+	color: var(--bodycolor);
 	border-color: red;
 	opacity: 100%;
+	background-color: transparent;
 	}
 
 .carddiv {
@@ -783,7 +804,17 @@ pre code {
 	z-index: 100;
 	box-shadow: rgba(0, 0, 0, 0.07) 0px 1px 2px, rgba(0, 0, 0, 0.07) 0px 2px 4px, rgba(0, 0, 0, 0.07) 0px 4px 8px, rgba(0, 0, 0, 0.07) 0px 8px 16px, rgba(0, 0, 0, 0.07) 0px 16px 32px, rgba(0, 0, 0, 0.07) 0px 32px 64px;
 }
-  
+
+.sidebar .visible {
+	display: block;
+  }
+  /*cover the whole screen and to detect user click on background */
+.sidebar .blocker { 
+	position: absolute;
+	width: 100%;
+	height: 100%;
+  }
+
 .sidebar.close {
 	width: 0px;
 	padding: 0px;
@@ -963,7 +994,15 @@ body.dark .sidebar header .toggle {
 	z-index: 100;
 	box-shadow: rgba(0, 0, 0, 0.07) 0px 1px 2px, rgba(0, 0, 0, 0.07) 0px 2px 4px, rgba(0, 0, 0, 0.07) 0px 4px 8px, rgba(0, 0, 0, 0.07) 0px 8px 16px, rgba(0, 0, 0, 0.07) 0px 16px 32px, rgba(0, 0, 0, 0.07) 0px 32px 64px;
 }
-  
+.sidebar .visible {
+	display: block;
+  }
+  /*cover the whole screen and to detect user click on background */
+.sidebar .blocker { 
+	position: absolute;
+	width: 100%;
+	height: 100%;
+  }
 .sidebar.close {
 	width: 88px;
 	padding: 0px;
@@ -1145,7 +1184,15 @@ body.dark .sidebar header .toggle {
 	z-index: 100;
 	box-shadow: rgba(0, 0, 0, 0.07) 0px 1px 2px, rgba(0, 0, 0, 0.07) 0px 2px 4px, rgba(0, 0, 0, 0.07) 0px 4px 8px, rgba(0, 0, 0, 0.07) 0px 8px 16px, rgba(0, 0, 0, 0.07) 0px 16px 32px, rgba(0, 0, 0, 0.07) 0px 32px 64px;
 }
-  
+.sidebar .visible {
+	display: block;
+  }
+  /*cover the whole screen and to detect user click on background */
+.sidebar .blocker { 
+	position: absolute;
+	width: 100%;
+	height: 100%;
+  }
 .sidebar.close {
 	width: 88px;
 	padding: 0px;
