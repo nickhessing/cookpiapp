@@ -1840,7 +1840,7 @@ def clean_data(GrainSelect,KPISelect,relayoutDatal0,relayoutDatal1,relayoutDatal
     dfll1 = []
     dfll2 = []
     dfllCompare = []
-    #dff0 = update_filter_l0(dfl0, GrainSelect, KPISelect)
+    dff0 = update_filter_l0(dfl0, GrainSelect, KPISelect)
     dff1 = update_filter_l1(dfl1, GrainSelect, KPISelect, Level1NameSelect)
     dff2 = pd.DataFrame(update_filter_l2(dfl2, GrainSelect, KPISelect, Level1NameSelect, Level2NameSelect))
     dffcompare0 = dfl0[
@@ -1873,12 +1873,12 @@ def clean_data(GrainSelect,KPISelect,relayoutDatal0,relayoutDatal1,relayoutDatal
     columnsdff1.remove('d_level0_id')
     columnsdff1.remove('d_level2_id')
     
-    dff0 = testtmp0.groupby(columnsdff0, as_index=False, sort=False).agg(
-            {'Denominator': eval(AggregateNumDenom(KPIDenomAgg[KPISelect])),'Numerator': eval(AggregateNumDenom(KPINumAgg[KPISelect])), 'Denominator_LP': eval(AggregateNumDenom(KPIDenomAgg[KPISelect])), 'Numerator_LP': eval(AggregateNumDenom(KPINumAgg[KPISelect]))})
-    
-
-    dff1 = testtmp1.groupby(columnsdff1, as_index=False, sort=False).agg(
-           {'Denominator': eval(AggregateNumDenom(KPIDenomAgg[KPISelect])),'Numerator': eval(AggregateNumDenom(KPINumAgg[KPISelect])), 'Denominator_LP': eval(AggregateNumDenom(KPIDenomAgg[KPISelect])), 'Numerator_LP': eval(AggregateNumDenom(KPINumAgg[KPISelect]))})
+    #dff0 = testtmp0.groupby(columnsdff0, as_index=False, sort=False).agg(
+    #        {'Denominator': eval(AggregateNumDenom(KPIDenomAgg[KPISelect])),'Numerator': eval(AggregateNumDenom(KPINumAgg[KPISelect])), 'Denominator_LP': eval(AggregateNumDenom(KPIDenomAgg[KPISelect])), 'Numerator_LP': eval(AggregateNumDenom(KPINumAgg[KPISelect]))})
+    #
+#
+    #dff1 = testtmp1.groupby(columnsdff1, as_index=False, sort=False).agg(
+    #       {'Denominator': eval(AggregateNumDenom(KPIDenomAgg[KPISelect])),'Numerator': eval(AggregateNumDenom(KPINumAgg[KPISelect])), 'Denominator_LP': eval(AggregateNumDenom(KPIDenomAgg[KPISelect])), 'Numerator_LP': eval(AggregateNumDenom(KPINumAgg[KPISelect]))})
    
     dffcompare = []
     if tabsdrilldown == 'tab-0':
