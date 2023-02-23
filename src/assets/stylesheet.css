@@ -19,7 +19,7 @@ body {
 background-color : var(--bodybackgroundcolor);
 }
 
-.sidebar .visible {
+.sidebar.visible {
 	display: block;
   }
   /*cover the whole screen and to detect user click on background */
@@ -804,17 +804,7 @@ pre code {
 	z-index: 100;
 	box-shadow: rgba(0, 0, 0, 0.07) 0px 1px 2px, rgba(0, 0, 0, 0.07) 0px 2px 4px, rgba(0, 0, 0, 0.07) 0px 4px 8px, rgba(0, 0, 0, 0.07) 0px 8px 16px, rgba(0, 0, 0, 0.07) 0px 16px 32px, rgba(0, 0, 0, 0.07) 0px 32px 64px;
 }
-
-.sidebar .visible {
-	display: block;
-  }
-  /*cover the whole screen and to detect user click on background */
-.sidebar .blocker { 
-	position: absolute;
-	width: 100%;
-	height: 100%;
-  }
-
+  
 .sidebar.close {
 	width: 0px;
 	padding: 0px;
@@ -994,15 +984,7 @@ body.dark .sidebar header .toggle {
 	z-index: 100;
 	box-shadow: rgba(0, 0, 0, 0.07) 0px 1px 2px, rgba(0, 0, 0, 0.07) 0px 2px 4px, rgba(0, 0, 0, 0.07) 0px 4px 8px, rgba(0, 0, 0, 0.07) 0px 8px 16px, rgba(0, 0, 0, 0.07) 0px 16px 32px, rgba(0, 0, 0, 0.07) 0px 32px 64px;
 }
-.sidebar .visible {
-	display: block;
-  }
-  /*cover the whole screen and to detect user click on background */
-.sidebar .blocker { 
-	position: absolute;
-	width: 100%;
-	height: 100%;
-  }
+  
 .sidebar.close {
 	width: 88px;
 	padding: 0px;
@@ -1184,15 +1166,7 @@ body.dark .sidebar header .toggle {
 	z-index: 100;
 	box-shadow: rgba(0, 0, 0, 0.07) 0px 1px 2px, rgba(0, 0, 0, 0.07) 0px 2px 4px, rgba(0, 0, 0, 0.07) 0px 4px 8px, rgba(0, 0, 0, 0.07) 0px 8px 16px, rgba(0, 0, 0, 0.07) 0px 16px 32px, rgba(0, 0, 0, 0.07) 0px 32px 64px;
 }
-.sidebar .visible {
-	display: block;
-  }
-  /*cover the whole screen and to detect user click on background */
-.sidebar .blocker { 
-	position: absolute;
-	width: 100%;
-	height: 100%;
-  }
+  
 .sidebar.close {
 	width: 88px;
 	padding: 0px;

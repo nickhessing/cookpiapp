@@ -87,31 +87,31 @@ lastDayStr = lastDay.strftime('%Y-%m-%d')
 
 cookpi_attributestmp = pd.read_excel(open('assets/Attributes/dashboard_data/cookpi_per_pi.xlsx', 'rb'),
               sheet_name='linktable')
-KPIFrameworktmp = pd.DataFrame(
-        pd.read_csv(r'assets/Attributes/dashboard_data/KPIFramework_Python.csv',sep=',', decimal='.',low_memory=False))
+KPIFramework = pd.DataFrame(
+        pd.read_csv(r'assets/Attributes/dashboard_data/KPIFrameworkEnd.csv',sep=',', decimal='.',low_memory=False))
 
-
-KPIIDList =  cookpi_attributestmp['d_kpi_id'].unique()
-
-KPIFrameworklist =[]
-
-for i in KPIIDList:
-    KPIFrameworkloop = KPIFrameworktmp[(KPIFrameworktmp.d_kpi_id ==i)]
-    cookpi_attributes = cookpi_attributestmp[(cookpi_attributestmp.d_kpi_id == i)]
-    sheettmp = cookpi_attributes[(cookpi_attributes.Level_ID_present =="d_level0_id")] 
-    sheettmpl1 = cookpi_attributes[(cookpi_attributes.Level_ID_present =="d_level1_id")] 
-    sheettmpl2 = cookpi_attributes[(cookpi_attributes.Level_ID_present =="d_level2_id")] 
-    rename = dict(sheettmp.set_index('Level_ID')['Level_ID_present'].to_dict()) 
-    renamel1 = dict(sheettmpl1.set_index('Level_ID')['Level_ID_present'].to_dict()) 
-    renamel2 = dict(sheettmpl2.set_index('Level_ID')['Level_ID_present'].to_dict()) 
-    rename_dict = {}
-    rename_dict.update(rename)
-    rename_dict.update(renamel1)
-    rename_dict.update(renamel2)
-    KPIFrameworkloop.rename(columns=rename_dict, inplace = True)
-    KPIFrameworklist.append(KPIFrameworkloop)
-
-KPIFramework = pd.concat(KPIFrameworklist)
+#
+#KPIIDList =  cookpi_attributestmp['d_kpi_id'].unique()
+#
+#KPIFrameworklist =[]
+#
+#for i in KPIIDList:
+#    KPIFrameworkloop = KPIFrameworktmp[(KPIFrameworktmp.d_kpi_id ==i)]
+#    cookpi_attributes = cookpi_attributestmp[(cookpi_attributestmp.d_kpi_id == i)]
+#    sheettmp = cookpi_attributes[(cookpi_attributes.Level_ID_present =="d_level0_id")] 
+#    sheettmpl1 = cookpi_attributes[(cookpi_attributes.Level_ID_present =="d_level1_id")] 
+#    sheettmpl2 = cookpi_attributes[(cookpi_attributes.Level_ID_present =="d_level2_id")] 
+#    rename = dict(sheettmp.set_index('Level_ID')['Level_ID_present'].to_dict()) 
+#    renamel1 = dict(sheettmpl1.set_index('Level_ID')['Level_ID_present'].to_dict()) 
+#    renamel2 = dict(sheettmpl2.set_index('Level_ID')['Level_ID_present'].to_dict()) 
+#    rename_dict = {}
+#    rename_dict.update(rename)
+#    rename_dict.update(renamel1)
+#    rename_dict.update(renamel2)
+#    KPIFrameworkloop.rename(columns=rename_dict, inplace = True)
+#    KPIFrameworklist.append(KPIFrameworkloop)
+#
+#KPIFramework = pd.concat(KPIFrameworklist)
 
 KPIFramework['d_level0_id']=KPIFramework['d_level0_id'].astype(int)
 KPIFramework['d_level1_id']=KPIFramework['d_level1_id'].astype(int)
@@ -257,7 +257,8 @@ columnsdftotal.remove('Period_int_lp')
 
 kpicountout = [len(KPINameList)]
 kpigroupcountout = [len(KPIGroupList)]
-
+print(kpicountout)
+print(kpigroupcountout)
 KPIattributes =[]
 
 pd.set_option('display.expand_frame_repr', False)
@@ -1654,11 +1655,18 @@ datetotmp.append(str(dfl0['Period_int'].max())[0:10])
               Input("Level1NameSelect", "value"),
               Input("Level2NameSelect", "value"),
               Input('graph-level0compare', 'selectedData'),
+              Input('graph-level0compare', 'relayoutData'),
               Input('graph-level1compare', 'selectedData'),
               Input('graph-level2compare', 'selectedData'),
               )
-def clean_data(GrainSelect,KPISelect,relayoutDatal0,relayoutDatal1,relayoutDatal2,clickdatal0,clickdatal1,clickdatal2,tabsdrilldown,Level0NameSelect,Level1NameSelect,Level2NameSelect,selecteddatal0bar,selecteddatal1bar,selecteddatal2bar):#,*args,sweepl1 relayoutl1barclickdatal2bar
+def clean_data(GrainSelect,KPISelect,relayoutDatal0,relayoutDatal1,relayoutDatal2,clickdatal0,clickdatal1,clickdatal2,tabsdrilldown,Level0NameSelect,Level1NameSelect,Level2NameSelect,selecteddatal0bar,relayoutDatabar,selecteddatal1bar,selecteddatal2bar):#,*args,sweepl1 relayoutl1barclickdatal2bar
     print('execute clean_data')
+    print('relayoutDatal0')
+    print('relayoutDatal0')
+    print(relayoutDatabar)
+    print('relayoutDatal0')
+    print('relayoutDatal0')
+    print('relayoutDatal0')
     selectedlistl0 = [
         i['y']
         for i in selecteddatal0bar['points']
@@ -2063,7 +2071,7 @@ def updatekpiindicator(compareset,dffcomparefilter,KPISelect,KPIGroupSelect,widt
         center_padding='10px',
         swipe_to_slide=True,
         autoplay=False,
-        speed=2000,
+        speed=1200,
        # variable_width=True,
         dots=True,
         center_mode=False,
@@ -2369,6 +2377,7 @@ def update_level1Graph(data00,KPISelect,KPIGroupSelect,Level0NameSelect,Level1Na
             df_by_Level0Name,
             y=df_by_Level0Name.LevelName_0,
             x=x2,
+            
             text=x2,
             text_auto=True,
             texttemplate="%{value:" + eval(Notation[0]) + "}",  # "%{value:.01%}",
@@ -2701,7 +2710,7 @@ def update_mainfigure(data00,data11,data22,GrainSelect,KPISelect,KPIGroupSelect,
     # eval(kpigrouplistinput3[0]),  
      ]
 )
-def update_level1Graph(data00,data11,KPISelect,KPIGroupSelect,Level1NameSelect,Level2NameSelect,clickData,Totaalswitch,widthBreakpoint): #,hoverData,*args
+def update_level0Graph(data00,data11,KPISelect,KPIGroupSelect,Level1NameSelect,Level2NameSelect,clickData,Totaalswitch,widthBreakpoint): #,hoverData,*args
     data0 = pd.read_json(data00, orient='split')
     data1 = pd.read_json(data11, orient='split')
     dff1tmp = data1 
@@ -2747,6 +2756,7 @@ def update_level1Graph(data00,data11,KPISelect,KPIGroupSelect,Level1NameSelect,L
                 y=df_by_Level1Name.LevelName_1,
                 x=x,
                 text=x,
+                ticktext=df_by_Level1Name.LevelName_1,
                 texttemplate="%{value:" + eval(Notation[0]) + "}",
                 text_auto=True,
                 type='bar',
