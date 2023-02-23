@@ -1166,7 +1166,7 @@ def definefilterlevel(tabsdrilldown):
 ######################################################################################################################
 
 
-tabs = html.Div(
+tabs = html.Div([
     dbc.Tabs(children=
     [
     dbc.Tab(children=[dbc.CardBody(
@@ -1278,6 +1278,7 @@ tabs = html.Div(
                       )]),className="col-12 col-sm-12 col-md-12 col-lg-8 col-xl-8 empty_tab",
         ),
         html.I("delete_sweep",n_clicks=0,id='sweepl2',className="material-icons md-48",style={'position':'absolute','top':'1px','right':'12px','z-index': '1'}),
+        html.I("shift",id='shiftbutton',className="material-icons"),
         dbc.Col(dbc.Spinner(children=[dcc.Graph(id='graph-level2compare',
                           config=dict(
                               modeBarButtonsToAdd=['customButton'],
@@ -1299,7 +1300,7 @@ tabs = html.Div(
     ),className="row-cols-sm-12 row-cols-md-12 row-cols-lg-11 row-cols-xl-11 pretty_tab"
 )],id="Tab2drilldown"),
             ],id="tabsdrilldown",active_tab="tab-0")
-)
+])
 
 
 tabscompare = dbc.Tabs(
@@ -1391,7 +1392,7 @@ app.layout = html.Div([html.I("filter_alt", id='dropdowncontrol', className="mat
 
     dbc.Row([
             dbc.Col([
-             html.I("settings_suggest",id='graphset',className="material-icons", style={'text-align': 'left !important'},n_clicks=0),
+            html.I("settings_suggest",id='graphset',className="material-icons", style={'text-align': 'left !important'},n_clicks=0),
             dbc.Popover(
                 [dbc.PopoverBody(children=[
                         dbc.Col([Totaalaggregaatswitch], className="col-sm-12 col-md-12 col-lg-12 col-xl-12"),
@@ -1446,6 +1447,26 @@ app.layout = html.Div([html.I("filter_alt", id='dropdowncontrol', className="mat
         #         ),
                 ]),
 ],
+)
+
+app.clientside_callback(
+    """
+    function() {
+        // Create a new KeyboardEvent object
+        var event = new KeyboardEvent('keydown', {
+            key: 'Shift',
+            code: 'ShiftLeft',
+            which: 16,
+            shiftKey: true,
+            bubbles: true
+        });
+
+        // Dispatch the KeyboardEvent on the window
+        window.dispatchEvent(event);
+    }
+    """,
+    Output('output', 'children'),
+    [Input('shiftbutton', 'n_clicks')]
 )
 
 app.clientside_callback(
@@ -2071,7 +2092,7 @@ def updatekpiindicator(compareset,dffcomparefilter,KPISelect,KPIGroupSelect,widt
         center_padding='10px',
         swipe_to_slide=True,
         autoplay=False,
-        speed=1200,
+        speed=120,
        # variable_width=True,
         dots=True,
         center_mode=False,

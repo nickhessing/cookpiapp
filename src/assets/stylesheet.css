@@ -94,6 +94,7 @@ color:purple
     height: 180px;
 	text-align: center;
     opacity: 1;
+	cursor: pointer;
     background: linear-gradient(var(--cardboven),var(--cardonder));
     margin: 10px;
 }
@@ -13300,7 +13301,8 @@ right: 0px;
     -webkit-font-smoothing: antialiased;
 }
 .material-icons{
-z-index: 1
+z-index: 1;
+cursor: pointer;
 }
 
 .buttoncard {
@@ -13394,8 +13396,4 @@ border-color: red;
   border-color: var(--bodycolor);
   border-width: 1px;
 }
-
-
-popupper-title {
-background-color: red
 }

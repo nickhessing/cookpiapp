@@ -24,28 +24,34 @@ function addListeners() {
   });
 
   swipeableArea.addEventListener('touchmove', function(event) {
-    touchEndX = event.touches[0].clientX;
-    delta = touchEndX - touchStartX;
+    if (touchStartX > 0) {
+      touchEndX = event.touches[0].clientX;
+      delta = touchEndX - touchStartX;
 
-    if (sidebar && delta < -80 && !sidebar.classList.contains('close')) {
-      sidebar.classList.add('close');
-      document.getElementById("page-content").classList.add('close');
-    } else if (sidebar && delta > 80 && sidebar.classList.contains('close')) {
-      sidebar.classList.remove('close');
-      document.getElementById("page-content").classList.remove('close');
+      if (sidebar && delta < -80 && !sidebar.classList.contains('close')) {
+        sidebar.classList.add('close');
+        document.getElementById("page-content").classList.add('close');
+      } else if (sidebar && delta > 80 && sidebar.classList.contains('close')) {
+        sidebar.classList.remove('close');
+        document.getElementById("page-content").classList.remove('close');
+      }
     }
   });
 
   swipeableArea.addEventListener('touchend', function(event) {
-    touchEndX = event.changedTouches[0].clientX;
-    delta = touchEndX - touchStartX;
+    if (touchStartX > 0) {
+      touchEndX = event.changedTouches[0].clientX;
+      delta = touchEndX - touchStartX;
 
-    if (sidebar && delta < -80 && !sidebar.classList.contains('close')) {
-      sidebar.classList.add('close');
-      document.getElementById("page-content").classList.add('close');
-    } else if (sidebar && delta > 80 && sidebar.classList.contains('close')) {
-      sidebar.classList.remove('close');
-      document.getElementById("page-content").classList.remove('close');
+      if (sidebar && delta < -80 && !sidebar.classList.contains('close')) {
+        sidebar.classList.add('close');
+        document.getElementById("page-content").classList.add('close');
+      } else if (sidebar && delta > 80 && sidebar.classList.contains('close')) {
+        sidebar.classList.remove('close');
+        document.getElementById("page-content").classList.remove('close');
+      }
+
+      touchStartX = 0;
     }
   });
 
