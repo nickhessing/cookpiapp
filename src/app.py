@@ -60,6 +60,7 @@ from dash_breakpoints import WindowBreakpoints
 
 import base64
 BeautifulSignalColor="#f3f6d0"
+ProjectOrange="#b37400"
 Highlightcardcolor="#f3f6d0"
 graphcolor="#243b55" #8EC5FC #tbv export
 fontcolor='rgb(247, 239, 213)'  #141e30
@@ -498,6 +499,8 @@ def KPIgrouplighter(*args):
     carddivnclicks.append(
         f"""Input("KPIGroupSelect","value")"""
     )
+    print('kpicountout:==:')
+    print(kpicountout[0])
     for i in range(kpicountout[0]):
         numbertmp= i
         numberidtmp= i+1
@@ -718,7 +721,7 @@ Totaalaggregaatswitch = html.Div([
     daq.BooleanSwitch(
         id='Totaalswitch',
         on=False,
-        color="#01002a",
+        color=ProjectOrange,
         label="Dark",
         labelPosition="left",
     )
@@ -729,7 +732,7 @@ CumulativeSwitch = html.Div([
     daq.BooleanSwitch(
         id='CumulativeSwitch',
         on=False,
-        color="#01002a",
+        color=ProjectOrange,
         label="Dark",
         labelPosition="left",
     )
@@ -740,7 +743,7 @@ TargetSwitch = html.Div([
     daq.BooleanSwitch(
         id='TargetSwitch',
         on=False,
-        color="#01002a",
+        color=ProjectOrange,
         label="Dark",
         labelPosition="left",
     )
@@ -751,7 +754,7 @@ PercentageTotalSwitch = html.Div([
     daq.BooleanSwitch(
         id='PercentageTotalSwitch',
         on=False,
-        color="#01002a",
+        color=ProjectOrange,
         label="Dark",
         labelPosition="left",
     )
@@ -762,7 +765,7 @@ ShowValueSwitch = html.Div([
     daq.BooleanSwitch(
         id='ShowValueSwitch',
         on=False,
-        color="#01002a",
+        color=ProjectOrange,
         label="Dark",
         labelPosition="left",
     )
@@ -801,7 +804,6 @@ def toggle_collapse(n, is_open):
         # Button has never been clicked
         return not is_open
     return is_open
-    
 
 
 def linesormarkers(Grain):
@@ -1169,7 +1171,8 @@ def definefilterlevel(tabsdrilldown):
 tabs = html.Div([
     dbc.Tabs(children=
     [
-    dbc.Tab(children=[dbc.CardBody(
+    dbc.Tab(children=[html.I("delete_sweep",n_clicks=0,id='shiftbutton',className="material-icons md-48",style={'position':'absolute','top':'1px','right':'12px','z-index': '1'}),
+    dbc.CardBody(
         dbc.Row([
         dbc.Col(dbc.Spinner(children=[#,spinner_class_name='loading'
             dcc.Graph(id='graphlevel0',
@@ -1213,8 +1216,8 @@ tabs = html.Div([
     )]
 ,id="Tab0drilldown"),
     dbc.Tab(children=[dbc.CardBody(
-        dbc.Row([
-        dbc.Col(dbc.Spinner(children=[
+        dbc.Row(
+        [dbc.Col(dbc.Spinner(children=[
             dcc.Graph(id='graphoveralltime',
                       config=dict(
                           modeBarButtonsToAdd=['customButton'],
@@ -1277,8 +1280,7 @@ tabs = html.Div([
                       className="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 pretty_graph",
                       )]),className="col-12 col-sm-12 col-md-12 col-lg-8 col-xl-8 empty_tab",
         ),
-        html.I("delete_sweep",n_clicks=0,id='sweepl2',className="material-icons md-48",style={'position':'absolute','top':'1px','right':'12px','z-index': '1'}),
-        html.I("shift",id='shiftbutton',className="material-icons"),
+        html.I("delete_sweep",id='sweepl2',className="material-icons md-48",style={'position':'absolute','top':'1px','right':'12px','z-index': '1'}),
         dbc.Col(dbc.Spinner(children=[dcc.Graph(id='graph-level2compare',
                           config=dict(
                               modeBarButtonsToAdd=['customButton'],
@@ -1368,17 +1370,24 @@ app.layout = html.Div([html.I("filter_alt", id='dropdowncontrol', className="mat
         html.Div(id='output-container-date-picker-range',
                  style={'margin-top': '12px'},
                  className='h7'),
-            dbc.Popover(
-            dbc.PopoverBody(children=[
+            dbc.Modal([
+            dbc.ModalBody(children=[
                 dbc.Col([mainlogo],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
                 dbc.Col([Level0DD],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
                 dbc.Col([Level1DD],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
                 dbc.Col([Level2DD],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
-            ],id="dropdowns"),
-            target="dropdowncontrol",
-            trigger="click",
-            className='popupper_filters',
-            placement='top'),
+            ],id="dropdowns"
+            ,className="modalfilter-modal"),
+            dbc.ModalFooter(
+                    dbc.Button(
+                        "Close", id="close-filter", className="ms-auto", n_clicks=0
+                    ),style={'border-top': '0px'}
+                ),
+        ],
+        id="modalfilter",
+        className="modalfilter-modal",
+        is_open=False,
+        ),
       dbc.Col(fade,className="col-sm-12 col-md-12 col-lg-2 col-xl-2",style={'display': 'none'}),
        ]),
     dbc.Row([
@@ -1392,20 +1401,24 @@ app.layout = html.Div([html.I("filter_alt", id='dropdowncontrol', className="mat
 
     dbc.Row([
             dbc.Col([
-            html.I("settings_suggest",id='graphset',className="material-icons", style={'text-align': 'left !important'},n_clicks=0),
-            dbc.Popover(
-                [dbc.PopoverBody(children=[
+            html.I("settings_suggest",id='open-settings',className="material-icons", style={'text-align': 'left !important'},n_clicks=0),
+            dbc.Modal(
+                [dbc.ModalHeader(dbc.ModalTitle("Graph settings", className='h5'),style={'border-bottom': '0px'}),
+                dbc.ModalBody(children=[
                         dbc.Col([Totaalaggregaatswitch], className="col-sm-12 col-md-12 col-lg-12 col-xl-12"),
                         dbc.Col([CumulativeSwitch], className="col-sm-12 col-md-12 col-lg-12 col-xl-12"),
                         dbc.Col([TargetSwitch], className="col-sm-12 col-md-12 col-lg-12 col-xl-12"),
                         dbc.Col([PercentageTotalSwitch], className="col-sm-12 col-md-12 col-lg-12 col-xl-12"),
                         dbc.Col([ShowValueSwitch], className="col-sm-12 col-md-12 col-lg-12 col-xl-12"),
-                    ], id='Graphsettingpopfooter', className='h6'),
+                    ]),
+                dbc.ModalFooter(
+                    dbc.Button(
+                        "Close", id="close-settings", className="ms-auto", n_clicks=0
+                    ),style={'border-top': '0px'}
+                ),
                 ],
-                target="graphset",
-                trigger="legacy",
-                className='popupper_graphsetting',
-                placement='top'
+                id="modal",
+                is_open=False,
             ),
             html.Div(tabs,
                      id="tabscontainer"
@@ -1985,6 +1998,7 @@ def updatekpiindicator(compareset,dffcomparefilter,KPISelect,KPIGroupSelect,widt
         agnumlp = "df_by_LevelName['Numerator_LP']." + str(eval(AggregateNum)) +"("+meannum[0]+")"
         agdenomlp = "df_by_LevelName['Denominator_LP']." + str(eval(AggregateDenom)) +"("+meandenom[0]+")"
         df_by_LevelName = df_by_LevelName.assign(Aggnum=eval(agnum))
+        print(kpi)
         valueNum.append(df_by_LevelName['Aggnum'].iloc[0])
         df_by_LevelName = df_by_LevelName.assign(Aggdenom=eval(agdenom))
         valueDenom.append(df_by_LevelName['Aggdenom'].iloc[0])
@@ -3682,6 +3696,26 @@ def update_kpicompare(data00,data11,data22,GrainSelect, KPISelect,KPIGroupSelect
 
 #app.config['suppress_callback_exceptions'] = True
 
+
+@app.callback(
+    Output("modal", "is_open"),
+    [Input("open-settings", "n_clicks"), Input("close-settings", "n_clicks")],
+    [State("modal", "is_open")],
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+@app.callback(
+    Output("modalfilter", "is_open"),
+    [Input("dropdowncontrol", "n_clicks"), Input("close-filter", "n_clicks")],
+    [State("modalfilter", "is_open")],
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
 
 
 if __name__ == "__main__":
