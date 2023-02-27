@@ -719,9 +719,6 @@ navbarlist2=','.join(navbarlist)
 
 navbar = html.Nav([html.Header([
                     html.Div([
-#                        html.Span(
-#                            html.Img(src="https://cdn0.iconfinder.com/data/icons/social-media-2091/100/social-32-512.png",alt=''),
-#                        className='image'),
                         html.Div(
                             Radiograin,className="col-sm-12 col-md-12 col-lg-12 col-xl-12 text logo-text"
                         )
@@ -763,7 +760,24 @@ navbar = html.Nav([html.Header([
                     ],className='menu'),
                     ])
                     ],className='menu-bar'),  
-                    ],className="sidebar close",id='nav'),
+                    ],className="sidebar close",id='nav')
+
+
+navbarfilters = html.Nav([html.Header([
+                    html.I("chevron_left",className='material-icons toggle-right',id='Opennavbar-right')
+                    ]),
+                    html.Div([
+                        html.Div([
+                            html.Div(mainlogo),
+                            html.Div(html.Span("Performace view",className='text nav-text')),
+                            html.Div([
+                                      dbc.Col([Level0DD],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
+                                      dbc.Col([Level1DD],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
+                                      dbc.Col([Level2DD],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'})],className='menu-links')
+                        ],className='menu')
+                    ],className='menu-bar')
+                    ],className="sidebar-right close-right",id='navright')
+
 
 
 Totaalaggregaatswitch = html.Div([
@@ -1424,24 +1438,24 @@ app.layout = html.Div([html.I("filter_alt", id='dropdowncontrol', className="mat
         html.Div(id='output-container-date-picker-range',
                  style={'margin-top': '12px'},
                  className='h7'),
-            dbc.Modal([
-            dbc.ModalBody(children=[
-                dbc.Col([mainlogo],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
-                dbc.Col([Level0DD],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
-                dbc.Col([Level1DD],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
-                dbc.Col([Level2DD],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
-            ],id="dropdowns"
-            ,className="modalfilter-modal"),
-            dbc.ModalFooter(
-                    dbc.Button(
-                        "Close", id="close-filter", className="ms-auto", n_clicks=0
-                    ),style={'border-top': '0px'}
-                ),
-        ],
-        id="modalfilter",
-        className="modalfilter-modal",
-        is_open=False,
-        ),
+        #dbc.Modal([
+        #    dbc.ModalBody(children=[
+        #        dbc.Col([mainlogo],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
+        #        dbc.Col([Level0DD],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
+        #        dbc.Col([Level1DD],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
+        #        dbc.Col([Level2DD],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
+        #    ],id="dropdowns"
+        #    ,className="modalfilter-modal"),
+        #    dbc.ModalFooter(
+        #            dbc.Button(
+        #                "Close", id="close-filter", className="ms-auto", n_clicks=0
+        #            ),style={'border-top': '0px'}
+        #        ),
+        #],
+        #id="modalfilter",
+        #className="modalfilter-modal",
+        #is_open=False,
+        #),
       dbc.Col(fade,className="col-sm-12 col-md-12 col-lg-2 col-xl-2",style={'display': 'none'}),
        ]),
     dbc.Row([
@@ -1487,6 +1501,7 @@ app.layout = html.Div([html.I("filter_alt", id='dropdowncontrol', className="mat
 
     ]
     ),
+    html.Div(navbarfilters),
     html.Div(navbar),
     html.Span(html.I(''),style={'margin-top': '5em','display': 'block'}),
     dcc.Store(id='dfl0',data=[],storage_type='memory'),
@@ -1536,14 +1551,6 @@ app.clientside_callback(
     [Input('shiftbutton', 'n_clicks')]
 )
 
-app.clientside_callback(
-    """window.onload=function () {
-        addListeners()
-        return 0
-    }""",
-    Output('nav','n_clicks'),
-    Input('nav','children')
-)
 
 
 @app.callback([Output('tabscontainer', 'style'),
@@ -3843,6 +3850,25 @@ app.clientside_callback(
     Output("Level0DD", "children"),
     Input("Level0DD", "id"),
 )
+app.clientside_callback(
+    """window.onload=function () {
+        addListenersRight()
+        return 0
+    }""",
+    Output('navright','n_clicks'),
+    Input('navright','children')
+)
+
+app.clientside_callback(
+    """window.onload=function () {
+        addListeners()
+        return 0
+    }""",
+    
+    Output('nav','n_clicks'),
+    Input('nav','children')
+)
+
 
 if __name__ == "__main__":
     print('application loaded')
