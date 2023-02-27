@@ -18,6 +18,8 @@ html {
 body {
 background-color : var(--bodybackgroundcolor);
 }
+
+
 .popover {
 	position: absolute;
 	top: 0;
@@ -12148,8 +12150,7 @@ margin: 1px;
 }
 
 .dash-dropdown-label {
-background-color: var(--dropdownmenu);
-font-size: 10px;
+font-size: 20px;
 color: white;
 }
 
@@ -12166,19 +12167,17 @@ color: white;
 .dash-dropdown .Select-value {
 border-color: transparent;
 background-color: transparent;
-border-radius: 15px;
 margin: 1px;
 }
 
 .dash-dropdown .Select--multi .Select-value-label {
 border-radius: 15px;
-padding-left: 10px;
-padding-right: 10px;
-padding-top: 4px;
-padding-bottom: 4px;
+padding-left: 0px;
+padding-right: 0px;
+padding-top: 0px;
+padding-bottom: 0px;
 font-size: 14px;
-margin-top: 1px;
-background-color: var(--dropdownvalue);
+margin-top: 0px;
 }
 
 .dash-dropdown .is-open>.Select-control {
@@ -12193,21 +12192,23 @@ border-color: transparent;
 }
 
 .Select--multi .Select-value {
-    color: #00394a;
     margin: 0px;
     background-color: transparent;
-    border-radius: 15px;
     border-color: transparent;
     border-width: 0px;
 }
 
 .dash-dropdown .Select-value-label {
-    color: #a8a8a8;
+    color: black;
     font-size: 30px;
-    margin: 10px;
-    background-color: #005871;
-    border-radius: 15px;
-    border-color: white;
+	font-weight: bold;
+    margin: 0px;
+    
+}
+
+.Select, .Select div, .Select input, .Select span{
+	padding: 5px;
+	border-radius: 10px;
 }
 
 .dash-dropdown .Select-menu-outer {
@@ -12255,8 +12256,9 @@ color: transparent;
 background-color: transparent;
 border-radius: 0px;
 border-right: 0px;
+margin: 0px;
+padding: 0px;
 color: white;
-padding-left: 10px;
 }
 
 .dash-dropdown .Select--multi .Select-value-icon:hover {
@@ -12265,7 +12267,7 @@ border-radius: 0px;
 border-right: 0px;
 font-size: 20px;
 color: red;
-padding-left: 10px;
+padding: 0px;
 }
 
 .dash-dropdown .Select-value-icon:hover {

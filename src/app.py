@@ -347,21 +347,53 @@ Radiograin = html.Div([
   )
  ],
 ),
+
+
+#options = [{'label': i, 'value': i, style={'color': 'Gold', 'font-size': 20}} for i in Level0NameList]
 Level0DD = html.Div([dcc.Dropdown(
     id="Level0NameSelect",
-    options=[{'label': i, 'value': i} for i in Level0NameList],
+    options=[{'label': html.Span([i],style={'background-color': Level0NameColor[i]}), 'value': i} for i in Level0NameList],#, 'style': {'backgroundColor': Level0NameColor[i]}
     multi=True,
     optionHeight=1,
     placeholder="Select a value",
     value=Level0NameList,
 ),
-],id="Level1DD"
+],id="Level0DD"
 )
 
+@app.callback(
+    Output('graph-level0compare', 'selectedData'),
+    [Input('sweepl0', 'n_clicks')]
+)
+
+def reset_clickDatal0(n_clicks):
+    print('removefilter')
+    return None
+
+@app.callback([
+              Output("Level0NameSelect", "value"),
+             ],             
+              Input('graph-level0compare', 'selectedData'),
+              Input('sweepl0', 'n_clicks'),
+              #State('sweepl0', 'n_clicks')
+             # Input('graph-level1compare', 'selectedData'),
+             # Input('graph-level2compare', 'selectedData'),
+             )
+def clean_data(selecteddatal0bar,n_clicks):#,selecteddatal1bar,selecteddatal2bar
+    print(n_clicks)
+    selectedlistl0 = [
+        i['y']
+        for i in selecteddatal0bar['points']
+    ] if selecteddatal0bar is not None else []
+    
+    if selecteddatal0bar:
+        return [selectedlistl0]
+    else:
+        return [Level0NameList]
 
 Level1DD = html.Div([dcc.Dropdown(
     id="Level1NameSelect",
-    options=[{'label': i, 'value': i} for i in Level1NameList],
+    options=[{'label': html.Span([i],style={'background-color': Level1NameColor[i]}), 'value': i} for i in Level1NameList],#, 'style': {'backgroundColor': Level0NameColor[i]}
     multi=True,
     optionHeight=1,
     placeholder="Select a value",
@@ -370,15 +402,81 @@ Level1DD = html.Div([dcc.Dropdown(
 ],id="Level1DD"
 )
 
+@app.callback(
+    Output('graph-level1compare', 'selectedData'),
+    [Input('sweepl1', 'n_clicks')]
+)
+
+def reset_clickDatal1(n_clicks):
+    print('removefilter')
+    return None
+
+@app.callback([
+              Output("Level1NameSelect", "value"),
+             ],             
+              Input('graph-level1compare', 'selectedData'),
+              Input('sweepl1', 'n_clicks'),
+              #State('sweepl0', 'n_clicks')
+             # Input('graph-level1compare', 'selectedData'),
+             # Input('graph-level2compare', 'selectedData'),
+             )
+def clean_data(selecteddatal1bar,n_clicks):#,selecteddatal1bar,selecteddatal2bar
+    print('triggeredl1bar')
+    selectedlistl1 = [
+        i['y']
+        for i in selecteddatal1bar['points']
+    ] if selecteddatal1bar is not None else []
+    
+    if selecteddatal1bar:
+        print('triggeredl1bar')
+        return [selectedlistl1]
+    else:
+        return [Level1NameList]
+
 Level2DD = html.Div([dcc.Dropdown(
         id="Level2NameSelect",
-        options=[{'label': str(i), 'value': str(i)} for i in Level2NameList],
+        options=[{'label': html.Span([i],style={'background-color': Level2NameColor[i]}), 'value': i} for i in Level2NameList],#, 'style': {'backgroundColor': Level0NameColor[i]}
         multi=True,
         placeholder="Select a value",
         value=Level2NameList,
 ),
 ],id="Level2DD"
 )
+
+
+@app.callback(
+    Output('graph-level2compare', 'selectedData'),
+    [Input('sweepl2', 'n_clicks')]
+)
+
+def reset_clickDatal2(n_clicks):
+    print('removefilter')
+    return None
+
+@app.callback([
+              Output("Level2NameSelect", "value"),
+             ],             
+              Input('graph-level2compare', 'selectedData'),
+              Input('sweepl2', 'n_clicks'),
+              #State('sweepl0', 'n_clicks')
+             # Input('graph-level1compare', 'selectedData'),
+             # Input('graph-level2compare', 'selectedData'),
+             )
+def clean_data(selecteddatal2bar,n_clicks):#,selecteddatal1bar,selecteddatal2bar
+    print('triggeredl1bar')
+    selectedlistl2 = [
+        i['y']
+        for i in selecteddatal2bar['points']
+    ] if selecteddatal2bar is not None else []
+    
+    if selecteddatal2bar:
+        print('triggeredl2bar')
+        return [selectedlistl2]
+    else:
+        return [Level2NameList]
+
+carousellistnew = []
+carousellist3new =[]
 
 carousellist = []
 carousellist3 = []
@@ -426,6 +524,8 @@ kpigroupstyleoutput3.append(kpigroupstyleoutput2)
 
 carddivnclicks=[]
 carddivnclicks3= []
+carddivnclicksnew=[]
+carddivnclicks3new= []
 
 carddivnclicks.append(
         f"""Input("KPIGroupSelect","value")"""
@@ -496,23 +596,6 @@ def KPIgrouplighter(*args):
         kpicountout.append(len(KPINameList))
     KPIGroup2 = KPIGroup[-1]
     kpigrouparray = np.asarray(KPIGroup) 
-    carddivnclicks.append(
-        f"""Input("KPIGroupSelect","value")"""
-    )
-    print('kpicountout:==:')
-    print(kpicountout[0])
-    for i in range(kpicountout[0]):
-        numbertmp= i
-        numberidtmp= i+1
-        number=str(numbertmp)
-        numberid=str(numberidtmp)
-        carddivnclicks.append(
-            f"""Input("carddiv{numberidtmp}","n_clicks")"""
-        )
-    carddivnclicks.clear()
-    carddivnclicks3.clear()
-    carddivnclicks2=','.join(carddivnclicks)
-    carddivnclicks3.append(carddivnclicks2)
     carddivstyle.clear()
     carddivstyle3.clear()
     carddivstylereturn.clear()
@@ -549,40 +632,7 @@ def KPIgrouplighter(*args):
 #    options = [{'label': i, 'value': i} for i in KPINameListOptions],
 #    return options
 
-kpi =[]
-KPSelectInputList = eval(carddivnclicks3[0]+','+kpigrouplistinput3[0])
 
-@app.callback([
-    Output('KPISelect', 'value'),
-    ],
-    eval(carddivnclicks3[0]+','+kpigrouplistinput3[0])
-)
-
-def update_df_KPIGroup(KPIGroupSelect,*args): 
-    print('execute update_df_KPIGroup')    
-    tmpchangedlist=dash.callback_context.triggered
-    tmpchangedlist2 = [item for item in tmpchangedlist if item['value'] is not None]
-    if not tmpchangedlist2:
-        changed_id ='tmp'
-    else:
-        changed_id = [p['prop_id'] for p in tmpchangedlist2][0].split('.')[0]
-    #changed_id2 = [p['prop_id'] for p in dash.callback_context.triggered][0]
-    #changed_id3 = ctx.triggered#[0]['prop_id'].split('.')[0]
-  #  print(changed_id3)
-    dffKPISelect = d_kpi[
-        (d_kpi["KPIGroup"].isin(KPIGroupSelect))
-    ]
-    dffKPISelect.sort_values(by=['Sorting'])
-    KPINameListi = dffKPISelect['KPIName'].unique()
-    if 'carddiv' in changed_id[0:7]:
-        listnumber = int(int(changed_id[7:])-1)
-        kpi.append(KPINameListi[listnumber])
-        carddivselected = changed_id[0:8]
-    elif 'kpigroup' in changed_id[0:8]:
-        kpi.append(KPINameListi[0])
-    if not kpi:
-        kpi.append(KPINameListi[0])
-    return [kpi[-1]]
 
 """
 @app.callback(
@@ -1033,14 +1083,6 @@ def kpilevel2attrDEF(kpi):
     return kpilevel2attr
 
 
-def update_filter_l2(dfl2, GrainSelect, KPISelect,Level1NameSelect, Level2NameSelect):
-    dff = dfl2[
-        (dfl2["Grain"] == GrainSelect)
-        & (dfl2["KPIName"] == KPISelect)
-        & (dfl2["LevelName_1"].isin(Level1NameSelect))
-        & dfl2["LevelName_2"].isin(Level2NameSelect)
-        ]
-    return dff
 
 def update_filter_compare_l2(dfl2Compare, GrainSelect, KPISelectCompare,Level1NameSelect, Level2NameSelect):
     dffcomp = dfl2Compare[
@@ -1073,21 +1115,32 @@ def update_filter_nokpi(dfl0, GrainSelect,KPIGroup):
         ]
     return dff
 
-def update_filter_l0(dfl0, GrainSelect, KPISelect):
+def update_filter_l0(dfl0, GrainSelect, KPISelect,Level0NameSelect):
     dff = dfl0[
         (dfl0["Grain"] == GrainSelect)
         & (dfl0["KPIName"] == KPISelect)
+        & (dfl0["LevelName_0"].isin(Level0NameSelect))
         ]
     return dff
 
-def update_filter_l1(dfl1, GrainSelect, KPISelect,Level1NameSelect):
+def update_filter_l1(dfl1, GrainSelect, KPISelect,Level0NameSelect,Level1NameSelect):
     dff = dfl1[
         (dfl1["Grain"] == GrainSelect)
         & (dfl1["KPIName"] == KPISelect)
+        & (dfl1["LevelName_0"].isin(Level0NameSelect))
         & (dfl1["LevelName_1"].isin(Level1NameSelect))
         ]
     return dff
 
+def update_filter_l2(dfl2, GrainSelect, KPISelect,Level0NameSelect,Level1NameSelect, Level2NameSelect):
+    dff = dfl2[
+        (dfl2["Grain"] == GrainSelect)
+        & (dfl2["KPIName"] == KPISelect)
+        & (dfl2["LevelName_0"].isin(Level0NameSelect))
+        & (dfl2["LevelName_1"].isin(Level1NameSelect))
+        & (dfl2["LevelName_2"].isin(Level2NameSelect))
+        ]
+    return dff
 
 
 def update_KPIDescription(KPISelect):
@@ -1166,7 +1219,6 @@ def definefilterlevel(tabsdrilldown):
 ################################################----tabs aanmaken----###############################################
 ######################################################################################################################
 ######################################################################################################################
-
 
 tabs = html.Div([
     dbc.Tabs(children=
@@ -1305,6 +1357,8 @@ tabs = html.Div([
 ])
 
 
+
+
 tabscompare = dbc.Tabs(
     [dbc.Tab(label="Compare two",children=[dbc.CardBody(
     dbc.Row([
@@ -1364,7 +1418,7 @@ tabscontainer = html.Div(
 ######################################################################################################################
 ######################################################################################################################
 
-
+carousselend = carousellist3new if carousellist3new else carousellist3
 app.layout = html.Div([html.I("filter_alt", id='dropdowncontrol', className="material-icons filtericon", n_clicks=0),
     dbc.Row([
         html.Div(id='output-container-date-picker-range',
@@ -1393,7 +1447,7 @@ app.layout = html.Div([html.I("filter_alt", id='dropdowncontrol', className="mat
     dbc.Row([
             dbc.Col(
             [html.Div(Perioddropdown,className="col-sm-2 col-md-2 col-lg-2 col-xl-2",style={'display': 'none'}),
-            html.Div(children=eval(carousellist3[0]),className="col-sm-9 col-md-9 col-lg-9 col-xl-9",style={"margin": '0 auto'},id='cardsid'),
+            html.Div(className="col-sm-9 col-md-9 col-lg-9 col-xl-9",style={"margin": '0 auto'},id='cardsid'),
             # html.Div(className="col-sm-9 col-md-9 col-lg-9 col-xl-9"
             #    ,style={"margin": '0 auto'},id='cardsid')
             ]),
@@ -1490,14 +1544,6 @@ app.clientside_callback(
     Output('nav','n_clicks'),
     Input('nav','children')
 )
-
-@app.callback(
-    Output('sweepl1', 'n_clicks'),
-    Input('sweepl1', 'n_clicks')
-)
-def upon_click(n_clicks):
-    if (n_clicks is None): raise PreventUpdate
-    return 1
 
 
 @app.callback([Output('tabscontainer', 'style'),
@@ -1635,32 +1681,7 @@ def filterclicks(GrainSelect,KPISelect,tabsdrilldown,relayoutDatal0,relayoutData
     print(sweepl1)
     return Level1NameListoutput#,Level2NameList
 """
-@app.callback(
-    Output('graph-level0compare', 'selectedData'),
-    [Input('sweepl0', 'n_clicks')]
-)
 
-def reset_clickDatal0(n_clicks):
-    print('removefilter')
-    return None
-
-@app.callback(
-    Output('graph-level1compare', 'selectedData'),
-    [Input('sweepl1', 'n_clicks')]
-)
-
-def reset_clickDatal1(n_clicks):
-    print('removefilter')
-    return None
-
-@app.callback(
-    Output('graph-level2compare', 'selectedData'),
-    [Input('sweepl2', 'n_clicks')]
-)
-
-def reset_clickDatal2(n_clicks):
-    print('removefilter')
-    return None
 
 datefromtmp = []
 datetotmp = []
@@ -1673,11 +1694,12 @@ datetotmp.append(str(dfl0['Period_int'].max())[0:10])
               Output('dfl1', 'data'),
               Output('dfl2', 'data'),
               Output('dffcomparefilter', 'data'),
-              Output('dflcomparekpi', 'data'),
+            #  Output('dflcomparekpi', 'data'),
               Output('output-container-date-picker-range', 'children'),
              ],              
               Input('GrainSelect', 'value'),
               Input('KPISelect', 'value'),
+              Input('KPIGroupSelect', 'value'),
               Input('graphlevel0', 'relayoutData'),
               Input('graphoveralltime', 'relayoutData'),
               Input('graph-with-slider', 'relayoutData'),
@@ -1688,51 +1710,32 @@ datetotmp.append(str(dfl0['Period_int'].max())[0:10])
               Input("Level0NameSelect", "value"),
               Input("Level1NameSelect", "value"),
               Input("Level2NameSelect", "value"),
-              Input('graph-level0compare', 'selectedData'),
-              Input('graph-level0compare', 'relayoutData'),
-              Input('graph-level1compare', 'selectedData'),
-              Input('graph-level2compare', 'selectedData'),
               )
-def clean_data(GrainSelect,KPISelect,relayoutDatal0,relayoutDatal1,relayoutDatal2,clickdatal0,clickdatal1,clickdatal2,tabsdrilldown,Level0NameSelect,Level1NameSelect,Level2NameSelect,selecteddatal0bar,relayoutDatabar,selecteddatal1bar,selecteddatal2bar):#,*args,sweepl1 relayoutl1barclickdatal2bar
-    print('execute clean_data')
-    print('relayoutDatal0')
-    print('relayoutDatal0')
-    print(relayoutDatabar)
-    print('relayoutDatal0')
-    print('relayoutDatal0')
-    print('relayoutDatal0')
-    selectedlistl0 = [
-        i['y']
-        for i in selecteddatal0bar['points']
-    ] if selecteddatal0bar is not None else []
-    
-    selectedlistl1 = [
-        i['y']
-        for i in selecteddatal1bar['points']
-    ] if selecteddatal1bar is not None else []
-    
-    selectedlistl2 = [
-        i['y']
-        for i in selecteddatal2bar['points']
-    ] if selecteddatal2bar is not None else []
+def clean_data(GrainSelect,KPISelect,KPIGroupSelect,relayoutDatal0,relayoutDatal1,relayoutDatal2,clickdatal0,clickdatal1,clickdatal2,tabsdrilldown,Level0NameSelect,Level1NameSelect,Level2NameSelect):#,*args,sweepl1 relayoutl1barclickdatal2bar
     dfll0 = []
     dfll1 = []
     dfll2 = []
     dfllCompare = []
-    dff0 = update_filter_l0(dfl0, GrainSelect, KPISelect)
-    dff1 = update_filter_l1(dfl1, GrainSelect, KPISelect, Level1NameSelect)
-    dff2 = pd.DataFrame(update_filter_l2(dfl2, GrainSelect, KPISelect, Level1NameSelect, Level2NameSelect))
+    dff0 = update_filter_l0(dfl0, GrainSelect, KPISelect,Level0NameSelect)
+    dff1 = update_filter_l1(dfl1, GrainSelect, KPISelect,Level0NameSelect,Level1NameSelect)
+    dff2 = pd.DataFrame(update_filter_l2(dfl2, GrainSelect, KPISelect,Level0NameSelect, Level1NameSelect, Level2NameSelect))
     dffcompare0 = dfl0[
         (dfl0["Grain"] == GrainSelect)
+        & (dfl0["LevelName_0"].isin(Level0NameSelect))
+        & (dfl0["KPIGroup"].isin(KPIGroupSelect))
         ]
     dffcompare1 = dfl1[
         (dfl1["Grain"] == GrainSelect)
+        & (dfl1["LevelName_0"].isin(Level0NameSelect))
         & (dfl1["LevelName_1"].isin(Level1NameSelect))
+        & (dfl1["KPIGroup"].isin(KPIGroupSelect))
         ]
     dffcompare2 = dfl2[
         (dfl2["Grain"] == GrainSelect)
+        & (dfl2["LevelName_0"].isin(Level0NameSelect))
         & (dfl2["LevelName_1"].isin(Level1NameSelect))
         & (dfl2["LevelName_2"].isin(Level2NameSelect))
+        & (dfl2["KPIGroup"].isin(KPIGroupSelect))
         ]
     #recalculation the calculated values because for example one attribute of level x+1 can be found under multiple attributes x (for example attribute 'protocol version: V2' can me found both under 'Aave' and 'Compound')
     #testtmp0 = pd.DataFrame(dff1.loc[:,~dff1.columns.str.endswith(('_1'))]).fillna(0)
@@ -1808,45 +1811,13 @@ def clean_data(GrainSelect,KPISelect,relayoutDatal0,relayoutDatal1,relayoutDatal
         dfll2.append(dff2[dff2['Period_int'].between(datefromtmp[-1], datetotmp[-1])].reset_index())
         dfll0.append(dff0[dff0['Period_int'].between(datefromtmp[-1], datetotmp[-1])].reset_index())
         dfllCompare.append(dffcompare[0][dffcompare[0]['Period_int'].between(datefromtmp[-1], datetotmp[-1])].reset_index())
-    dffl0 = dfll0[0]   
-    dffl1 = dfll1[0]   
-    dffl2 = dfll2[0]  
-    dffl0click = []
-    dffl1click = []
-    dffl2click = []
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
-
-    if not selectedlistl0 and not selectedlistl1 and not selectedlistl2:
-        print('a')
-        dffl0click.append(dffl0)
-        dffl1click.append(dffl1)
-        dffl2click.append(dffl2)
-    elif not selectedlistl1 and not selectedlistl2:
-        print('b')
-        dffl0click.append(dffl0[dffl0['LevelName_0'].isin(selectedlistl0)])
-        dffl1click.append(dffl1[dffl1['LevelName_0'].isin(selectedlistl0)])
-        dffl2click.append(dffl2)
-    elif not selectedlistl2:
-        print('c')
-        dffl0click.append(dffl0[dffl0['LevelName_0'].isin(selectedlistl0)])
-        dffl1click.append(dffl1[(dffl1['LevelName_0'].isin(selectedlistl0)) & (dffl1['LevelName_1'].isin(selectedlistl1))])
-        dffl2click.append(dffl2[(dffl2['LevelName_0'].isin(selectedlistl0)) & (dffl2['LevelName_1'].isin(selectedlistl1))])
-    else:
-        print('d')
-        dffl0click.append(dffl0)
-        dffl1click.append(dffl1[dffl1['LevelName_1'].isin(selectedlistl1)])
-        dffl2click.append(dffl2[(dffl2['LevelName_1'].isin(selectedlistl1)) & (dffl2['LevelName_2'].isin(selectedlistl2))])
-    dffl0end = dffl0click[0]
-    dffl1end = dffl1click[0]
-    dffl2end = dffl2click[0]    
     dflCompare = dfllCompare[0]
-    dffl0json = dffl0end.to_json(date_format='iso', orient='split')
-    dffl1json = dffl1end.to_json(date_format='iso', orient='split')
-    dffl2json = dffl2end.to_json(date_format='iso', orient='split')
-    comparejson = dflCompare.to_json(date_format='iso', orient='split')
-
-    dff1tmp = dffl1end 
-    dff2tmp = dffl2end 
+    dffl0json = dfll0[0] .to_json(date_format='iso', orient='split')
+    dffl1json = dfll1[0] .to_json(date_format='iso', orient='split')
+    dffl2json = dfll2[0] .to_json(date_format='iso', orient='split')
+    dff1tmp = dfll1[0] 
+    dff2tmp = dfll2[0] 
     dff2tmp['Period_int'] = pd.to_datetime(dff2tmp['Period_int']).dt.tz_localize(None)
     dff1tmp['Period_int'] = pd.to_datetime(dff1tmp['Period_int']).dt.tz_localize(None)
     dffcompareclick =[]
@@ -1861,7 +1832,7 @@ def clean_data(GrainSelect,KPISelect,relayoutDatal0,relayoutDatal1,relayoutDatal
     dffcomparejson = dffcompareclick2.to_json(date_format='iso', orient='split')
    # dffl2comparejson = dff2[0].to_json(date_format='iso', orient='split')
 
-    clickdatasend = dffl0end['PeriodName'].unique()
+    clickdatasend = dfll0[0]['PeriodName'].unique()
     Periodchosencount = []
     Periodchosencount.clear()
     Periodchosencount.append(len(clickdatasend.tolist()))
@@ -1874,15 +1845,15 @@ def clean_data(GrainSelect,KPISelect,relayoutDatal0,relayoutDatal1,relayoutDatal
     style = {'display': Displaypreviouscount}
     string_prefix = 'You have selected: '
     if datefromtmp is not None:
-        start_date_string = str(min(dffl0['Period_int']))[0:10]
+        start_date_string = str(min(dfll0[0]['Period_int']))[0:10]
         string_prefix = string_prefix + 'Start Date: ' + start_date_string + ' | '
     if datetotmp is not None:
-        end_date_string = str(max(dffl0['Period_int']))[0:10]
+        end_date_string = str(max(dfll0[0]['Period_int']))[0:10]
         string_prefix = string_prefix + 'End Date: ' + end_date_string
     if len(string_prefix) == len('You have selected: '):
         string_prefix = 'Select a date to see it displayed here'
-    level1options=dffl1end["LevelName_1"].unique()
-    return dffl0json,dffl1json,dffl2json,dffcomparejson,comparejson,string_prefix#,style,style,style,style,style#,clickdatasend
+    level1options=dfll1[0]["LevelName_1"].unique()
+    return dffl0json,dffl1json,dffl2json,dffcomparejson,string_prefix#,style,style,style,style,style#,clickdatasend
 
 datefromtmp.clear()
 datetotmp.clear()  
@@ -1890,43 +1861,39 @@ datetotmp.clear()
 @app.callback(
     Output('cardsid', 'children')
     ,
-    Input('dflcomparekpi', 'data'),
+   # Input('dflcomparekpi', 'data'),
   #  Input('dfl0','data'),
     Input('dffcomparefilter', 'data'),
   #  Input('tabsdrilldown','active_tab'),
     Input("KPISelect", "value"),
     Input("KPIGroupSelect", "value"),
     Input("breakpoints", "widthBreakpoint"),
+    Input("Level0NameSelect", "value"),
+    Input("Level1NameSelect", "value"),
+    Input("Level2NameSelect", "value"),
     State("breakpoints", "width"),
-    #Input("Perioddropdown", "value"),
-    #Input('graphlevel0', 'clickData'),
-    #Input('graphoveralltime', 'clickData'),
-    #Input('graph-with-slider', 'clickData'),
-   # eval(kpigrouplistinput3[0]),  
+    
 )
 
-def updatekpiindicator(compareset,dffcomparefilter,KPISelect,KPIGroupSelect,widthBreakpoint,window_width): #,*args,tabsdrilldown,clickData0,clickDatal1,clickDatal2,dfl0
+def updatekpiindicator(dffcomparefilter,KPISelect,KPIGroupSelect,widthBreakpoint,Level0NameSelect,Level1NameSelect,Level2NameSelect,window_width): #,*args,tabsdrilldown,clickData0,clickDatal1,clickDatal2,dfl0
     print('execute updatekpiindicator')
+    carousellist3new.clear()
+    carousellistnew.clear()
+    carddivnclicks3new.clear()
+    carddivnclicksnew.clear() 
    # dfl0 = pd.read_json(dfl0, orient='split')
     dffcomparefilter = pd.read_json(dffcomparefilter, orient='split')
    # dfl2 = pd.read_json(dfl2click, orient='split')
-    dataCompare = pd.read_json(compareset, orient='split')
-    carousellist.clear()
-    carousellist3.clear()
+    #dataCompare = pd.read_json(compareset, orient='split')
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
     if kpicountout[0]<slides_to_show_ifenough:
         slides_to_show = kpicountout[0]
     else:
         slides_to_show = slides_to_show_ifenough
     
-    dftouse = dffcomparefilter[
-            (dffcomparefilter["KPIGroup"].isin(KPIGroupSelect))
-        ]
-    KPIListFiltered = d_kpi[
-            (d_kpi["KPIGroup"].isin(KPIGroupSelect))
-        ]
-    KPIListFiltered.sort_values(by=['Sorting'])
-    KPINameList2 = KPIListFiltered['KPIName'].unique()
+    dftouse = dffcomparefilter
+    dftouse.sort_values(by=['Sorting'])
+    KPINameList2 = dftouse['KPIName'].unique()
     outputactual =[]
     outputactualtxt =[]
     outputlasttxt =[]
@@ -1999,9 +1966,9 @@ def updatekpiindicator(compareset,dffcomparefilter,KPISelect,KPIGroupSelect,widt
         agdenomlp = "df_by_LevelName['Denominator_LP']." + str(eval(AggregateDenom)) +"("+meandenom[0]+")"
         df_by_LevelName = df_by_LevelName.assign(Aggnum=eval(agnum))
         print(kpi)
-        valueNum.append(df_by_LevelName['Aggnum'].iloc[0])
+        valueNum.append(df_by_LevelName['Aggnum'].iloc[0]) 
         df_by_LevelName = df_by_LevelName.assign(Aggdenom=eval(agdenom))
-        valueDenom.append(df_by_LevelName['Aggdenom'].iloc[0])
+        valueDenom.append(df_by_LevelName['Aggdenom'].iloc[0]) 
         df_by_LevelName = df_by_LevelName.assign(Aggnum_LP=eval(agnumlp))
         valueNumLP.append(df_by_LevelName['Aggnum_LP'].iloc[0])
         df_by_LevelName = df_by_LevelName.assign(Aggdenom_LP=eval(agdenomlp))
@@ -2045,10 +2012,18 @@ def updatekpiindicator(compareset,dffcomparefilter,KPISelect,KPIGroupSelect,widt
         value.clear()
         value_lp.clear()
         notation.clear()
+        carddivnclicksnew.append(
+        f"""Input("KPIGroupSelect","value")"""
+            )
+        carddivnclicksnew.append(
+               f"""Input("carddiv{i}","n_clicks")"""
+        )
+        carddivnclicks2new=','.join(carddivnclicksnew)
+        carddivnclicks3new.append(carddivnclicks2new)
         numbertmp= i+1
         number=str(numbertmp)
         numberi=str(numbertmp)
-        carousellist.append(
+        carousellistnew.append(
         f"""html.Div(
                 html.Div([
                     html.I('info', className='material-icons', 
@@ -2091,15 +2066,16 @@ def updatekpiindicator(compareset,dffcomparefilter,KPISelect,KPIGroupSelect,widt
                         ])
                 	],id='CardContent{number}'),id='carddiv{number}',style={style111},className='carddiv')"""
         ) 
-    carousellist2=','.join(carousellist)
-    carousellist3.append(carousellist2)
+    carousellist2new=','.join(carousellistnew)
+    carousellist3new.append(carousellist2new)
     if widthBreakpoint =='sm':
         slides_to_showfinal = 1
         slides_to_scrollfinal = 1
     else:
         slides_to_showfinal = slides_to_show
         slides_to_scrollfinal = slides_to_scroll
-    return [html.Div(dbc.Spinner(size='md',delay_hide=1500,children=[dtc.Carousel(eval(carousellist3[0])
+    carousselend = carousellist3new if carousellist3new else carousellist3
+    return [html.Div(dbc.Spinner(size='md',delay_hide=1500,children=[dtc.Carousel(eval(carousellist3new[0])
         ,
         slides_to_scroll=slides_to_scrollfinal,
         slides_to_show=slides_to_showfinal,
@@ -2116,8 +2092,38 @@ def updatekpiindicator(compareset,dffcomparefilter,KPISelect,KPIGroupSelect,widt
             ],
     )]))
     ]
+    
 
+kpi =[]
+print(eval(carddivnclicks3new[0]+','+kpigrouplistinput3[0]) if carddivnclicks3new else eval(carddivnclicks3[0]+','+kpigrouplistinput3[0]))
+@app.callback([
+    Output('KPISelect', 'value'),
+    ],
+    eval(carddivnclicks3new[0]+','+kpigrouplistinput3[0]) if carddivnclicks3new else eval(carddivnclicks3[0]+','+kpigrouplistinput3[0])
+)
 
+def update_df_KPIGroup(KPIGroupSelect,*args): 
+    print('execute update_df_KPIGroup')   
+    tmpchangedlist=dash.callback_context.triggered
+    tmpchangedlist2 = [item for item in tmpchangedlist if item['value'] is not None]
+    if not tmpchangedlist2:
+        changed_id ='tmp'
+    else:
+        changed_id = [p['prop_id'] for p in tmpchangedlist2][0].split('.')[0]
+    dffKPISelect = d_kpi[
+        (d_kpi["KPIGroup"].isin(KPIGroupSelect))
+    ]
+    dffKPISelect.sort_values(by=['Sorting'])
+    KPINameListi = dffKPISelect['KPIName'].unique()
+    if 'carddiv' in changed_id[0:7]:
+        listnumber = int(int(changed_id[7:])-1)
+        kpi.append(KPINameListi[listnumber])
+        carddivselected = changed_id[0:8]
+    elif 'kpigroup' in changed_id[0:8]:
+        kpi.append(KPINameListi[0])
+    if not kpi:
+        kpi.append(KPINameListi[0])
+    return [kpi[-1]]
 ######################################################################################################################
 ######################################################################################################################
 ################################################----tab 0 aanmaken----###############################################
@@ -2264,7 +2270,7 @@ def update_kpiagg(data00,GrainSelect,KPISelect,KPIGroupSelect,CumulativeSwitch,P
             opacity=1,
             customdata=eval(dataframe[0]).LevelName_0,
             line=dict(
-                width=2,
+                width=3,
                 shape="spline",
             ),
             marker=dict(
@@ -2285,84 +2291,106 @@ def update_kpiagg(data00,GrainSelect,KPISelect,KPIGroupSelect,CumulativeSwitch,P
             ),
         )
         )
-    return {
-        'data': traces3,
-        'layout': dict(
-            barmode='stack',
-            barnorm=eval(PercentageTotalSwitchDEF(PercentageTotalSwitch)),
-            xaxis=dict(type='string',
-                       title='',
-                       showgrid=False,
-                       gridwidth=0,
-                       showline=False,
-                       color=fontcolor,
-                       rangeselector=dict(
-                           buttons=list([
-                               dict(count=1,
-                                    label="1m",
-                                    step="month",
-                                    stepmode="backward"),
-                               dict(count=6,
-                                    label="6m",
-                                    step="month",
-                                    stepmode="backward"),
-                               dict(count=1,
-                                    label="YTD",
-                                    step="year",
-                                    stepmode="todate"),
-                               dict(count=1,
-                                    label="1y",
-                                    step="year",
-                                    stepmode="backward"),
-                               dict(count=10,
-                                    label="All",
-                                    step="year",
-                                    stepmode="backward")
-                           ])
-                       ),
-                       rangeslider=dict(
-                           visible=False
-                       ),
-                       linewidth=2,
-                       font=dict(
-                           size=14,
-                       )
-                       ),
-            yaxis=dict(title='',
-                       linewidth=2,
-                       tickformat=eval(Notation[0]),
-                       showgrid=False,
-                       showline=False,
-                       autorange=True,
-                       fixedrange=True,
-                       color=fontcolor,
-                       gridwidth=0.5,
-                       font=dict(
-                           size=14,
-                       )
-                       ),
-            margin={'l': 60, 'b': 45, 't': 33, 'r': 40},
-            modebar = dict(
-                        bgcolor='transparent',
-                        color=BeautifulSignalColor,
-            ),
-            autosize=True,
-            plot_bgcolor=graphcolor,
-            paper_bgcolor=graphcolor,
-            legend=legend,
-            title=title,
-            font=dict(
-            ),
-            images=dict(
-                x = 0,
-                y = 1,
-                sizex=0.2,
-                sizey=0.2,
-            ),
-            hovermode='closest',
-            transition={'duration': 500},
+    if not traces3:
+        return {"layout": dict(
+        xaxis = dict(visible=False),
+        yaxis = dict(visible=False),
+        style={'background-color': 'red', 'color': 'white'},
+        annotations=[
+                        dict(
+                            xref="paper",
+                            yref="paper",
+                            x=0.5,
+                            y=0.5,
+                            text="No data available",
+                            showarrow=False,
+                            font=dict(size=26,color=fontcolor),
+            )
+        ],
+        plot_bgcolor='transparent',
+        paper_bgcolor='transparent' 
         )
-    }
+        }
+    else:
+        return {
+            'data': traces3,
+            'layout': dict(
+                barmode='stack',
+                showlegend=False,
+                barnorm=eval(PercentageTotalSwitchDEF(PercentageTotalSwitch)),
+                xaxis=dict(type='string',
+                           title='',
+                           showgrid=False,
+                           gridwidth=0,
+                           showline=False,
+                           color=fontcolor,
+                           rangeselector=dict(
+                               buttons=list([
+                                   dict(count=1,
+                                        label="1m",
+                                        step="month",
+                                        stepmode="backward"),
+                                   dict(count=6,
+                                        label="6m",
+                                        step="month",
+                                        stepmode="backward"),
+                                   dict(count=1,
+                                        label="YTD",
+                                        step="year",
+                                        stepmode="todate"),
+                                   dict(count=1,
+                                        label="1y",
+                                        step="year",
+                                        stepmode="backward"),
+                                   dict(count=10,
+                                        label="All",
+                                        step="year",
+                                        stepmode="backward")
+                               ])
+                           ),
+                           rangeslider=dict(
+                               visible=False
+                           ),
+                           linewidth=2,
+                           font=dict(
+                               size=14,
+                           )
+                           ),
+                yaxis=dict(title='',
+                           linewidth=2,
+                           tickformat=eval(Notation[0]),
+                           showgrid=False,
+                           showline=False,
+                           autorange=True,
+                           fixedrange=True,
+                           color=fontcolor,
+                           gridwidth=0.5,
+                           font=dict(
+                               size=14,
+                           )
+                           ),
+                margin={'l': 60, 'b': 45, 't': 33, 'r': 40},
+                modebar = dict(
+                            bgcolor='transparent',
+                            color=BeautifulSignalColor,
+                ),
+                autosize=True,
+                plot_bgcolor=graphcolor,
+                paper_bgcolor=graphcolor,
+                legend=legend,
+                title=title,
+                font=dict(
+                ),
+                images=dict(
+                    x = 0,
+                    y = 1,
+                    sizex=0.2,
+                    sizey=0.2,
+                ),
+                hovermode='closest',
+                transition={'duration': 500},
+            )
+        }
 
 
 @app.callback(
@@ -2380,7 +2408,7 @@ def update_kpiagg(data00,GrainSelect,KPISelect,KPIGroupSelect,CumulativeSwitch,P
     # eval(kpigrouplistinput3[0]),  
      ]
 )
-def update_level1Graph(data00,KPISelect,KPIGroupSelect,Level0NameSelect,Level1NameSelect,Level2NameSelect,clickData,Totaalswitch,widthBreakpoint): #,hoverData,*args
+def update_level0Graph(data00,KPISelect,KPIGroupSelect,Level0NameSelect,Level1NameSelect,Level2NameSelect,clickData,Totaalswitch,widthBreakpoint): #,hoverData,*args
     data0 = pd.read_json(data00, orient='split')
     dff0tmp = data0 
     dff0tmp['Period_int'] = pd.to_datetime(dff0tmp['Period_int']).dt.tz_localize(None)
@@ -2409,10 +2437,9 @@ def update_level1Graph(data00,KPISelect,KPIGroupSelect,Level0NameSelect,Level1Na
         df_by_Level0Name = dff0[dff0['LevelName_0'] == j]
         x2 = eval(CalculationLogic0(Calculation))
         traces.append(dict(
-            df_by_Level0Name,
+            #df_by_Level0Name,
             y=df_by_Level0Name.LevelName_0,
             x=x2,
-            
             text=x2,
             text_auto=True,
             texttemplate="%{value:" + eval(Notation[0]) + "}",  # "%{value:.01%}",
@@ -2440,48 +2467,69 @@ def update_level1Graph(data00,KPISelect,KPIGroupSelect,Level0NameSelect,Level1Na
             ),
             ]
         ))
-    return {
-        'data': traces,
-        'layout': dict(
-            clickmode='event+select',
-            type='bar',
-            xaxis=dict(type='string',
-                       title='',
-                       showgrid=False,
-                       gridwidth=0,
-                       fixedrange=True,
-                       showline=False,
-                       tickformat=eval(Notation[0]),
-                       visible=False,
-                       color=fontcolor,
-                       font=dict(
-                           size=14,
-                       )
-                       ),
-            yaxis=dict(title='',
-                       showline=False,
-                       showgrid=False,
-                       categoryorder="total ascending",
-                       gridwidth=0,
-                       color=fontcolor,
-                       ),
-            margin={'l': 140, 'b': 25, 't': 37, 'r': 40},
-            showlegend=False,
-            autosize=True,
+    if data0.empty:
+        return {"layout": dict(
+            xaxis = dict(visible=False),
+            yaxis = dict(visible=False),
+            annotations=[
+                            dict(
+                                xref="paper",
+                                yref="paper",
+                                x=0.5,
+                                y=0.5,
+                                text="No data available",
+                                showarrow=False,
+                                font=dict(size=26,color=fontcolor),
+                )
+            ],
             plot_bgcolor=graphcolor,
-            paper_bgcolor=graphcolor,
-            modebar=dict(
-                bgcolor='transparent',
-                color=BeautifulSignalColor,
-            ),
-            font=dict(
-                size=15,
-            ),
-            title=title,
-            hovermode='closest',
-            transition={'duration': 500},
+            paper_bgcolor=graphcolor
         )
-    }
+        }
+    else:
+        print('notsoemptylayout')
+        return {
+            'data': traces,
+            'layout': dict(
+                clickmode='event+select',
+                type='bar',
+                xaxis=dict(type='string',
+                           title='',
+                           showgrid=False,
+                           gridwidth=0,
+                           fixedrange=True,
+                           showline=False,
+                           tickformat=eval(Notation[0]),
+                           visible=False,
+                           color=fontcolor,
+                           font=dict(
+                               size=14,
+                           )
+                           ),
+                yaxis=dict(title='',
+                           showline=False,
+                           showgrid=False,
+                           categoryorder="total ascending",
+                           gridwidth=0,
+                           color=fontcolor,
+                           ),
+                margin={'l': 140, 'b': 25, 't': 37, 'r': 40},
+                showlegend=False,
+                autosize=True,
+                plot_bgcolor=graphcolor,
+                paper_bgcolor=graphcolor,
+                modebar=dict(
+                    bgcolor='transparent',
+                    color=BeautifulSignalColor,
+                ),
+                font=dict(
+                    size=15,
+                ),
+                title=title,
+                hovermode='closest',
+                transition={'duration': 500},
+            )
+        }
 
 ######################################################################################################################
 ######################################################################################################################
@@ -2581,7 +2629,7 @@ def update_mainfigure(data00,data11,data22,GrainSelect,KPISelect,KPIGroupSelect,
                opacity=1,
                customdata=eval(dataframe1[0]).LevelName_1,
                line=dict(
-                 width=2,
+                 width=3,
                  shape="spline",
                  color=eval(dataframe1[0]).LevelColor_1,
                ),
@@ -2648,87 +2696,109 @@ def update_mainfigure(data00,data11,data22,GrainSelect,KPISelect,KPIGroupSelect,
                 ),
                 ]
             ))
-    return {
-        'data': tracestotal,
-        'layout': dict(
-            barmode='stack',
-            barnorm=eval(PercentageTotalSwitchDEF(PercentageTotalSwitch)),
-            xaxis=dict(type='string',
-                       title='',
-                       autorange=True,
-                       showgrid=False,
-                       rangeselector=dict(
-                           buttons=list([
-                               dict(count=1,
-                                    label="1m",
-                                    step="month",
-                                    stepmode="backward"),
-                               dict(count=6,
-                                    label="6m",
-                                    step="month",
-                                    stepmode="backward"),
-                               dict(count=1,
-                                    label="YTD",
-                                    step="year",
-                                    stepmode="todate"),
-                               dict(count=1,
-                                    label="1y",
-                                    step="year",
-                                    stepmode="backward"),
-                               dict(count=10,
-                                    label="All",
-                                    step="year",
-                                    stepmode="backward")
-                           ])
-                       ),
-                       rangeslider=dict(
-                           visible=False
-                       ),
-                       gridwidth=0,
-                       showline=False,
-                       linewidth=0,
-                       color=fontcolor,
-                       font=dict(
-                           size=14,
-                       )
-                       ),
-            yaxis=dict(title='',
-                       showline=False,
-                       linewidth=0,
-                       autorange=True,
-                       tickformat=eval(Notation[0]),
-                       fixedrange=True,
-                       showgrid=False,
-                       gridwidth=0.5,
-                       color=fontcolor,
-                       font=dict(
-                           size=14,
-                       )
-                       ),
-            margin={'l': 60, 'b': 45, 't': 33, 'r': 40},
-            legend=legend,
-            autosize=True,
-            plot_bgcolor=graphcolor,
-            paper_bgcolor=graphcolor,
-            modebar=dict(
-                bgcolor='transparent',
-                color=BeautifulSignalColor,
-            ),
-            font=dict(
-                size=15,
-            ),
-            images=dict(
-                source="https://raw.githubusercontent.com/cldougl/plot_images/add_r_img/vox.png",
-                xref="paper", yref="paper",
-                x=1, y=1.05,
-                sizex=0.2, sizey=0.2,
-                xanchor="right", yanchor="bottom"
-            ),
-            title=title,
-            hovermode='closest',
-            transition={'duration': 500},
+    if not tracestotal:
+        return {"layout": dict(
+        xaxis = dict(visible=False),
+        yaxis = dict(visible=False),
+        style={'background-color': 'red', 'color': 'white'},
+        annotations=[
+                        dict(
+                            xref="paper",
+                            yref="paper",
+                            x=0.5,
+                            y=0.5,
+                            text="No data available",
+                            showarrow=False,
+                            font=dict(size=26,color=fontcolor),
+            )
+        ],
+        plot_bgcolor='transparent',
+        paper_bgcolor='transparent' 
         )
-    },options
+        },options
+    else:
+        return {
+            'data': tracestotal,
+            'layout': dict(
+                showlegend=False,
+                barmode='stack',
+                barnorm=eval(PercentageTotalSwitchDEF(PercentageTotalSwitch)),
+                xaxis=dict(type='string',
+                           title='',
+                           autorange=True,
+                           showgrid=False,
+                           rangeselector=dict(
+                               buttons=list([
+                                   dict(count=1,
+                                        label="1m",
+                                        step="month",
+                                        stepmode="backward"),
+                                   dict(count=6,
+                                        label="6m",
+                                        step="month",
+                                        stepmode="backward"),
+                                   dict(count=1,
+                                        label="YTD",
+                                        step="year",
+                                        stepmode="todate"),
+                                   dict(count=1,
+                                        label="1y",
+                                        step="year",
+                                        stepmode="backward"),
+                                   dict(count=10,
+                                        label="All",
+                                        step="year",
+                                        stepmode="backward")
+                               ])
+                           ),
+                           rangeslider=dict(
+                               visible=False
+                           ),
+                           gridwidth=0,
+                           showline=False,
+                           linewidth=0,
+                           color=fontcolor,
+                           font=dict(
+                               size=14,
+                           )
+                           ),
+                yaxis=dict(title='',
+                           showline=False,
+                           linewidth=0,
+                           autorange=True,
+                           tickformat=eval(Notation[0]),
+                           fixedrange=True,
+                           showgrid=False,
+                           gridwidth=0.5,
+                           color=fontcolor,
+                           font=dict(
+                               size=14,
+                           )
+                           ),
+                margin={'l': 60, 'b': 45, 't': 33, 'r': 40},
+                legend=legend,
+                autosize=True,
+                plot_bgcolor=graphcolor,
+                paper_bgcolor=graphcolor,
+                modebar=dict(
+                    bgcolor='transparent',
+                    color=BeautifulSignalColor,
+                ),
+                font=dict(
+                    size=15,
+                ),
+                images=dict(
+                    source="https://raw.githubusercontent.com/cldougl/plot_images/add_r_img/vox.png",
+                    xref="paper", yref="paper",
+                    x=1, y=1.05,
+                    sizex=0.2, sizey=0.2,
+                    xanchor="right", yanchor="bottom"
+                ),
+                title=title,
+                hovermode='closest',
+                transition={'duration': 500},
+            )
+        },options
 
 
 @app.callback(
@@ -2745,7 +2815,7 @@ def update_mainfigure(data00,data11,data22,GrainSelect,KPISelect,KPIGroupSelect,
     # eval(kpigrouplistinput3[0]),  
      ]
 )
-def update_level0Graph(data00,data11,KPISelect,KPIGroupSelect,Level1NameSelect,Level2NameSelect,clickData,Totaalswitch,widthBreakpoint): #,hoverData,*args
+def update_level1Graph(data00,data11,KPISelect,KPIGroupSelect,Level1NameSelect,Level2NameSelect,clickData,Totaalswitch,widthBreakpoint): #,hoverData,*args
     data0 = pd.read_json(data00, orient='split')
     data1 = pd.read_json(data11, orient='split')
     dff1tmp = data1 
@@ -2846,48 +2916,68 @@ def update_level0Graph(data00,data11,KPISelect,KPIGroupSelect,Level1NameSelect,L
                 ),
                 ]
             ))
-    return {
-        'data': tracestotal,
-        'layout': dict(
-            clickmode='event+select',
-            type='bar',
-            xaxis=dict(type='string',
-                       title='',
-                       showgrid=False,
-                       gridwidth=0,
-                       fixedrange=True,
-                       showline=False,
-                       tickformat=eval(Notation[0]),
-                       visible=False,
-                       color=fontcolor,
-                       font=dict(
-                           size=14,
-                       )
-                       ),
-            yaxis=dict(title='',
-                       showline=False,
-                       showgrid=False,
-                       categoryorder="total ascending",
-                       gridwidth=0,
-                       color=fontcolor,
-                       ),
-            margin={'l': 140, 'b': 25, 't': 37, 'r': 40},
-            showlegend=False,
-            autosize=True,
+    if data1.empty:
+        return {"layout": dict(
+            xaxis = dict(visible=False),
+            yaxis = dict(visible=False),
+            annotations=[
+                            dict(
+                                xref="paper",
+                                yref="paper",
+                                x=0.5,
+                                y=0.5,
+                                text="No data available",
+                                showarrow=False,
+                                font=dict(size=26,color=fontcolor),
+                )
+            ],
             plot_bgcolor=graphcolor,
-            paper_bgcolor=graphcolor,
-            modebar=dict(
-                bgcolor='transparent',
-                color=BeautifulSignalColor,
-            ),
-            font=dict(
-                size=15,
-            ),
-            title=title,
-            hovermode='closest',
-            transition={'duration': 500},
-        )
-    }
+            paper_bgcolor=graphcolor
+            )
+        }
+    else:
+        return {
+            'data': tracestotal,
+            'layout': dict(
+                clickmode='event+select',
+                type='bar',
+                xaxis=dict(type='string',
+                           title='',
+                           showgrid=False,
+                           gridwidth=0,
+                           fixedrange=True,
+                           showline=False,
+                           tickformat=eval(Notation[0]),
+                           visible=False,
+                           color=fontcolor,
+                           font=dict(
+                               size=14,
+                           )
+                           ),
+                yaxis=dict(title='',
+                           showline=False,
+                           showgrid=False,
+                           categoryorder="total ascending",
+                           gridwidth=0,
+                           color=fontcolor,
+                           ),
+                margin={'l': 140, 'b': 25, 't': 37, 'r': 40},
+                showlegend=False,
+                autosize=True,
+                plot_bgcolor=graphcolor,
+                paper_bgcolor=graphcolor,
+                modebar=dict(
+                    bgcolor='transparent',
+                    color=BeautifulSignalColor,
+                ),
+                font=dict(
+                    size=15,
+                ),
+                title=title,
+                hovermode='closest',
+                transition={'duration': 500},
+            )
+        }
 
 
 ######################################################################################################################
@@ -2985,7 +3075,7 @@ def update_figure(data11,data22,GrainSelect, KPISelect,KPIGroupSelect,Totaalswit
                 text_auto=True,
                 customdata=eval(dataframe2[0]).LevelName_2,
                 line=dict(
-                    width=2,
+                    width=3,
                     shape="spline",
                     color=Level2NameColor[i],
                 ),
@@ -3053,6 +3143,7 @@ def update_figure(data11,data22,GrainSelect, KPISelect,KPIGroupSelect,Totaalswit
     return {
         'data': tracestotal,
         'layout': dict(
+            showlegend=False,
             clickmode='event+select',
             barmode='stack',
             barnorm=eval(PercentageTotalSwitchDEF(PercentageTotalSwitch)),
@@ -3254,48 +3345,68 @@ def update_level2Graph(data11,data22,KPISelect,KPIGroupSelect,clickData,Totaalsw
                 ),
                 ]
             ))
-    return {
-        'data': tracestotal,
-        'layout': dict(
-            clickmode='event+select',
-            type='bar',
-            xaxis=dict(type='string',
-                       title='',
-                       visible=False,
-                       autorange=True,
-                       fixedrange=True,
-                       showgrid=False,
-                       showline=False,
-                       gridwidth=0,
-                       tickformat=eval(Notation[0]),
-                       color=fontcolor,
-                       font=dict(
-                           size=14,
-                       )
-                       ),
-            yaxis=dict(title='',
-                       showline=False,
-                       showgrid=False,
-                       categoryorder="total ascending",
-                       gridwidth=0,
-                       color=fontcolor,
-                       ),
-            margin={'l': 140, 'b': 25, 't': 37, 'r': 40},
-            showlegend=False,
+    if data2.empty:
+        return {"layout": dict(
+            xaxis = dict(visible=False),
+            yaxis = dict(visible=False),
+            annotations=[
+                            dict(
+                                xref="paper",
+                                yref="paper",
+                                x=0.5,
+                                y=0.5,
+                                text="No data available",
+                                showarrow=False,
+                                font=dict(size=26,color=fontcolor),
+                )
+            ],
             plot_bgcolor=graphcolor,
-            paper_bgcolor=graphcolor,
-            modebar=dict(
-                bgcolor='transparent',
-                color=BeautifulSignalColor,
-            ),
-            font=dict(
-                size=15,
-            ),
-            title=title,
-            hovermode='closest',
-            transition={'duration': 500},
-        )
-    }
+            paper_bgcolor=graphcolor
+            )
+        }
+    else:
+        return {
+            'data': tracestotal,
+            'layout': dict(
+                clickmode='event+select',
+                type='bar',
+                xaxis=dict(type='string',
+                           title='',
+                           visible=False,
+                           autorange=True,
+                           fixedrange=True,
+                           showgrid=False,
+                           showline=False,
+                           gridwidth=0,
+                           tickformat=eval(Notation[0]),
+                           color=fontcolor,
+                           font=dict(
+                               size=14,
+                           )
+                           ),
+                yaxis=dict(title='',
+                           showline=False,
+                           showgrid=False,
+                           categoryorder="total ascending",
+                           gridwidth=0,
+                           color=fontcolor,
+                           ),
+                margin={'l': 140, 'b': 25, 't': 37, 'r': 40},
+                showlegend=False,
+                plot_bgcolor=graphcolor,
+                paper_bgcolor=graphcolor,
+                modebar=dict(
+                    bgcolor='transparent',
+                    color=BeautifulSignalColor,
+                ),
+                font=dict(
+                    size=15,
+                ),
+                title=title,
+                hovermode='closest',
+                transition={'duration': 500},
+            )
+        }
 
 
 ######################################################################################################################
@@ -3317,6 +3428,7 @@ def update_level2Graph(data11,data22,KPISelect,KPIGroupSelect,clickData,Totaalsw
      Input("KPISelect", "value"),
      Input("KPIGroupSelect", "value"),
      Input("KPISelectCompare", "value"),
+     Input("Level0NameSelect", "value"),
      Input("Level1NameSelect", "value"),
      Input("Level2NameSelect", "value"),
      Input('tabsdrilldown','active_tab'),
@@ -3325,30 +3437,30 @@ def update_level2Graph(data11,data22,KPISelect,KPIGroupSelect,clickData,Totaalsw
 )
 
 
-def update_kpicompare(data00,data11,data22,GrainSelect, KPISelect,KPIGroupSelect, KPISelectCompare,Level1NameSelect, Level2NameSelect,tabsdrilldown):#,*args
+def update_kpicompare(data00,data11,data22,GrainSelect, KPISelect,KPIGroupSelect, KPISelectCompare,Level0NameSelect,Level1NameSelect, Level2NameSelect,tabsdrilldown):#,*args
     data0 = pd.read_json(data00, orient='split')
     data1 = pd.read_json(data11, orient='split')
     data2 = pd.read_json(data22, orient='split')
     if tabsdrilldown == 'tab-0':
-        dfftmp = pd.DataFrame(update_filter_l0(data0, GrainSelect, KPISelect))
+        dfftmp = pd.DataFrame(update_filter_l0(data0, GrainSelect, KPISelect,Level0NameSelect))
         dffcomptmp = pd.DataFrame(update_filter_compare_l0(dfl0Compare, GrainSelect, KPISelectCompare))
         TopImageName = dfftmp['LevelName_0'].unique().astype(str)
     elif tabsdrilldown == 'tab-1':
-        dfftmp = pd.DataFrame(update_filter_l1(data1, GrainSelect, KPISelect,Level1NameSelect))
+        dfftmp = pd.DataFrame(update_filter_l1(data1, GrainSelect, KPISelect,Level0NameSelect,Level1NameSelect))
         dffcomptmp = pd.DataFrame(update_filter_compare_l1(dfl1Compare, GrainSelect, KPISelectCompare, Level1NameSelect))
         if dfftmp['LevelName_1'].nunique() == 1:
             TopImageName = dfftmp['LevelName_1'].unique().astype(str)
         else:
             TopImageName = dfftmp['LevelName_1'].unique().astype(str)
     elif tabsdrilldown == 'tab-2':
-        dfftmp = pd.DataFrame(update_filter_l2(data2, GrainSelect, KPISelect,Level1NameSelect, Level2NameSelect))
+        dfftmp = pd.DataFrame(update_filter_l2(data2, GrainSelect, KPISelect,Level0NameSelect,Level1NameSelect, Level2NameSelect))
         dffcomptmp = pd.DataFrame(update_filter_compare_l2(dfl2Compare, GrainSelect, KPISelectCompare, Level1NameSelect, Level2NameSelect))
         if dfftmp['LevelName_2'].nunique() == 1:
             TopImageName = dfftmp['LevelName_2'].unique().astype(str)
         else:
             TopImageName = dfftmp['LevelName_1'].unique().astype(str)
     else:
-        dfftmp = pd.DataFrame(update_filter_l0(data0, GrainSelect, KPISelect))
+        dfftmp = pd.DataFrame(update_filter_l0(data0, GrainSelect, KPISelect,Level0NameSelect))
         dffcomptmp = pd.DataFrame(update_filter_compare_l0(dfl0Compare, GrainSelect, KPISelectCompare))
         TopImageName = dfftmp['LevelName_0'].unique().astype(str)
     TopImageURL = f'assets/attributes/Images/sythetix.png' 
@@ -3393,7 +3505,7 @@ def update_kpicompare(data00,data11,data22,GrainSelect, KPISelect,KPIGroupSelect
             opacity=1,
             type='Scatter',
             line=dict(
-                width=2,
+                width=3,
                 shape="spline",
                 color='#FFA500'  
             ),
@@ -3419,7 +3531,7 @@ def update_kpicompare(data00,data11,data22,GrainSelect, KPISelect,KPIGroupSelect
             opacity=1,
             type='line',
             line=dict(
-                width=2,
+                width=3,
                 shape="spline",
                 color='#005AFF',
                 #               
@@ -3598,7 +3710,7 @@ def update_kpicompare(data00,data11,data22,GrainSelect, KPISelect,KPIGroupSelect
             opacity=1,
             type='Scatter',
             line=dict(
-                width=2,
+                width=3,
                 shape="spline",
                 #color='#FFA500'  
             ),
@@ -3717,6 +3829,20 @@ def toggle_modal(n1, n2, is_open):
         return not is_open
     return is_open
 
+app.clientside_callback(
+    """
+    function(className) {
+        var selectValue = document.querySelector('.' + className);
+        selectValue.addEventListener('click', function(e) {
+            if (e.target.classList.contains('Select-value')) {
+                e.target.remove();
+            }
+        });
+    }
+    """,
+    Output("Level0DD", "children"),
+    Input("Level0DD", "id"),
+)
 
 if __name__ == "__main__":
     print('application loaded')
