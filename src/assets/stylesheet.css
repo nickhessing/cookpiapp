@@ -19,7 +19,6 @@ body {
 background-color : var(--bodybackgroundcolor);
 }
 
-
 .popover {
 	position: absolute;
 	top: 0;
@@ -474,6 +473,11 @@ body.dark .switch::before {
 	padding: 12px 60px;
 }
 .sidebar.close ~ .home {
+	left: 78px;
+	height: 100vh;
+	width: calc(100% - 78px);
+}
+.sidebar-right.close-right ~ .home {
 	left: 78px;
 	height: 100vh;
 	width: calc(100% - 78px);
@@ -975,6 +979,60 @@ pre code {
 		max-width: 540px
 	}
 	
+.sidebar-right {
+		position: fixed;
+		top: 0;
+		right: 0;
+		height: 100%;
+		width: 250px;
+		padding: 10px 14px;
+		background: var(--sidebar-color);
+		background-image: var(--gradientcolor);
+		transition: var(--tran-05);
+		z-index: 100;
+		box-shadow: rgba(0, 0, 0, 0.07) 0px 1px 2px, rgba(0, 0, 0, 0.07) 0px 2px 4px, rgba(0, 0, 0, 0.07) 0px 4px 8px, rgba(0, 0, 0, 0.07) 0px 8px 16px, rgba(0, 0, 0, 0.07) 0px 16px 32px, rgba(0, 0, 0, 0.07) 0px 32px 64px;
+}	
+.sidebar-right.close-right {
+	width: 0px;
+	padding: 0px;
+}
+.sidebar-right.close-right .toggle-right {
+	transform: translateX(-50%) translateY(50%) rotate(0deg);
+}
+
+.sidebar-right header .toggle-right {
+	position: absolute;
+	top: 50%;
+	right: -25px;
+	transform: translateY(-50%) rotate(180deg);
+	height: 25px;
+	width: 25px;
+	background-color: var(--primary-color);
+	color: var(--body-color);
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 22px;
+	cursor: pointer;
+	transition: var(--tran-05);
+}
+
+.sidebar-right .menu-bar-right {
+	height: calc(100% - 55px);
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	overflow-y: scroll;
+}
+
+.sidebar-right .menu-bar-right .mode {
+	border-radius: 6px;
+	background-color: var(--primary-color-light);
+	position: relative;
+	transition: var(--tran-05);
+}
+
 .sidebar {
 	position: fixed;
 	top: 0;
@@ -993,6 +1051,8 @@ pre code {
 	width: 0px;
 	padding: 0px;
 }
+
+
 .sidebar li {
 	height: 50px;
 	list-style: none;
@@ -1084,6 +1144,7 @@ body.dark .sidebar header .toggle {
 .sidebar.close .toggle {
 	transform: translateX(-50%) translateY(50%) rotate(0deg);
 }
+
 .sidebar .menu {
 	margin-top: 3px;
 }
@@ -1155,6 +1216,60 @@ body.dark .sidebar header .toggle {
 		max-width: 540px
 	}
 	
+.sidebar-right {
+		position: fixed;
+		top: 0;
+		right: 0;
+		height: 100%;
+		width: 250px;
+		padding: 10px 14px;
+		background: var(--sidebar-color);
+		background-image: var(--gradientcolor);
+		transition: var(--tran-05);
+		z-index: 100;
+		box-shadow: rgba(0, 0, 0, 0.07) 0px 1px 2px, rgba(0, 0, 0, 0.07) 0px 2px 4px, rgba(0, 0, 0, 0.07) 0px 4px 8px, rgba(0, 0, 0, 0.07) 0px 8px 16px, rgba(0, 0, 0, 0.07) 0px 16px 32px, rgba(0, 0, 0, 0.07) 0px 32px 64px;
+}	
+.sidebar-right.close-right {
+	width: 88px;
+	padding: 0px;
+}
+.sidebar-right.close-right .toggle-right {
+	transform: translateX(-50%) translateY(50%) rotate(0deg);
+}
+
+.sidebar-right header .toggle-right {
+	position: absolute;
+	top: 50%;
+	right: -25px;
+	transform: translateY(-50%) rotate(180deg);
+	height: 25px;
+	width: 25px;
+	background-color: var(--primary-color);
+	color: var(--body-color);
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 22px;
+	cursor: pointer;
+	transition: var(--tran-05);
+}
+
+.sidebar-right .menu-bar-right {
+	height: calc(100% - 55px);
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	overflow-y: scroll;
+}
+
+.sidebar-right .menu-bar-right .mode {
+	border-radius: 6px;
+	background-color: var(--primary-color-light);
+	position: relative;
+	transition: var(--tran-05);
+}
+
 .sidebar {
 	position: fixed;
 	top: 0;
@@ -1173,6 +1288,12 @@ body.dark .sidebar header .toggle {
 	width: 88px;
 	padding: 0px;
 }
+
+.sidebar.close .toggle {
+	transform: translateX(-50%) translateY(50%) rotate(0deg);
+}
+
+
 .sidebar li {
 	height: 50px;
 	list-style: none;
@@ -1336,7 +1457,62 @@ body.dark .sidebar header .toggle {
 	.container-md {
 		max-width: 720px
 	}
-	
+.sidebar-right {
+		position: fixed;
+		top: 0;
+		right: 0;
+		height: 100%;
+		width: 250px;
+		padding: 10px 14px;
+		background: var(--sidebar-color);
+		background-image: var(--gradientcolor);
+		transition: var(--tran-05);
+		z-index: 100;
+		box-shadow: rgba(0, 0, 0, 0.07) 0px 1px 2px, rgba(0, 0, 0, 0.07) 0px 2px 4px, rgba(0, 0, 0, 0.07) 0px 4px 8px, rgba(0, 0, 0, 0.07) 0px 8px 16px, rgba(0, 0, 0, 0.07) 0px 16px 32px, rgba(0, 0, 0, 0.07) 0px 32px 64px;
+}	
+
+.sidebar-right.close-right {
+	width: 88px;
+	padding: 0px;
+}	
+.sidebar-right.close-right .toggle-right {
+	transform: translateX(-50%) translateY(50%) rotate(0deg);
+}
+
+.sidebar-right header .toggle-right {
+	position: absolute;
+	top: 4%;
+	right: 60px;
+	transform: translateY(-50%) rotate(180deg);
+	height: 25px;
+	width: 25px;
+	background-color: var(--primary-color);
+	color: var(--body-color);
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 22px;
+	cursor: pointer;
+	transition: var(--tran-05);
+}
+
+
+.sidebar-right .menu-bar-right {
+	height: calc(100% - 55px);
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	overflow-y: scroll;
+}
+
+.sidebar-right .menu-bar-right .mode {
+	border-radius: 6px;
+	background-color: var(--primary-color-light);
+	position: relative;
+	transition: var(--tran-05);
+}
+
 .sidebar {
 	position: fixed;
 	top: 0;
@@ -1355,6 +1531,11 @@ body.dark .sidebar header .toggle {
 	width: 88px;
 	padding: 0px;
 }
+.sidebar.close .toggle {
+	transform: translateX(-50%) translateY(50%) rotate(0deg);
+}
+
+
 .sidebar li {
 	height: 50px;
 	list-style: none;
@@ -1443,9 +1624,7 @@ header .image-text .profession {
 body.dark .sidebar header .toggle {
 	color: var(--text-color);
 }
-.sidebar.close .toggle {
-	transform: translateX(-50%) translateY(50%) rotate(0deg);
-}
+
 .sidebar .menu {
 	margin-top: 3px;
 }
@@ -12138,7 +12317,7 @@ table-danger,
   border-top-left-radius: 0px;
   background-color: transparent;
   margin: 0px;
-  padding: 10px;
+  padding: 0px;
   position: relative;
   box-shadow: 0px 0px 0px #0c2a4d;
 }
@@ -12251,12 +12430,14 @@ color: transparent;
 background-color: transparent;
 border-radius: 0px;
 color: transparent;
+
 }
 .dash-dropdown .Select--multi .Select-value-icon {
 background-color: transparent;
 border-radius: 0px;
 border-right: 0px;
 margin: 0px;
+font-size: 20px;
 padding: 0px;
 color: white;
 }

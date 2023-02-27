@@ -118,45 +118,6 @@ KPIFramework['d_level0_id']=KPIFramework['d_level0_id'].astype(int)
 KPIFramework['d_level1_id']=KPIFramework['d_level1_id'].astype(int)
 KPIFramework['d_level2_id']=KPIFramework['d_level2_id'].astype(int)
 
-#openimage = Image.open(r'/assets/Images/synthetix.png')
-
-
-# engine = create_engine('mysql+pymysql://root:Handschoen92@localhost:3306/kpiframework')
-# dbConnection    = engine.connect()
-
-# SQL Retrieve data
-
-#KPIFrameworkl0 = KPIFramework.groupby(columnsdf0, as_index=False).agg(
-#    {'Denominator': 'sum', 'Numerator': 'sum', 'Denominator_LP': 'sum', 'Numerator_LP': 'sum'})
-#
-#KPIFrameworkl1 = KPIFramework.groupby(columnsdf1, as_index=False).agg(
-#    {'Denominator': 'sum', 'Numerator': 'sum', 'Denominator_LP': 'sum', 'Numerator_LP': 'sum'})
-#KPIFrameworkl2 = KPIFramework.groupby(columnsdf2, as_index=False).agg(
-#    {'Denominator': 'sum', 'Numerator': 'sum', 'Denominator_LP': 'sum', 'Numerator_LP': 'sum'})
-#
-#KPIFrameworkl0.to_csv(r'assets/Attributes/dashboard_data/KPIFrameworkl0.csv',
-#                      index=False)
-#KPIFrameworkl1.to_csv(r'assets/Attributes/dashboard_data/KPIFrameworkl1.csv',
-#                      index=False)
-#KPIFrameworkl2.to_csv(r'assets/Attributes/dashboard_data/KPIFrameworkl2.csv',
-#                      index=False)
-
-
-
-#for i in KPIIDList:
-#    sheet = dict(cookpi_attributes[(cookpi_attributes.d_kpi_id==i)].set_index('Join_ID')['Level_ID'].to_dict())
-
-
-#d_level0 = pd.DataFrame(
-#    pd.read_csv(r'assets/Attributes/dashboard_data/LEVEL0_Synthetix_Library.csv',
-#                sep=';', index_col=False));
-#
-#d_level1 = pd.DataFrame(
-#    pd.read_csv(r'assets/Attributes/dashboard_data/LEVEL1_Synthetix_Library.csv',
-#                sep=';', index_col=False));
-#d_level2 = pd.DataFrame(
-#    pd.read_csv(r'assets/Attributes/dashboard_data/LEVEL2_Synthetix_Library.csv',
-#                sep=';', index_col=False));
 d_kpi_tmp = pd.read_excel(open('assets/Attributes/dashboard_data/cookpi_per_pi.xlsx', 'rb'),
               sheet_name='d_kpi')
               
@@ -349,7 +310,6 @@ Radiograin = html.Div([
 ),
 
 
-#options = [{'label': i, 'value': i, style={'color': 'Gold', 'font-size': 20}} for i in Level0NameList]
 Level0DD = html.Div([dcc.Dropdown(
     id="Level0NameSelect",
     options=[{'label': html.Span([i],style={'background-color': Level0NameColor[i]}), 'value': i} for i in Level0NameList],#, 'style': {'backgroundColor': Level0NameColor[i]}
@@ -763,20 +723,20 @@ navbar = html.Nav([html.Header([
                     ],className="sidebar close",id='nav')
 
 
-navbarfilters = html.Nav([html.Header([
-                    html.I("chevron_left",className='material-icons toggle-right',id='Opennavbar-right')
-                    ]),
-                    html.Div([
-                        html.Div([
-                            html.Div(mainlogo),
-                            html.Div(html.Span("Performace view",className='text nav-text')),
-                            html.Div([
-                                      dbc.Col([Level0DD],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
-                                      dbc.Col([Level1DD],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
-                                      dbc.Col([Level2DD],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'})],className='menu-links')
-                        ],className='menu')
-                    ],className='menu-bar')
-                    ],className="sidebar-right close-right",id='navright')
+#navbarfilters = html.Nav([html.Header([
+#                    html.I("chevron_left",className='material-icons toggle-right',id='Opennavbar-right')
+#                    ]),
+#                    html.Div([
+#                        html.Div([
+#                           # html.Div(mainlogo),
+#                            html.Div(html.Span("Performace view",className='text nav-text')),
+#                            html.Div([
+#                                      html.Div([Level0DD],style={"margin-bottom": '2px'}),
+#                                      html.Div([Level1DD],style={"margin-bottom": '2px'}),
+#                                      html.Div([Level2DD],style={"margin-bottom": '2px'})],className='menu-links')
+#                        ],className='menu')
+#                    ],className='menu-bar')
+#                    ],className="sidebar-right close-right",id='navright')
 
 
 
@@ -1237,7 +1197,7 @@ def definefilterlevel(tabsdrilldown):
 tabs = html.Div([
     dbc.Tabs(children=
     [
-    dbc.Tab(children=[html.I("delete_sweep",n_clicks=0,id='shiftbutton',className="material-icons md-48",style={'position':'absolute','top':'1px','right':'12px','z-index': '1'}),
+    dbc.Tab(children=[#html.I("delete_sweep",n_clicks=0,id='shiftbutton',className="material-icons md-48",style={'position':'absolute','top':'1px','right':'12px','z-index': '1'}),
     dbc.CardBody(
         dbc.Row([
         dbc.Col(dbc.Spinner(children=[#,spinner_class_name='loading'
@@ -1438,25 +1398,25 @@ app.layout = html.Div([html.I("filter_alt", id='dropdowncontrol', className="mat
         html.Div(id='output-container-date-picker-range',
                  style={'margin-top': '12px'},
                  className='h7'),
-        #dbc.Modal([
-        #    dbc.ModalBody(children=[
-        #        dbc.Col([mainlogo],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
-        #        dbc.Col([Level0DD],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
-        #        dbc.Col([Level1DD],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
-        #        dbc.Col([Level2DD],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
-        #    ],id="dropdowns"
-        #    ,className="modalfilter-modal"),
-        #    dbc.ModalFooter(
-        #            dbc.Button(
-        #                "Close", id="close-filter", className="ms-auto", n_clicks=0
-        #            ),style={'border-top': '0px'}
-        #        ),
-        #],
-        #id="modalfilter",
-        #className="modalfilter-modal",
-        #is_open=False,
-        #),
-      dbc.Col(fade,className="col-sm-12 col-md-12 col-lg-2 col-xl-2",style={'display': 'none'}),
+        dbc.Modal([
+            dbc.ModalBody(children=[
+                dbc.Col([mainlogo],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
+                dbc.Col([Level0DD],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
+                dbc.Col([Level1DD],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
+                dbc.Col([Level2DD],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
+            ],id="dropdowns"
+            ,className="modalfilter-modal"),
+            dbc.ModalFooter(
+                    dbc.Button(
+                        "Close", id="close-filter", className="ms-auto", n_clicks=0
+                    ),style={'border-top': '0px'}
+                ),
+        ],
+        id="modalfilter",
+        className="modalfilter-modal",
+        is_open=False,
+        ),
+    dbc.Col(fade,className="col-sm-12 col-md-12 col-lg-2 col-xl-2",style={'display': 'none'}),
        ]),
     dbc.Row([
             dbc.Col(
@@ -1501,7 +1461,6 @@ app.layout = html.Div([html.I("filter_alt", id='dropdowncontrol', className="mat
 
     ]
     ),
-    html.Div(navbarfilters),
     html.Div(navbar),
     html.Span(html.I(''),style={'margin-top': '5em','display': 'block'}),
     dcc.Store(id='dfl0',data=[],storage_type='memory'),
@@ -1510,6 +1469,7 @@ app.layout = html.Div([html.I("filter_alt", id='dropdowncontrol', className="mat
     dcc.Store(id='dffcomparefilter',data=[],storage_type='memory'),
     dcc.Store(id='dflcomparekpi',data=[],storage_type='memory'),
     dcc.Store(id='selectedkpigroup',data=[],storage_type='memory'),
+  #  html.Div(navbarfilters),
     WindowBreakpoints(
             id="breakpoints",
             # Define the breakpoint thresholds
@@ -1531,25 +1491,25 @@ app.layout = html.Div([html.I("filter_alt", id='dropdowncontrol', className="mat
 ],
 )
 
-app.clientside_callback(
-    """
-    function() {
-        // Create a new KeyboardEvent object
-        var event = new KeyboardEvent('keydown', {
-            key: 'Shift',
-            code: 'ShiftLeft',
-            which: 16,
-            shiftKey: true,
-            bubbles: true
-        });
-
-        // Dispatch the KeyboardEvent on the window
-        window.dispatchEvent(event);
-    }
-    """,
-    Output('output', 'children'),
-    [Input('shiftbutton', 'n_clicks')]
-)
+#app.clientside_callback(
+#    """
+#    function() {
+#        // Create a new KeyboardEvent object
+#        var event = new KeyboardEvent('keydown', {
+#            key: 'Shift',
+#            code: 'ShiftLeft',
+#            which: 16,
+#            shiftKey: true,
+#            bubbles: true
+#        });
+#
+#        // Dispatch the KeyboardEvent on the window
+#        window.dispatchEvent(event);
+#    }
+#    """,
+#    Output('output', 'children'),
+#    [Input('shiftbutton', 'n_clicks')]
+#)
 
 
 
@@ -2376,7 +2336,7 @@ def update_kpiagg(data00,GrainSelect,KPISelect,KPIGroupSelect,CumulativeSwitch,P
                                size=14,
                            )
                            ),
-                margin={'l': 60, 'b': 45, 't': 33, 'r': 40},
+                margin={'l': 60, 'b': 45, 't': 33, 'r': 40}, 
                 modebar = dict(
                             bgcolor='transparent',
                             color=BeautifulSignalColor,
