@@ -38,6 +38,8 @@ print(("It takes %s seconds to download "+BLOBNAME) % (t2 - t1))
 print(pd.read_csv(LOCALFILENAME))
 
 """
+
+import dash_mantine_components as dmc
 import openpyxl
 import pandas as pd
 import datetime
@@ -55,7 +57,7 @@ import plotly.express as px
 import plotly.io as pio
 import numpy as np
 from dash_breakpoints import WindowBreakpoints
-
+import json
 #from dash_extensions.callback import CallbackCache, DiskCache
 
 import base64
@@ -182,7 +184,7 @@ GrainNameListCompare = dfl0Compare['Grain'].unique()
 Level1NameListCompare = dfl1Compare['LevelName_1'].unique()
 Level2NameListCompare = dfl2['LevelName_2'].unique().tolist()
 
-
+KPI_Level0 = dict(Level0Name.set_index('KPIName')['LevelName_0'].to_dict())
 Level0NameColor = dict(Level0Name.set_index('LevelName_0')['LevelColor_0'].to_dict())
 Level1NameColor = dict(Level1Name.set_index('LevelName_1')['LevelColor_1'].to_dict())
 Level2NameColor = dict(Level2Name.set_index('LevelName_2')['LevelColor_2'].to_dict())
@@ -192,7 +194,7 @@ Level2attr = dict(Level2Name.set_index('KPIName')['LevelEntitytype_2'].to_dict()
 
 
 KPINameListCompare = d_kpi['KPIName'].unique()
-KPINameColor = dict(d_kpi.set_index('d_kpi_id')['KPIName'].to_dict())
+KPINameToID = dict(d_kpi.set_index('KPIName')['d_kpi_id'].to_dict())
 KPINameList =  d_kpi['KPIName'].unique()
 KPIGroupList = d_kpi['KPIGroup'].unique()
 HigherIs = dict(d_kpi.set_index('KPIName')['HigherIs(1=positive)'].to_dict())
@@ -310,7 +312,9 @@ Radiograin = html.Div([
 ),
 
 
-Level0DD = html.Div([dcc.Dropdown(
+Level0DD = html.Div([
+    html.Div(dcc.Textarea(value='Level zero filters',id='dropdown0',className='h6')),
+    dcc.Dropdown(
     id="Level0NameSelect",
     options=[{'label': html.Span([i],style={'background-color': Level0NameColor[i]}), 'value': i} for i in Level0NameList],#, 'style': {'backgroundColor': Level0NameColor[i]}
     multi=True,
@@ -323,10 +327,12 @@ Level0DD = html.Div([dcc.Dropdown(
 
 @app.callback(
     Output('graph-level0compare', 'selectedData'),
-    [Input('sweepl0', 'n_clicks')]
+    [Input('sweepl0', 'n_clicks'),
+     Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'),
+    ]
 )
 
-def reset_clickDatal0(n_clicks):
+def reset_clickDatal0(n_clicks,n_clicks2):
     print('removefilter')
     return None
 
@@ -335,11 +341,12 @@ def reset_clickDatal0(n_clicks):
              ],             
               Input('graph-level0compare', 'selectedData'),
               Input('sweepl0', 'n_clicks'),
+              Input('KPISelect','value'),
               #State('sweepl0', 'n_clicks')
              # Input('graph-level1compare', 'selectedData'),
              # Input('graph-level2compare', 'selectedData'),
              )
-def clean_data(selecteddatal0bar,n_clicks):#,selecteddatal1bar,selecteddatal2bar
+def clean_data(selecteddatal0bar,n_clicks,KPINameSelect):#,selecteddatal1bar,selecteddatal2bar
     print(n_clicks)
     selectedlistl0 = [
         i['y']
@@ -351,7 +358,9 @@ def clean_data(selecteddatal0bar,n_clicks):#,selecteddatal1bar,selecteddatal2bar
     else:
         return [Level0NameList]
 
-Level1DD = html.Div([dcc.Dropdown(
+Level1DD = html.Div([
+    html.Div(dcc.Textarea(value='Level one filters',id='dropdown1',className='h6')),
+dcc.Dropdown(
     id="Level1NameSelect",
     options=[{'label': html.Span([i],style={'background-color': Level1NameColor[i]}), 'value': i} for i in Level1NameList],#, 'style': {'backgroundColor': Level0NameColor[i]}
     multi=True,
@@ -393,7 +402,9 @@ def clean_data(selecteddatal1bar,n_clicks):#,selecteddatal1bar,selecteddatal2bar
     else:
         return [Level1NameList]
 
-Level2DD = html.Div([dcc.Dropdown(
+Level2DD = html.Div([
+    html.Div(dcc.Textarea(value='Level two filters',id='dropdown2',className='h6')),
+    dcc.Dropdown(
         id="Level2NameSelect",
         options=[{'label': html.Span([i],style={'background-color': Level2NameColor[i]}), 'value': i} for i in Level2NameList],#, 'style': {'backgroundColor': Level0NameColor[i]}
         multi=True,
@@ -435,20 +446,17 @@ def clean_data(selecteddatal2bar,n_clicks):#,selecteddatal1bar,selecteddatal2bar
     else:
         return [Level2NameList]
 
-carousellistnew = []
-carousellist3new =[]
-
-carousellist = []
-carousellist3 = []
-
-for i in range(len(KPINameList)):
-    numbertmp= i+1
-    number=str(numbertmp)
-    carousellist.append(
-    f"""html.Div(id='carddiv{number}')"""
-    ) 
-carousellist2=','.join(carousellist)
-carousellist3.append(carousellist2)
+#carousellist = []
+#carousellist3 = []
+#
+#for i in range(len(KPINameList)):
+#    numbertmp= i+1
+#    number=str(numbertmp)
+#    carousellist.append(
+#    f"""html.Div(id='carddiv{number}')"""
+#    ) 
+#carousellist2=','.join(carousellist)
+#carousellist3.append(carousellist2)
 
 kpigrouplistinput =[]
 kpigrouplistinput3 =[]
@@ -481,26 +489,6 @@ kpigrouplistinput3.append(kpigrouplistinput2)
 
 kpigroupstyleoutput2=','.join(kpigroupstyleoutput)
 kpigroupstyleoutput3.append(kpigroupstyleoutput2)
-
-carddivnclicks=[]
-carddivnclicks3= []
-carddivnclicksnew=[]
-carddivnclicks3new= []
-
-carddivnclicks.append(
-        f"""Input("KPIGroupSelect","value")"""
-    )
-for i in range(kpicountout[0]):
-    numbertmp=i
-    numberidtmp= i+1
-    number=str(numbertmp)
-    numberid=str(numberidtmp)
-    carddivnclicks.append(
-        f"""Input("carddiv{numberidtmp}","n_clicks")"""
-    )
-
-carddivnclicks2=','.join(carddivnclicks)
-carddivnclicks3.append(carddivnclicks2)
 
 
 carddivstyle = []
@@ -1174,12 +1162,12 @@ def definefilterlevel(tabsdrilldown):
         msg1 = {'display': 'none'}
         msg2 = {'display': 'none'}
     elif tabsdrilldown == 'tab-1':
-        msg0 = {'display': 'none'}
+        msg0 = {'display': 'block'}
         msg1 = {'display': 'block'}
         msg2 = {'display': 'none'}
     elif tabsdrilldown == 'tab-2':
-        msg0 = {'display': 'none','overflow':'hidden'}
-        msg1 = {'display': 'none','overflow':'hidden'}
+        msg0 = {'display': 'block'}
+        msg1 = {'display': 'block'}
         msg2 = {'display': 'block'}
     else:
         msg0 = {'display': 'block'}
@@ -1392,8 +1380,7 @@ tabscontainer = html.Div(
 ######################################################################################################################
 ######################################################################################################################
 
-carousselend = carousellist3new if carousellist3new else carousellist3
-app.layout = html.Div([html.I("filter_alt", id='dropdowncontrol', className="material-icons filtericon", n_clicks=0),
+app.layout = html.Div([html.I("chevron_right",className='material-icons toggle-right',id='Opennavbar-right'),#html.I("filter_alt", id='dropdowncontrol', className="material-icons filtericon", n_clicks=0),
     dbc.Row([
         html.Div(id='output-container-date-picker-range',
                  style={'margin-top': '12px'},
@@ -1405,7 +1392,7 @@ app.layout = html.Div([html.I("filter_alt", id='dropdowncontrol', className="mat
                 dbc.Col([Level1DD],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
                 dbc.Col([Level2DD],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
             ],id="dropdowns"
-            ,className="modalfilter-modal"),
+            ),
             dbc.ModalFooter(
                     dbc.Button(
                         "Close", id="close-filter", className="ms-auto", n_clicks=0
@@ -1413,7 +1400,7 @@ app.layout = html.Div([html.I("filter_alt", id='dropdowncontrol', className="mat
                 ),
         ],
         id="modalfilter",
-        className="modalfilter-modal",
+        className="modalfilter",
         is_open=False,
         ),
     dbc.Col(fade,className="col-sm-12 col-md-12 col-lg-2 col-xl-2",style={'display': 'none'}),
@@ -1422,6 +1409,7 @@ app.layout = html.Div([html.I("filter_alt", id='dropdowncontrol', className="mat
             dbc.Col(
             [html.Div(Perioddropdown,className="col-sm-2 col-md-2 col-lg-2 col-xl-2",style={'display': 'none'}),
             html.Div(className="col-sm-9 col-md-9 col-lg-9 col-xl-9",style={"margin": '0 auto'},id='cardsid'),
+            html.Div(id='container-ex3', children=[])
             # html.Div(className="col-sm-9 col-md-9 col-lg-9 col-xl-9"
             #    ,style={"margin": '0 auto'},id='cardsid')
             ]),
@@ -1462,6 +1450,7 @@ app.layout = html.Div([html.I("filter_alt", id='dropdowncontrol', className="mat
     ]
     ),
     html.Div(navbar),
+    #html.Div(navbarfilters),
     html.Span(html.I(''),style={'margin-top': '5em','display': 'block'}),
     dcc.Store(id='dfl0',data=[],storage_type='memory'),
     dcc.Store(id='dfl1',data=[],storage_type='memory'),
@@ -1469,7 +1458,7 @@ app.layout = html.Div([html.I("filter_alt", id='dropdowncontrol', className="mat
     dcc.Store(id='dffcomparefilter',data=[],storage_type='memory'),
     dcc.Store(id='dflcomparekpi',data=[],storage_type='memory'),
     dcc.Store(id='selectedkpigroup',data=[],storage_type='memory'),
-  #  html.Div(navbarfilters),
+
     WindowBreakpoints(
             id="breakpoints",
             # Define the breakpoint thresholds
@@ -1663,6 +1652,9 @@ datetotmp.append(str(dfl0['Period_int'].max())[0:10])
               Output('dffcomparefilter', 'data'),
             #  Output('dflcomparekpi', 'data'),
               Output('output-container-date-picker-range', 'children'),
+              Output('dropdown0', 'value'),
+              Output('dropdown1', 'value'),
+              Output('dropdown2', 'value')
              ],              
               Input('GrainSelect', 'value'),
               Input('KPISelect', 'value'),
@@ -1798,7 +1790,21 @@ def clean_data(GrainSelect,KPISelect,KPIGroupSelect,relayoutDatal0,relayoutDatal
     dffcompareclick2 = dffcompareclick[0]
     dffcomparejson = dffcompareclick2.to_json(date_format='iso', orient='split')
    # dffl2comparejson = dff2[0].to_json(date_format='iso', orient='split')
-
+    cookpi_attributes = cookpi_attributestmp[(cookpi_attributestmp.d_kpi_id == KPINameToID[KPISelect])]
+    result = {}
+    level0 =[]
+    level1 =[]
+    level2 =[]
+    for index,row in cookpi_attributes.iterrows():
+        if row['Level_ID_present'] == 'd_level0_id':
+            result[row['Level_ID_present']] = row['dds_name']
+            level0.append(result['d_level0_id'])
+        elif row['Level_ID_present'] == 'd_level1_id':
+            result[row['Level_ID_present']] = row['dds_name']
+            level1.append(result['d_level1_id'])
+        elif row['Level_ID_present'] == 'd_level2_id':
+            result[row['Level_ID_present']] = row['dds_name']
+            level2.append(result['d_level2_id']) #used to fill the name of the dropdownlist
     clickdatasend = dfll0[0]['PeriodName'].unique()
     Periodchosencount = []
     Periodchosencount.clear()
@@ -1820,7 +1826,7 @@ def clean_data(GrainSelect,KPISelect,KPIGroupSelect,relayoutDatal0,relayoutDatal
     if len(string_prefix) == len('You have selected: '):
         string_prefix = 'Select a date to see it displayed here'
     level1options=dfll1[0]["LevelName_1"].unique()
-    return dffl0json,dffl1json,dffl2json,dffcomparejson,string_prefix#,style,style,style,style,style#,clickdatasend
+    return dffl0json,dffl1json,dffl2json,dffcomparejson,string_prefix,'bs' if not level0 else level0[0],'bs' if not level1 else level1[0],'bs' if not level2 else level2[0]#,style,style,style,style,style#,clickdatasend
 
 datefromtmp.clear()
 datetotmp.clear()  
@@ -1844,10 +1850,14 @@ datetotmp.clear()
 
 def updatekpiindicator(dffcomparefilter,KPISelect,KPIGroupSelect,widthBreakpoint,Level0NameSelect,Level1NameSelect,Level2NameSelect,window_width): #,*args,tabsdrilldown,clickData0,clickDatal1,clickDatal2,dfl0
     print('execute updatekpiindicator')
+    accordionlist=[]
+    accordionlist3=[]
+    accordionlist.clear()
+    accordionlist3.clear()
+    carousellistnew = []
+    carousellist3new =[]
     carousellist3new.clear()
     carousellistnew.clear()
-    carddivnclicks3new.clear()
-    carddivnclicksnew.clear() 
    # dfl0 = pd.read_json(dfl0, orient='split')
     dffcomparefilter = pd.read_json(dffcomparefilter, orient='split')
    # dfl2 = pd.read_json(dfl2click, orient='split')
@@ -1860,7 +1870,27 @@ def updatekpiindicator(dffcomparefilter,KPISelect,KPIGroupSelect,widthBreakpoint
     
     dftouse = dffcomparefilter
     dftouse.sort_values(by=['Sorting'])
-    KPINameList2 = dftouse['KPIName'].unique()
+    KPINameListmodelfilter = dftouse['KPIName'].unique()
+    KPIListFiltered = d_kpi[
+            (d_kpi["KPIGroup"].isin(KPIGroupSelect))
+        ]
+    KPIListFiltered.sort_values(by=['Sorting'])
+    KPINameListGroupFilter = KPIListFiltered['KPIName'].unique()
+
+    KPINameListIterate = []
+    for i in KPINameListmodelfilter:
+        KPINameListIterate.append(i)
+
+    for p in KPINameListGroupFilter:
+        if p not in KPINameListmodelfilter:
+            KPINameListIterate.append(p)
+    KPINameListIterate.remove(KPISelect)
+    KPINameListIterate.insert(0,KPISelect)
+    print(KPINameListIterate)
+    print('mmmmmmmmmmmmmmmmmm')
+    print('mmmmmmmmmmmmmmmmmm')
+    print('mmmmmmmmmmmmmmmmmm')
+    print('mmmmmmmmmmmmmmmmmm')
     outputactual =[]
     outputactualtxt =[]
     outputlasttxt =[]
@@ -1879,170 +1909,182 @@ def updatekpiindicator(dffcomparefilter,KPISelect,KPIGroupSelect,widthBreakpoint
     arrow.clear()
     popbody.clear()
   #  outputlasttxtlogo.clear()
-    for i,kpi in enumerate(KPINameList2):
-        enum = str(i + 1)
-        dataCompare1 = dftouse[
-            (dftouse["KPIName"] == kpi)
-        ]
-        df_by_LevelName = dataCompare1[["Denominator","Numerator","Denominator_LP","Numerator_LP"]]#"d_kpi_id","Denominator","Numerator","Denominator_LP","Numerator_LP"
-        
-        clickdatasend = dataCompare1['PeriodName'].unique()
-        Periodchosencount = []
-        Periodchosencount.clear()
-        Periodchosencount.append(len(clickdatasend.tolist()))
-        Displayprevious = []
-        if Periodchosencount[0]>1:
-            Displayprevious.append("none")
+    code_executed = False
+    for i,kpi in enumerate(KPINameListIterate):
+        if kpi in KPINameListmodelfilter:   
+            enum = str(i + 1)
+            dataCompare1 = dftouse[
+                (dftouse["KPIName"] == kpi)
+            ]
+            df_by_LevelName = dataCompare1[["Denominator","Numerator","Denominator_LP","Numerator_LP"]]#"d_kpi_id","Denominator","Numerator","Denominator_LP","Numerator_LP"
+
+            clickdatasend = dataCompare1['PeriodName'].unique()
+            Periodchosencount = []
+            Periodchosencount.clear()
+            Periodchosencount.append(len(clickdatasend.tolist()))
+            Displayprevious = []
+            if Periodchosencount[0]>1:
+                Displayprevious.append("none")
+            else:
+                Displayprevious.append("block")
+            logopositive = "green"
+            logonegative = "red"
+            logoneutral = "grey"
+            value = []
+            value_lp = []
+            valueNum =[]
+            valueDenom = []
+            valueNumLP =[]
+            valueDenomLP =[]
+            notation =[]
+            valueNum.clear()
+            valueDenom.clear()
+            valueNumLP.clear()
+            valueDenomLP.clear()
+            df_by_LevelName.reset_index(drop=True,inplace=True)
+            Notationtmp = KPISelectedStylePython(kpi)
+            Notation = KPISelectedStyle(kpi)
+            Notationlist=Notationtmp[0]
+            Calculation = CalculationDEF(kpi)
+            CalculationLogic = CalculationLogicOveral(Calculation)
+            AggregateNum = AggregateNumDenom(Calculation)
+            AggregateDenom = AggregateNumDenom(Calculation)
+            meannum = []
+            if str(eval(AggregateNum))=='mean':
+                meannum.append("axis = 0")
+            else:
+                meannum.append("")
+            meandenom = []
+            if str(eval(AggregateDenom)) == 'mean':
+                meandenom.append("axis = 0")
+            else:
+                meandenom.append("")
+            agnum = "df_by_LevelName['Numerator']."+str(eval(AggregateNum)) +"("+meannum[0]+")"
+            agdenom = "df_by_LevelName['Denominator']." + str(eval(AggregateDenom)) +"("+meandenom[0]+")"
+            agnumlp = "df_by_LevelName['Numerator_LP']." + str(eval(AggregateNum)) +"("+meannum[0]+")"
+            agdenomlp = "df_by_LevelName['Denominator_LP']." + str(eval(AggregateDenom)) +"("+meandenom[0]+")"
+            df_by_LevelName = df_by_LevelName.assign(Aggnum=eval(agnum))
+            valueNum.append(df_by_LevelName['Aggnum'].iloc[0]) 
+            df_by_LevelName = df_by_LevelName.assign(Aggdenom=eval(agdenom))
+            valueDenom.append(df_by_LevelName['Aggdenom'].iloc[0]) 
+            df_by_LevelName = df_by_LevelName.assign(Aggnum_LP=eval(agnumlp))
+            valueNumLP.append(df_by_LevelName['Aggnum_LP'].iloc[0])
+            df_by_LevelName = df_by_LevelName.assign(Aggdenom_LP=eval(agdenomlp))
+            valueDenomLP.append(df_by_LevelName['Aggdenom_LP'].iloc[0])
+            twee = [i / j for i, j in zip(valueNum, valueDenom)]
+            twee_lp = [i / j for i, j in zip(valueNumLP, valueDenomLP)]
+            if Calculation == 2:
+                CalculationString = twee[0]
+                CalculationStringlp = twee_lp[0]
+                value.append(CalculationString)
+                value_lp.append(CalculationStringlp)
+            elif Calculation == 1:
+                CalculationString = sum(valueNum)
+                CalculationStringlp = sum(valueNumLP)
+                value.append(CalculationString)
+                value_lp.append(CalculationStringlp)
+            if value_lp[0]==value[0]:
+                arrow = "'arrow_right'"
+            elif value_lp[0]<value[0]:
+                arrow = "'arrow_drop_up'"
+            else:
+                arrow = "'arrow_drop_down'"
+            valueNum.clear()
+            valueDenom.clear()
+            valueNumLP.clear()
+            valueDenomLP.clear()
+            meannum.clear()
+            meandenom.clear()
+            notation.append(Notationlist)
+            if kpi == KPISelect:
+                style111 = {'box-shadow': f'0px -0px 5px 2px {Highlightcardcolor}'}
+            else:
+                style111 = {}
+            outputactualtxt =str(eval(Notationlist).format(value_lp[0])) #value[0]#eval(Notationlist).format(value[0]),
+            outputlasttxt = str(eval(Notationlist).format(value[0])) #value[0]#eval(Notationlist).format(value[0]),
+            Card.append(kpi)
+            style = {'display': Displayprevious[0] , 'color' : logopositive if HigherIs[kpi]==1 else logonegative if HigherIs[kpi]==2 else logoneutral}
+            popbody.append(kpi)
+         #   outputlasttxtlogo = logopositive
+          #  carddivstyle.append(stylempty)
+            value.clear()
+            value_lp.clear()
+            notation.clear()
+            numbertmp= i+1
+            number=str(numbertmp)
+            numberi=str(numbertmp)
+            carousellistnew.append(
+            f"""html.Div(
+                    html.Div([
+                        html.I('info', className='material-icons', 
+                                   id='open-box{number}', n_clicks=0),
+                        dbc.Popover(
+                            [
+                                dbc.PopoverBody('And heres some amazing content. Cool!',id='popbody{number}',className='h6'),
+                            ],
+                            target='open-box{number}',
+                            trigger='legacy',
+                            className='popupper',
+                            hide_arrow=False
+                            ),
+                        html.Div(id=dict(type='output-ex3',index = '{kpi}')),
+                        dcc.Textarea(value=f'{kpi}',
+                                     disabled=True,
+                                     draggable=False,
+                                     contentEditable=False,
+                                     id='Card{number}',
+                                     className='col-12 h5'),
+                        html.Div(children=[
+                            dcc.Textarea(value=f'{outputactualtxt}',
+                                id='indicator-graph{number}TXT',
+                                contentEditable=False,
+                                disabled=True,
+                                readOnly=True,
+                                draggable=False,
+                                className='col-12 h6'
+                            ),
+                            html.Div([
+                                 dcc.Textarea(value=f'{outputlasttxt}',
+                                     id="indicatorlast-graph{number}TXT",
+                                     contentEditable =False,
+                                     disabled=True,
+                                     readOnly=True,
+                                     draggable=False,
+                                     className='col-8 h7',
+                                 ),
+                                 html.I({arrow},className="material-icons icon",id="arrow{number}")
+                                ],id="indicatorlast-graph{number}TXTLogo",style={style})
+                            ])
+                    	],id='CardContent{number}'),id=dict(type='filter-dropdown-ex3',index = '{kpi}'),style={style111},className='carddiv')"""
+            ) 
         else:
-            Displayprevious.append("block")
-        logopositive = "green"
-        logonegative = "red"
-        logoneutral = "grey"
-        value = []
-        value_lp = []
-        valueNum =[]
-        valueDenom = []
-        valueNumLP =[]
-        valueDenomLP =[]
-        notation =[]
-        valueNum.clear()
-        valueDenom.clear()
-        valueNumLP.clear()
-        valueDenomLP.clear()
-        df_by_LevelName.reset_index(drop=True,inplace=True)
-        Notationtmp = KPISelectedStylePython(kpi)
-        Notation = KPISelectedStyle(kpi)
-        Notationlist=Notationtmp[0]
-        Calculation = CalculationDEF(kpi)
-        CalculationLogic = CalculationLogicOveral(Calculation)
-        AggregateNum = AggregateNumDenom(Calculation)
-        AggregateDenom = AggregateNumDenom(Calculation)
-        meannum = []
-        if str(eval(AggregateNum))=='mean':
-            meannum.append("axis = 0")
-        else:
-            meannum.append("")
-        meandenom = []
-        if str(eval(AggregateDenom)) == 'mean':
-            meandenom.append("axis = 0")
-        else:
-            meandenom.append("")
-        agnum = "df_by_LevelName['Numerator']."+str(eval(AggregateNum)) +"("+meannum[0]+")"
-        agdenom = "df_by_LevelName['Denominator']." + str(eval(AggregateDenom)) +"("+meandenom[0]+")"
-        agnumlp = "df_by_LevelName['Numerator_LP']." + str(eval(AggregateNum)) +"("+meannum[0]+")"
-        agdenomlp = "df_by_LevelName['Denominator_LP']." + str(eval(AggregateDenom)) +"("+meandenom[0]+")"
-        df_by_LevelName = df_by_LevelName.assign(Aggnum=eval(agnum))
-        print(kpi)
-        valueNum.append(df_by_LevelName['Aggnum'].iloc[0]) 
-        df_by_LevelName = df_by_LevelName.assign(Aggdenom=eval(agdenom))
-        valueDenom.append(df_by_LevelName['Aggdenom'].iloc[0]) 
-        df_by_LevelName = df_by_LevelName.assign(Aggnum_LP=eval(agnumlp))
-        valueNumLP.append(df_by_LevelName['Aggnum_LP'].iloc[0])
-        df_by_LevelName = df_by_LevelName.assign(Aggdenom_LP=eval(agdenomlp))
-        valueDenomLP.append(df_by_LevelName['Aggdenom_LP'].iloc[0])
-        twee = [i / j for i, j in zip(valueNum, valueDenom)]
-        twee_lp = [i / j for i, j in zip(valueNumLP, valueDenomLP)]
-        if Calculation == 2:
-            CalculationString = twee[0]
-            CalculationStringlp = twee_lp[0]
-            value.append(CalculationString)
-            value_lp.append(CalculationStringlp)
-        elif Calculation == 1:
-            CalculationString = sum(valueNum)
-            CalculationStringlp = sum(valueNumLP)
-            value.append(CalculationString)
-            value_lp.append(CalculationStringlp)
-        if value_lp[0]==value[0]:
-            arrow = "'arrow_right'"
-        elif value_lp[0]<value[0]:
-            arrow = "'arrow_drop_up'"
-        else:
-            arrow = "'arrow_drop_down'"
-        valueNum.clear()
-        valueDenom.clear()
-        valueNumLP.clear()
-        valueDenomLP.clear()
-        meannum.clear()
-        meandenom.clear()
-        notation.append(Notationlist)
-        if kpi == KPISelect:
-            style111 = {'box-shadow': f'0px -0px 5px 2px {Highlightcardcolor}'}
-        else:
-            style111 = {}
-        outputactualtxt =str(eval(Notationlist).format(value_lp[0])) #value[0]#eval(Notationlist).format(value[0]),
-        outputlasttxt = str(eval(Notationlist).format(value[0])) #value[0]#eval(Notationlist).format(value[0]),
-        Card.append(kpi)
-        style = {'display': Displayprevious[0] , 'color' : logopositive if HigherIs[kpi]==1 else logonegative if HigherIs[kpi]==2 else logoneutral}
-        popbody.append(kpi)
-     #   outputlasttxtlogo = logopositive
-      #  carddivstyle.append(stylempty)
-        value.clear()
-        value_lp.clear()
-        notation.clear()
-        carddivnclicksnew.append(
-        f"""Input("KPIGroupSelect","value")"""
-            )
-        carddivnclicksnew.append(
-               f"""Input("carddiv{i}","n_clicks")"""
-        )
-        carddivnclicks2new=','.join(carddivnclicksnew)
-        carddivnclicks3new.append(carddivnclicks2new)
-        numbertmp= i+1
-        number=str(numbertmp)
-        numberi=str(numbertmp)
-        carousellistnew.append(
-        f"""html.Div(
-                html.Div([
-                    html.I('info', className='material-icons', 
-                               id='open-box{number}', n_clicks=0),
-                    dbc.Popover(
-                        [
-                            dbc.PopoverBody('And heres some amazing content. Cool!',id='popbody{number}',className='h6'),
-                        ],
-                        target='open-box{number}',
-                        trigger='legacy',
-                        className='popupper',
-                        hide_arrow=False
-                        ),
-                    dcc.Textarea(value=f'{kpi}',
-                                 disabled=True,
-                                 draggable=False,
-                                 contentEditable=False,
-                                 id='Card{number}',
-                                 className='col-12 h5'),
-                    html.Div(children=[
-                        dcc.Textarea(value=f'{outputactualtxt}',
-                            id='indicator-graph{number}TXT',
-                            contentEditable=False,
-                            disabled=True,
-                            readOnly=True,
-                            draggable=False,
-                            className='col-12 h6'
-                        ),
-                        html.Div([
-                             dcc.Textarea(value=f'{outputlasttxt}',
-                                 id="indicatorlast-graph{number}TXT",
-                                 contentEditable =False,
-                                 disabled=True,
-                                 readOnly=True,
-                                 draggable=False,
-                                 className='col-8 h7',
-                             ),
-                             html.I({arrow},className="material-icons icon",id="arrow{number}")
-                            ],id="indicatorlast-graph{number}TXTLogo",style={style})
-                        ])
-                	],id='CardContent{number}'),id='carddiv{number}',style={style111},className='carddiv')"""
-        ) 
+            accordionlist.append(
+                f"""html.Div('{kpi}',id=dict(type='filter-dropdown-ex3-reset',index='{kpi}'),className ='KPIRemainingbox')"""
+            ) 
+            if i == len(KPINameListGroupFilter) - 1:
+                accordionliststring = str(accordionlist)
+                accordionliststring2 = accordionliststring.replace('"', '')
+                accordionlist2=','.join(accordionlist)
+                accordionlist3.append(accordionlist2)
+                lastlistaccordionstring = []
+                lastlistaccordionstring.append(eval(accordionlist3[0]))
+                carousellistnew.append("html.Div(className='KPIRemainingcontainer',children="+accordionliststring2+")")
+            #carousellistnew.append(
+            #f"""html.Div(
+            #   ,id=dict(type='filter-dropdown-ex3',index = '{kpi}'),style={style111},className='carddiv')"""
+            #) 
+    accordionlist.clear()
+    accordionlist3.clear()
     carousellist2new=','.join(carousellistnew)
     carousellist3new.append(carousellist2new)
+    #print(carousellist3new[0])
     if widthBreakpoint =='sm':
         slides_to_showfinal = 1
         slides_to_scrollfinal = 1
     else:
         slides_to_showfinal = slides_to_show
         slides_to_scrollfinal = slides_to_scroll
-    carousselend = carousellist3new if carousellist3new else carousellist3
-    return [html.Div(dbc.Spinner(size='md',delay_hide=1500,children=[dtc.Carousel(eval(carousellist3new[0])
+    return [html.Div([dbc.Spinner(size='md',delay_hide=1500,children=[dtc.Carousel(eval(carousellist3new[0])
         ,
         slides_to_scroll=slides_to_scrollfinal,
         slides_to_show=slides_to_showfinal,
@@ -2057,40 +2099,56 @@ def updatekpiindicator(dffcomparefilter,KPISelect,KPIGroupSelect,widthBreakpoint
         className='col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12',
         responsive=[
             ],
-    )]))
+    )])
+    ]),
     ]
     
 
 kpi =[]
-print(eval(carddivnclicks3new[0]+','+kpigrouplistinput3[0]) if carddivnclicks3new else eval(carddivnclicks3[0]+','+kpigrouplistinput3[0]))
+#print(eval(carddivnclicks3new[0]+','+kpigrouplistinput3[0]) if carddivnclicks3new else eval(carddivnclicks3[0]+','+kpigrouplistinput3[0]))
 @app.callback([
     Output('KPISelect', 'value'),
+  #  Output({'type': 'output-ex3', 'index': MATCH}, 'children'),
     ],
-    eval(carddivnclicks3new[0]+','+kpigrouplistinput3[0]) if carddivnclicks3new else eval(carddivnclicks3[0]+','+kpigrouplistinput3[0])
-)
+    [
+    Input({'type': 'filter-dropdown-ex3', 'index': ALL}, 'n_clicks'),
+    Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'),
+    Input('KPIGroupSelect', 'value'),
+    eval(kpigrouplistinput3[0])
+    ]
+ )
 
-def update_df_KPIGroup(KPIGroupSelect,*args): 
+def update_df_KPIGroup(n_clicks,n_clicks2,KPIGroupSelect,*args): 
     print('execute update_df_KPIGroup')   
-    tmpchangedlist=dash.callback_context.triggered
-    tmpchangedlist2 = [item for item in tmpchangedlist if item['value'] is not None]
-    if not tmpchangedlist2:
-        changed_id ='tmp'
-    else:
-        changed_id = [p['prop_id'] for p in tmpchangedlist2][0].split('.')[0]
     dffKPISelect = d_kpi[
         (d_kpi["KPIGroup"].isin(KPIGroupSelect))
     ]
     dffKPISelect.sort_values(by=['Sorting'])
     KPINameListi = dffKPISelect['KPIName'].unique()
-    if 'carddiv' in changed_id[0:7]:
-        listnumber = int(int(changed_id[7:])-1)
-        kpi.append(KPINameListi[listnumber])
-        carddivselected = changed_id[0:8]
-    elif 'kpigroup' in changed_id[0:8]:
-        kpi.append(KPINameListi[0])
-    if not kpi:
-        kpi.append(KPINameListi[0])
-    return [kpi[-1]]
+    tmpchangedlist=dash.callback_context.triggered
+    kpi =[]
+    kpi.clear()
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
+    print(changed_id)
+    try:
+        valuelist = list(json.loads(changed_id).values()) 
+    except json.decoder.JSONDecodeError as e:
+        print("Unable to decode JSON: ", e)
+    try:
+        if "filter-dropdown-ex3-reset" in valuelist: 
+            kpi = valuelist[0]
+        elif "filter-dropdown-ex3" in valuelist: 
+            kpi = valuelist[0]
+        elif 'kpigroup' in changed_id[0:8]:
+            kpi = KPINameListi[0]
+    except:
+        print('bs!')
+    #kpilist = [index['prop_id'].split('{"index":"')[1].split('","type"')[0] for index in tmpchangedlist]
+   # print(kpilist)
+   # my_string = tmpchangedlist[0]['prop_id']  # extract the value of 'prop_id'
+   # my_value = my_string.split(':')[1].split(',')[0].strip('"')
+    #print(kpilist)
+    return [KPINameListi[0] if not kpi else kpi]
 ######################################################################################################################
 ######################################################################################################################
 ################################################----tab 0 aanmaken----###############################################
@@ -2336,7 +2394,7 @@ def update_kpiagg(data00,GrainSelect,KPISelect,KPIGroupSelect,CumulativeSwitch,P
                                size=14,
                            )
                            ),
-                margin={'l': 60, 'b': 45, 't': 33, 'r': 40}, 
+                margin={'l': 60, 'b': 45, 't': 37, 'r': 40}, 
                 modebar = dict(
                             bgcolor='transparent',
                             color=BeautifulSignalColor,
@@ -3418,7 +3476,7 @@ def update_kpicompare(data00,data11,data22,GrainSelect, KPISelect,KPIGroupSelect
         if dfftmp['LevelName_1'].nunique() == 1:
             TopImageName = dfftmp['LevelName_1'].unique().astype(str)
         else:
-            TopImageName = dfftmp['LevelName_1'].unique().astype(str)
+            TopImageName = dfftmp['LevelName_0'].unique().astype(str)
     elif tabsdrilldown == 'tab-2':
         dfftmp = pd.DataFrame(update_filter_l2(data2, GrainSelect, KPISelect,Level0NameSelect,Level1NameSelect, Level2NameSelect))
         dffcomptmp = pd.DataFrame(update_filter_compare_l2(dfl2Compare, GrainSelect, KPISelectCompare, Level1NameSelect, Level2NameSelect))
@@ -3430,12 +3488,14 @@ def update_kpicompare(data00,data11,data22,GrainSelect, KPISelect,KPIGroupSelect
         dfftmp = pd.DataFrame(update_filter_l0(data0, GrainSelect, KPISelect,Level0NameSelect))
         dffcomptmp = pd.DataFrame(update_filter_compare_l0(dfl0Compare, GrainSelect, KPISelectCompare))
         TopImageName = dfftmp['LevelName_0'].unique().astype(str)
-    TopImageURL = f'assets/attributes/Images/sythetix.png' 
+    TopImageURL = f'assets/Attributes/Images/{TopImageName[0]}.png' if len(TopImageName) == 1 else '' 
     TopImageURLCheck =[]
+    print(TopImageURL)
     if os.path.exists(TopImageURL):
         TopImageURLCheck.append(TopImageURL)
     else:
-        TopImageURLCheck.append('assets/Attributes/Images/synthetix.png')
+        TopImageURLCheck.append(f'assets/Attributes/Images/ethereum.png')
+    print(TopImageURLCheck)
     TopImage= 'data:image/png;base64,{}'.format(base64.b64encode(open(TopImageURLCheck[0], 'rb').read()).decode())
     AggregateNum = NumaggregateDEF(KPISelect)
     AggregateDenom = DenomaggregateDEF(KPISelect)
@@ -3788,7 +3848,7 @@ def toggle_modal(n1, n2, is_open):
 
 @app.callback(
     Output("modalfilter", "is_open"),
-    [Input("dropdowncontrol", "n_clicks"), Input("close-filter", "n_clicks")],
+    [Input("Opennavbar-right", "n_clicks"), Input("close-filter", "n_clicks")],
     [State("modalfilter", "is_open")],
 )
 def toggle_modal(n1, n2, is_open):
@@ -3810,14 +3870,6 @@ app.clientside_callback(
     Output("Level0DD", "children"),
     Input("Level0DD", "id"),
 )
-app.clientside_callback(
-    """window.onload=function () {
-        addListenersRight()
-        return 0
-    }""",
-    Output('navright','n_clicks'),
-    Input('navright','children')
-)
 
 app.clientside_callback(
     """window.onload=function () {
@@ -3828,7 +3880,6 @@ app.clientside_callback(
     Output('nav','n_clicks'),
     Input('nav','children')
 )
-
 
 if __name__ == "__main__":
     print('application loaded')

@@ -19,6 +19,24 @@ body {
 background-color : var(--bodybackgroundcolor);
 }
 
+	
+.toggle-right {
+	position: absolute;
+	cursor: pointer;
+	top: 50%;
+	right: -25px;
+	transform: translateY(-50%) rotate(180deg);
+	height: 25px;
+	width: 25px;
+	background-color: var(--primary-color);
+	color: var(--body-color);
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 22px;
+	transition: var(--tran-05);
+}
 .popover {
 	position: absolute;
 	top: 0;
@@ -64,7 +82,7 @@ background-color : var(--bodybackgroundcolor);
 
 }
 
-.modalfilter-modal {
+.modalfilter {
 	text-decoration: none;
 	text-align: center;
 	padding: 15px 0;
@@ -73,7 +91,16 @@ background-color : var(--bodybackgroundcolor);
 	overflow:hidden;
 	border-color: var(--bodycolor);
 }
-
+.modalfilter .close {
+	text-decoration: none;
+	text-align: center;
+	display: block;
+	padding: 15px 0;
+	border-radius: 25px;
+	width: 100%;
+	overflow:hidden;
+	border-color: var(--bodycolor);
+}
 .modal-header {
 	text-decoration: none;
 	text-align: center;
@@ -94,6 +121,28 @@ background-color : var(--bodybackgroundcolor);
 
 .modal-footer {
 	border-top: 0px transparent;
+}
+
+.KPIRemainingcontainer {
+	width: 180px;
+	margin: 10px;
+	transform: rotate(90deg);
+	display: flex;
+	flex-direction: column;
+	height: 180px; /* Set the desired height here */
+  }
+  
+.KPIRemainingbox {
+	background: linear-gradient(var(--cardonder), var(--cardboven));
+	margin-bottom: 2px;
+	flex-grow: 1;
+	display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.KPIRemainingbox :hover {
+	background-color: #f71717;
 }
 
 .popover-header {
@@ -978,7 +1027,42 @@ pre code {
 	.container-sm {
 		max-width: 540px
 	}
-	
+.modalfilter {
+	text-decoration: none;
+	text-align: center;
+	padding: 15px 0;
+	border-radius: 25px;
+	width: 100%;
+	overflow:hidden;
+	border-color: var(--bodycolor);
+}
+.modalfilter .close {
+	text-decoration: none;
+	text-align: center;
+	display: block;
+	padding: 15px 0;
+	border-radius: 25px;
+	width: 100%;
+	overflow:hidden;
+	border-color: var(--bodycolor);
+}
+
+.toggle-right {
+		position: absolute;
+		cursor: pointer;
+		top: 50%;
+		transform: translateY(-50%) rotate(180deg);
+		height: 25px;
+		width: 25px;
+		background-color: var(--primary-color);
+		color: var(--body-color);
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 22px;
+		transition: var(--tran-05);
+}
 .sidebar-right {
 		position: fixed;
 		top: 0;
@@ -1215,6 +1299,42 @@ body.dark .sidebar header .toggle {
 	.container-sm {
 		max-width: 540px
 	}
+.modalfilter {
+	text-decoration: none;
+	text-align: center;
+	padding: 15px 0;
+	border-radius: 25px;
+	width: 100%;
+	overflow:hidden;
+	border-color: var(--bodycolor);
+}
+.modalfilter .close {
+	text-decoration: none;
+	text-align: center;
+	display: block;
+	padding: 15px 0;
+	border-radius: 25px;
+	width: 100%;
+	overflow:hidden;
+	border-color: var(--bodycolor);
+}
+
+.toggle-right {
+		position: absolute;
+		cursor: pointer;
+		top: 50%;
+		transform: translateY(-50%) rotate(180deg);
+		height: 25px;
+		width: 25px;
+		background-color: var(--primary-color);
+		color: var(--body-color);
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 22px;
+		transition: var(--tran-05);
+}
 	
 .sidebar-right {
 		position: fixed;
@@ -1237,7 +1357,7 @@ body.dark .sidebar header .toggle {
 	transform: translateX(-50%) translateY(50%) rotate(0deg);
 }
 
-.sidebar-right header .toggle-right {
+.sidebar-right .toggle-right {
 	position: absolute;
 	top: 50%;
 	right: -25px;
@@ -1457,6 +1577,41 @@ body.dark .sidebar header .toggle {
 	.container-md {
 		max-width: 720px
 	}
+.modalfilter {
+		text-decoration: none;
+		text-align: center;
+		padding: 15px 0;
+		border-radius: 25px;
+		width: 100%;
+		overflow:hidden;
+		border-color: var(--bodycolor);
+}
+.modalfilter .close {
+		text-decoration: none;
+		text-align: center;
+		display: block;
+		padding: 15px 0;
+		border-radius: 25px;
+		width: 100%;
+		overflow:hidden;
+		border-color: var(--bodycolor);
+}
+
+.toggle-right {
+		position: absolute;
+		cursor: pointer;
+		top: 50%;
+		left:98%;
+		transform: translateY(-50%) rotate(180deg);
+		height: 25px;
+		width: 25px;
+		background-color: var(--primary-color);
+		color: var(--body-color);
+		border-radius: 50%;
+		display: flex;
+		font-size: 22px;
+		transition: var(--tran-05);
+}
 .sidebar-right {
 		position: fixed;
 		top: 0;

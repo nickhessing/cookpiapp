@@ -62,7 +62,6 @@ function addListeners() {
       document.getElementById("page-content").classList.toggle("close");
     });
   }
-
   // Click handling to close sidebar when clicking outside of it
   document.addEventListener("click", function(event) {
     if (sidebar && !sidebar.contains(event.target) && event.target !== toggle) {
@@ -72,55 +71,88 @@ function addListeners() {
   });
 }
 
-document.addEventListener("DOMContentLoaded", function() {
-  setTimeout(function() {addListeners()}, 1000);
-});
-
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Get a reference to the component with id='dropdowncontrol'
-const dropdownControl = document.getElementById('dropdowncontrol');
 
-// Get a reference to the modal with id='modalfilter'
-const modalFilter = document.getElementById('modalfilter');
+function addListenersModalFilter() {
+  console.log('adding listeners modalfilter');
+  const body = document.querySelector("body"),
+        modal = body.querySelector("#modalfilter"),
+        toggle = body.querySelector(".toggle-right"),
+        searchBtn = body.querySelector(".search-box"),
+        modeSwitch = body.querySelector(".toggle-switch"),
+        modeText = document.querySelector(".mode-text");
 
-// Variables to track touch start and end positions
-let startX, endX;
-
-// Listen for touch start event on the document
-document.addEventListener('touchstart', function(event) {
-  // Record the x position of the touch start
-  startX = event.touches[0].pageX;
-});
-
-// Listen for touch end event on the document
-document.addEventListener('touchend', function(event) {
-  // Record the x position of the touch end
-  endX = event.changedTouches[0].pageX;
-
-  // Calculate the distance between the start and end positions
-  const distance = endX - startX;
-
-  // If the distance is greater than or equal to 50 (pixels), open the modalFilter element
-  if (distance >= 50) {
-    modalFilter.classList.add('show');
-    modalFilter.style.display = 'block';
-    modalFilter.setAttribute('aria-modal', true);
-    modalFilter.removeAttribute('aria-hidden');
-    document.body.classList.add('modal-open');
+  if (!modal) {
+    console.error("Unable to find modal element");
+    return;
   }
-});
 
-// Listen for clicks on the dropdownControl element to close the modal
-dropdownControl.addEventListener('click', function() {
-  modalFilter.classList.remove('show');
-  modalFilter.style.display = 'none';
-  modalFilter.removeAttribute('aria-modal');
-  modalFilter.setAttribute('aria-hidden', true);
-  document.body.classList.remove('modal-open');
+  // Swipe handling for mobile devices
+  let touchStartX = 0, touchEndX = 0;
+  let swipeableArea = body;
+  let delta = 0;
+
+  swipeableArea.addEventListener('touchstart', function(event) {
+    const screenWidth = window.innerWidth;
+    const touchX = event.touches[0].clientX;
+    touchStartX = touchX < screenWidth * 0.2 ? touchX : 0;
+  });
+
+  swipeableArea.addEventListener('touchmove', function(event) {
+    if (touchStartX > 0) {
+      touchEndX = event.touches[0].clientX;
+      delta = touchEndX - touchStartX;
+
+      if (modal && delta < -80 && !modal.classList.contains('close')) {
+        modal.classList.add('close');
+        document.getElementById("page-content").classList.add('close');
+      } else if (modal && delta > 80 && modal.classList.contains('close')) {
+        modal.classList.remove('close');
+        document.getElementById("page-content").classList.remove('close');
+      }
+    }
+  });
+
+  swipeableArea.addEventListener('touchend', function(event) {
+    if (touchStartX > 0) {
+      touchEndX = event.changedTouches[0].clientX;
+      delta = touchEndX - touchStartX;
+
+      if (modal && delta < -80 && !modal.classList.contains('close')) {
+        modal.classList.add('close');
+        document.getElementById("page-content").classList.add('close');
+      } else if (modal && delta > 80 && modal.classList.contains('close')) {
+        modal.classList.remove('close');
+        document.getElementById("page-content").classList.remove('close');
+      }
+
+      touchStartX = 0;
+    }
+  });
+
+  // Click handling for desktop devices
+  if (toggle) {
+    toggle.addEventListener("click", function() {
+      modal.classList.toggle("close-modal");
+      document.getElementById("page-content").classList.toggle("close-modal");
+    });
+  }
+
+  // Click handling to close sidebar when clicking outside of it
+  document.addEventListener("click", function(event) {
+    if (modal && !modal.contains(event.target) && event.target !== toggle) {
+      modal.classList.add("close");
+      document.getElementById("page-content").classList.add("close");
+    }
+  });
+}
+
+window.addEventListener("load", function() {
+  addListeners();
+  addListenersModalFilter();
 });
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -158,3 +190,11 @@ selectValueElement.addEventListener('click', function() {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+var section = $('li');
+
+function toggleAccordion() {
+  section.removeClass('active');
+  $(this).addClass('active');
+}
+
+section.on('click', toggleAccordion);
