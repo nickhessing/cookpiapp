@@ -124,12 +124,12 @@ background-color : var(--bodybackgroundcolor);
 }
 
 .KPIRemainingcontainer {
-	width: 180px;
+	width: 120px;
 	margin: 10px;
 	transform: rotate(90deg);
 	display: flex;
 	flex-direction: column;
-	height: 180px; /* Set the desired height here */
+	height: 120px; /* Set the desired height here */
   }
   
 .KPIRemainingbox {
@@ -138,6 +138,7 @@ background-color : var(--bodybackgroundcolor);
 	flex-grow: 1;
 	display: flex;
     justify-content: center;
+	cursor: pointer;
     align-items: center;
 }
 
@@ -262,11 +263,12 @@ color:purple
 
 .slick-dots li.slick-active button:before, .slick-dots li button:before {
 	color: #FFF;
-	opacity: 1;
+	opacity: 0.3;
 	font-size: 16px;
 }
 .slick-dots li.slick-active button {
-	border: 5px solid var(--bulletcolor);
+	border: 5px solid rgb(243, 207, 153);
+	opacity: 0.3;
 	border-radius: 100%;
 }
 .slick-dots li.slick-active button:before {
@@ -332,10 +334,10 @@ color:purple
     position: relative;
     color: var(--bodycolor);
     border-radius: 20px;
-    height: 180px;
+    height: 120px;
 	text-align: center;
     opacity: 1;
-	cursor: pointer;
+	cursor: grab;
     background: linear-gradient(var(--cardboven),var(--cardonder));
     margin: 10px;
 }
@@ -374,6 +376,7 @@ display : none
 }
 .carddiv .inner {
     padding: 5px 10px 0 10px;
+	cursor: grab;
 }
 .carddiv h3 {
     font-size: 27px;
@@ -381,10 +384,12 @@ display : none
     margin: 0 0 8px 0;
     white-space: nowrap;
     padding: 0;
+	cursor: grab;
     text-align: left;
 }
 .carddiv p {
     font-size: 15px;
+	cursor: grab;
 }
 .carddiv .icon {
     position: absolute;
@@ -392,6 +397,7 @@ display : none
     top: auto;
     bottom: 5px;
     right: 5px;
+	cursor: grab;
     z-index: 0;
     font-size: 72px;
 
@@ -401,7 +407,7 @@ display : none
     border-bottom-left-radius: 0px;
     border-bottom-right-radius: 0px;
     padding: 0px;
-
+	cursor: grab;
     width :0px;
     height: 0px;
     background-color : transparent;
