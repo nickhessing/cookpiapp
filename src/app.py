@@ -348,7 +348,7 @@ Level0DD = html.Div([
 @app.callback(
     Output('graph-level0compare', 'selectedData'),
     [Input('sweepl0', 'n_clicks'),
-    # Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'),
+  #   Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'),
     ]
 )
 
@@ -1104,7 +1104,8 @@ tabs = html.Div([
                               format='png',
                               scale=10,
                               filename='Plotlygraph'),
-                      )
+                      ),
+                      style={'overflow': 'auto'}
                       )])
         ],className="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 pretty_graph2"
         ),className="col-12 col-sm-12 col-md-12 col-lg-4 col-xl-4 empty_tab2"
@@ -1254,7 +1255,7 @@ tabscontainer = html.Div(
         ]
         )
   #  )
-)
+,style={'min-height': 'auto'})
 
 
 ######################################################################################################################
@@ -1264,9 +1265,12 @@ tabscontainer = html.Div(
 
 app.layout = html.Div([
     html.I("chevron_right",className='material-icons toggle-right',id='Opennavbar-right'),#html.I("filter_alt", id='dropdowncontrol', className="material-icons filtericon", n_clicks=0),
-    html.I("delete_sweep",id='sweepl0',className="material-icons md-48",style={'position':'absolute','top':'50px','right':'12px','z-index': '1'}),
-    html.I("delete_sweep",id='sweepl1',className="material-icons md-48",style={'position':'absolute','top':'30px','right':'12px','z-index': '1'}),
-    html.I("delete_sweep",id='sweepl2',className="material-icons md-48",style={'position':'absolute','top':'10px','right':'12px','z-index': '1'}),
+    html.Div([html.I("settings_suggest",id='open-settings',className="material-icons",n_clicks=0,style={'position':'fixed'}),
+              html.I("chevron_right",className='material-icons toggle-bottom',id='Opennavbar-bottom',style={'position':'fixed'})
+    ],style={'position':'fixed','top': '96.7%','right': '50%','z-index': '1'}),
+    html.I("delete_sweep",id='sweepl0',className="material-icons md-48",style={'position':'fixed','top':'52%','right':'12px','z-index': '1'}),
+    html.I("delete_sweep",id='sweepl1',className="material-icons md-48",style={'position':'fixed','top':'54%','right':'12px','z-index': '1'}),
+    html.I("delete_sweep",id='sweepl2',className="material-icons md-48",style={'position':'fixed','top':'56%','right':'12px','z-index': '1'}),
     #dcc.Graph(id='animatedbar'),
     dbc.Row([
         html.Div(id='output-container-date-picker-range',
@@ -1290,6 +1294,20 @@ app.layout = html.Div([
         className="modalfilter",
         is_open=False,
         ),
+        dbc.Modal([
+            dbc.ModalBody(children=[
+            ],id="graphsets"
+            ),
+            dbc.ModalFooter(
+                    dbc.Button(
+                        "Close", id="close-filter-bottom", className="ms-auto", n_clicks=0
+                    ),style={'border-top': '0px'}
+                ),
+        ],
+        id="modalfilter-bottom",
+        className="modalfilter-bottom",
+        is_open=False,
+        ),
     dbc.Col(fade,className="col-sm-12 col-md-12 col-lg-2 col-xl-2",style={'display': 'none'}),
        ]),
     dbc.Row([
@@ -1304,7 +1322,6 @@ app.layout = html.Div([
 
     dbc.Row([
             dbc.Col([
-            html.I("settings_suggest",id='open-settings',className="material-icons", style={'text-align': 'left !important'},n_clicks=0),
             dbc.Modal(
                 [dbc.ModalHeader(dbc.ModalTitle("Graph settings", className='h5'),style={'border-bottom': '0px'}),
                 dbc.ModalBody(children=[
@@ -1325,7 +1342,7 @@ app.layout = html.Div([
             ),
             html.Div(tabs,
                      id="tabscontainer"
-                     ),
+                     ,style={'min-height': 'auto'}),
             html.Div(tabscompare,
                      id="tabscompare"
                      ),
@@ -1334,7 +1351,7 @@ app.layout = html.Div([
             
           #  html.Div(KPI_Group,className="col-sm-11 col-md-11 col-lg-4 col-xl-3"),
 
-    ]
+    ],style={'min-height': 'auto'}
     ),
     html.Div(navbar),
     #html.Div(navbarfilters),
@@ -1767,17 +1784,17 @@ def clean_data(GrainSelect,KPISelect,KPIGroupSelect,relayoutDatal0,relayoutDatal
         string_prefix = 'Select a date to see it displayed here'
     level1options=dfll2[0]["LevelName_1"].unique()
     if Level0NameSelect == list(Level0NameList):
-        sweep0style = {'position':'absolute','top':'50px','right':'12px','z-index': '1','color':'grey'}
+        sweep0style = {'position':'fixed','top':'52%','opacity':'0.4','right':'10px','z-index': '1'}
     else:
-        sweep0style = {'position':'absolute','top':'50px','right':'12px','z-index': '1','color': ProjectOrange}
+        sweep0style = {'position':'fixed','top':'52%','right':'10px','z-index': '1'}
     if Level1NameSelect == list(Level1NameList):
-        sweep1style = {'position':'absolute','top':'30px','right':'12px','z-index': '1','color':'grey'}
+        sweep1style = {'position':'fixed','top':'54%','right':'10px','opacity':'0.4','z-index': '1'}
     else:
-        sweep1style = {'position':'absolute','top':'30px','right':'12px','z-index': '1','color':ProjectOrange}
+        sweep1style = {'position':'fixed','top':'54%','right':'10px','z-index': '1'}
     if Level2NameSelect == list(Level2NameList):
-        sweep2style = {'position':'absolute','top':'10px','right':'12px','z-index': '1','color':'grey'}
+        sweep2style = {'position':'fixed','top':'56%','right':'10px','opacity':'0.4','z-index': '1'}
     else:
-        sweep2style = {'position':'absolute','top':'10px','right':'12px','z-index': '1','color':ProjectOrange}
+        sweep2style = {'position':'fixed','top':'56%','right':'10px','z-index': '1'}
     return dffl0json,dffl1json,dffl2json,dffl0jsonnotime,dffl1jsonnotime,dffl2jsonnotime,dffcomparejson,string_prefix,'bs' if not level0 else level0[0],'bs' if not level1 else level1[0],'bs' if not level2 else level2[0],sweep0style,sweep1style,sweep2style#,style,style,style,style,style#,clickdatasend,dffcomparejson
 
 datefromtmp.clear()
@@ -1828,8 +1845,8 @@ def updatekpiindicator(dffcompare,KPISelect,KPIGroupSelect,widthBreakpoint):
     for p in KPINameListGroupFilter:
         if p not in KPINameListmodelfilter:
             KPINameListIterate.append(p)
-    KPINameListIterate.remove(KPISelect)
-    KPINameListIterate.insert(0,KPISelect)
+    #KPINameListIterate.remove(KPISelect)
+    #KPINameListIterate.insert(0,KPISelect)
     outputactual =[]
     outputactualtxt =[]
     outputlasttxt =[]
@@ -1939,13 +1956,11 @@ def updatekpiindicator(dffcompare,KPISelect,KPIGroupSelect,widthBreakpoint):
                 style111 = {'box-shadow': f'0px -0px 5px 2px {Highlightcardcolor}'}
             else:
                 style111 = {}
-            outputactualtxt =str(eval(Notationlist).format(value_lp[0])) #value[0]#eval(Notationlist).format(value[0]),
-            outputlasttxt = str(eval(Notationlist).format(value[0])) #value[0]#eval(Notationlist).format(value[0]),
+            outputactualtxt =str(eval(Notationlist).format(value_lp[0])) 
+            outputlasttxt = str(eval(Notationlist).format(value[0]))
             Card.append(kpi)
             style = {'display': Displayprevious[0] , 'color' : logopositive if HigherIs[kpi]==1 else logonegative if HigherIs[kpi]==2 else logoneutral}
             popbody.append(kpi)
-         #   outputlasttxtlogo = logopositive
-          #  carddivstyle.append(stylempty)
             value.clear()
             value_lp.clear()
             notation.clear()
@@ -1980,7 +1995,7 @@ def updatekpiindicator(dffcompare,KPISelect,KPIGroupSelect,widthBreakpoint):
                                 disabled=True,
                                 readOnly=True,
                                 draggable=False,
-                                className='col-12 h6'
+                                className='col-12 h7'
                             ),
                             #html.Div([
                             #     dcc.Textarea(value=f'{outputlasttxt}',
@@ -2075,6 +2090,7 @@ def update_df_KPIGroup(n_clicks,n_clicks2,KPIGroupSelect,*args):
     try:
         if "filter-dropdown-ex3-reset" in valuelist: 
             kpi = valuelist[0]
+            print('bloei')
         elif "filter-dropdown-ex3" in valuelist: 
             kpi = valuelist[0]
         elif 'kpigroup' in changed_id[0:8]:
@@ -2085,7 +2101,7 @@ def update_df_KPIGroup(n_clicks,n_clicks2,KPIGroupSelect,*args):
    # print(kpilist)
    # my_string = tmpchangedlist[0]['prop_id']  # extract the value of 'prop_id'
    # my_value = my_string.split(':')[1].split(',')[0].strip('"')
-    #print(kpilist)
+    print(kpi)
     return [KPINameListi[0] if not kpi else kpi]
 ######################################################################################################################
 ######################################################################################################################
@@ -2380,22 +2396,12 @@ def update_kpiagg(data00,GrainSelect,KPISelect,CumulativeSwitch,PercentageTotalS
 def update_level0Graph(data00,KPISelect,selectedData,Totaalswitch,widthBreakpoint): #,hoverData,*args
     print('update_level0Graph')
     dff0 = pd.read_json(data00, orient='split')
-    #dff0tmp = data0 
-    #dff0tmp['Period_int'] = pd.to_datetime(dff0tmp['Period_int']).dt.tz_localize(None)
-    #dff0 = []
-    #if selectedData == "{'autosize': True}" or selectedData == None:
-    #    dff0.append(dff0tmp)
-    #else:
-    #    dff0.append(dff0tmp[dff0tmp['Period_int'] == selectedData['points'][0]['x']])
-    #dff0 = dff0[0]
     traces = []
     if widthBreakpoint=='sm':
         title = ''
     else:
-        title = dict(text=str(KPISelect) + ' per ',# + Level2Entitytype,
-                       # +' -     selected: '+str(Level2NameSelect),
-                       font=dict(#family='Montserrat',
-                                 size=22,
+        title = dict(text=str(KPISelect),
+                       font=dict(size=22,
                                  color=fontcolor,
                         ),
         ) 
@@ -2498,6 +2504,7 @@ def update_level0Graph(data00,KPISelect,selectedData,Totaalswitch,widthBreakpoin
                 title=title,
                 hovermode='x-unified',
                 transition={'duration': 500},
+                style={'overflow': 'auto'}
             )
         }
 
@@ -3771,6 +3778,16 @@ def toggle_modal(n1, n2, is_open):
     Output("modalfilter", "is_open"),
     [Input("Opennavbar-right", "n_clicks"), Input("close-filter", "n_clicks")],
     [State("modalfilter", "is_open")],
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+@app.callback(
+    Output("modalfilter-bottom", "is_open"),
+    [Input("Opennavbar-bottom", "n_clicks"), Input("close-filter-bottom", "n_clicks")],
+    [State("modalfilter-bottom", "is_open")],
 )
 def toggle_modal(n1, n2, is_open):
     if n1 or n2:

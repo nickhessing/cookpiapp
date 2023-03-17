@@ -21,10 +21,10 @@ background-color : var(--bodybackgroundcolor);
 
 	
 .toggle-right {
-	position: absolute;
+	position: fixed;
 	cursor: pointer;
 	top: 50%;
-	right: -25px;
+	right: 12px;
 	transform: translateY(-50%) rotate(180deg);
 	height: 25px;
 	width: 25px;
@@ -37,6 +37,27 @@ background-color : var(--bodybackgroundcolor);
 	font-size: 22px;
 	transition: var(--tran-05);
 }
+.close .toggle-right {
+	transform: translateX(-50%) translateY(50%) rotate(0deg);
+}
+.toggle-bottom {
+	position: fixed;
+	cursor: pointer;
+	top: 98%;
+	right: 50%;
+	transform: translateY(-50%) rotate(-90deg);
+	height: 25px;
+	width: 25px;
+	background-color: var(--primary-color);
+	color: var(--body-color);
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 22px;
+	transition: var(--tran-05);
+}
+
 .popover {
 	position: absolute;
 	top: 0;
@@ -90,7 +111,10 @@ background-color : var(--bodybackgroundcolor);
 	width: 100%;
 	overflow:hidden;
 	border-color: var(--bodycolor);
+	transition: height 0.3s ease-out, transform 0.3s ease-out;
+  	transform: translateY(100%);
 }
+
 .modalfilter .close {
 	text-decoration: none;
 	text-align: center;
@@ -1033,6 +1057,73 @@ pre code {
 	.container-sm {
 		max-width: 540px
 	}
+
+.rangeselector {
+background-color: var(--rangeselector);
+width : 80px;
+height : 20px;
+border-color: red;
+border-width: 10px;
+}
+
+
+.selector-rect {
+    fill: var(--rangeselector)! important;
+    font-family: var(--fontfamily);
+	border-radius: 15px;
+	border-color: red;
+	border-width: 10px;
+}
+
+.dash-graph text{
+border-color: red;
+}
+
+.trich_carousel .slick-prev {
+	font-family: "Material Icons";
+	font-weight: 900;
+	content: 'arrow_back_ios_new';
+	opacity: 70%;
+	color: var(--bodycolor);
+	background-color: transparent;
+
+  }
+  
+.trich_carousel .slick-next {
+	font-family: "Material Icons";
+	font-weight: 900;
+	content: 'arrow_forward_ios_new';
+	opacity: 70%;
+	color: var(--bodycolor);
+	background-color: transparent;
+  }
+
+.trich_carousel .slick-prev:before {
+	font-family: "Material Icons";
+	font-weight: 900;
+	content: 'arrow_back_ios_new';
+	opacity: 70%;
+	color: var(--bodycolor);
+	background-color: transparent;
+
+  }
+  
+.trich_carousel .slick-next:before {
+	font-family: "Material Icons";
+	font-weight: 900;
+	content: 'arrow_forward_ios_new';
+	opacity: 70%;
+	color: var(--bodycolor);
+	background-color: transparent;
+  }
+.slick-prev:hover {
+	color: var(--bodycolor);
+	border-color: red;
+	opacity: 100%;
+	background-color: transparent;
+	}
+
+
 .modalfilter {
 	text-decoration: none;
 	text-align: center;
@@ -1054,21 +1145,43 @@ pre code {
 }
 
 .toggle-right {
-		position: absolute;
-		cursor: pointer;
-		top: 50%;
-		transform: translateY(-50%) rotate(180deg);
-		height: 25px;
-		width: 25px;
-		background-color: var(--primary-color);
-		color: var(--body-color);
-		border-radius: 50%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 22px;
-		transition: var(--tran-05);
+	position: fixed;
+	cursor: pointer;
+	top: 50%;
+	right: 12px;
+	transform: translateY(-50%) rotate(180deg);
+	height: 25px;
+	width: 25px;
+	background-color: var(--primary-color);
+	color: var(--body-color);
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 22px;
+	transition: var(--tran-05);
 }
+.close .toggle-right {
+	transform: translateX(-50%) translateY(50%) rotate(0deg);
+}
+.toggle-bottom {
+	position: fixed;
+	cursor: pointer;
+	top: 98%;
+	right: 50%;
+	transform: translateY(-50%) rotate(-90deg);
+	height: 25px;
+	width: 25px;
+	background-color: var(--primary-color);
+	color: var(--body-color);
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 22px;
+	transition: var(--tran-05);
+}
+
 .sidebar-right {
 		position: fixed;
 		top: 0;
@@ -1091,9 +1204,10 @@ pre code {
 }
 
 .sidebar-right header .toggle-right {
-	position: absolute;
+	position: fixed;
+	cursor: pointer;
 	top: 50%;
-	right: -25px;
+	right: 12px;
 	transform: translateY(-50%) rotate(180deg);
 	height: 25px;
 	width: 25px;
@@ -1104,7 +1218,6 @@ pre code {
 	align-items: center;
 	justify-content: center;
 	font-size: 22px;
-	cursor: pointer;
 	transition: var(--tran-05);
 }
 
@@ -1305,6 +1418,70 @@ body.dark .sidebar header .toggle {
 	.container-sm {
 		max-width: 540px
 	}
+	
+.rangeselector {
+background-color: var(--rangeselector);
+width : 80px;
+height : 20px;
+}
+
+
+.selector-rect {
+    fill: var(--rangeselector)! important;
+    font-family: var(--fontfamily);
+}
+
+.selector-rect:hover {
+	fill: var(--projectorange)! important;
+}
+
+
+.dash-graph text{
+border-color: red;
+}
+.trich_carousel .slick-prev {
+	font-family: "Material Icons";
+	font-weight: 900;
+	content: 'arrow_back_ios_new';
+	opacity: 70%;
+	color: var(--bodycolor);
+	background-color: transparent;
+
+  }
+  
+.trich_carousel .slick-next {
+	font-family: "Material Icons";
+	font-weight: 900;
+	content: 'arrow_forward_ios_new';
+	opacity: 70%;
+	color: var(--bodycolor);
+	background-color: transparent;
+  }
+
+.trich_carousel .slick-prev:before {
+	font-family: "Material Icons";
+	font-weight: 900;
+	content: 'arrow_back_ios_new';
+	opacity: 70%;
+	color: var(--bodycolor);
+	background-color: transparent;
+
+  }
+  
+.trich_carousel .slick-next:before {
+	font-family: "Material Icons";
+	font-weight: 900;
+	content: 'arrow_forward_ios_new';
+	opacity: 70%;
+	color: var(--bodycolor);
+	background-color: transparent;
+  }
+.slick-prev:hover {
+	color: var(--bodycolor);
+	border-color: red;
+	opacity: 100%;
+	background-color: transparent;
+	}
 .modalfilter {
 	text-decoration: none;
 	text-align: center;
@@ -1326,22 +1503,44 @@ body.dark .sidebar header .toggle {
 }
 
 .toggle-right {
-		position: absolute;
-		cursor: pointer;
-		top: 50%;
-		transform: translateY(-50%) rotate(180deg);
-		height: 25px;
-		width: 25px;
-		background-color: var(--primary-color);
-		color: var(--body-color);
-		border-radius: 50%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 22px;
-		transition: var(--tran-05);
+	position: fixed;
+	cursor: pointer;
+	top: 50%;
+	right: 12px;
+	transform: translateY(-50%) rotate(180deg);
+	height: 25px;
+	width: 25px;
+	background-color: var(--primary-color);
+	color: var(--body-color);
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 22px;
+	transition: var(--tran-05);
 }
-	
+.close .toggle-right {
+	transform: translateX(-50%) translateY(50%) rotate(0deg);
+}
+
+.toggle-bottom {
+	position: fixed;
+	cursor: pointer;
+	top: 98%;
+	right: 50%;
+	transform: translateY(-50%) rotate(-90deg);
+	height: 25px;
+	width: 25px;
+	background-color: var(--primary-color);
+	color: var(--body-color);
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 22px;
+	transition: var(--tran-05);
+}
+
 .sidebar-right {
 		position: fixed;
 		top: 0;
@@ -1364,9 +1563,10 @@ body.dark .sidebar header .toggle {
 }
 
 .sidebar-right .toggle-right {
-	position: absolute;
+	position: fixed;
+	cursor: pointer;
 	top: 50%;
-	right: -25px;
+	right: 12px;
 	transform: translateY(-50%) rotate(180deg);
 	height: 25px;
 	width: 25px;
@@ -1377,7 +1577,6 @@ body.dark .sidebar header .toggle {
 	align-items: center;
 	justify-content: center;
 	font-size: 22px;
-	cursor: pointer;
 	transition: var(--tran-05);
 }
 
@@ -1583,6 +1782,69 @@ body.dark .sidebar header .toggle {
 	.container-md {
 		max-width: 720px
 	}
+.rangeselector {
+background-color: var(--rangeselector);
+width : 80px;
+height : 20px;
+}
+
+
+.selector-rect {
+    fill: var(--rangeselector)! important;
+    font-family: var(--fontfamily);
+}
+
+.selector-rect:hover {
+	fill: var(--projectorange)! important;
+}
+
+
+.dash-graph text{
+border-color: red;
+}
+.trich_carousel .slick-prev {
+	font-family: "Material Icons";
+	font-weight: 900;
+	content: 'arrow_back_ios_new';
+	opacity: 70%;
+	color: var(--bodycolor);
+	background-color: transparent;
+
+  }
+  
+.trich_carousel .slick-next {
+	font-family: "Material Icons";
+	font-weight: 900;
+	content: 'arrow_forward_ios_new';
+	opacity: 70%;
+	color: var(--bodycolor);
+	background-color: transparent;
+  }
+
+.trich_carousel .slick-prev:before {
+	font-family: "Material Icons";
+	font-weight: 900;
+	content: 'arrow_back_ios_new';
+	opacity: 70%;
+	color: var(--bodycolor);
+	background-color: transparent;
+
+  }
+  
+.trich_carousel .slick-next:before {
+	font-family: "Material Icons";
+	font-weight: 900;
+	content: 'arrow_forward_ios_new';
+	opacity: 70%;
+	color: var(--bodycolor);
+	background-color: transparent;
+  }
+.slick-prev:hover {
+	color: var(--bodycolor);
+	border-color: red;
+	opacity: 100%;
+	background-color: transparent;
+	}
 .modalfilter {
 		text-decoration: none;
 		text-align: center;
@@ -1604,20 +1866,45 @@ body.dark .sidebar header .toggle {
 }
 
 .toggle-right {
-		position: absolute;
-		cursor: pointer;
-		top: 50%;
-		left:98%;
-		transform: translateY(-50%) rotate(180deg);
-		height: 25px;
-		width: 25px;
-		background-color: var(--primary-color);
-		color: var(--body-color);
-		border-radius: 50%;
-		display: flex;
-		font-size: 22px;
-		transition: var(--tran-05);
+	position: fixed;
+	cursor: pointer;
+	top: 50%;
+	right: 12px;
+	transform: translateY(-50%) rotate(180deg);
+	height: 25px;
+	width: 25px;
+	background-color: var(--primary-color);
+	color: var(--body-color);
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 22px;
+	transition: var(--tran-05);
 }
+
+.close .toggle-right {
+	transform: translateX(-50%) translateY(50%) rotate(0deg);
+}
+
+.toggle-bottom {
+	position: fixed;
+	cursor: pointer;
+	top: 98%;
+	right: 50%;
+	transform: translateY(-50%) rotate(-90deg);
+	height: 25px;
+	width: 25px;
+	background-color: var(--primary-color);
+	color: var(--body-color);
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 22px;
+	transition: var(--tran-05);
+}
+
 .sidebar-right {
 		position: fixed;
 		top: 0;
@@ -1643,7 +1930,7 @@ body.dark .sidebar header .toggle {
 .sidebar-right header .toggle-right {
 	position: absolute;
 	top: 4%;
-	right: 60px;
+	right: 12px;
 	transform: translateY(-50%) rotate(180deg);
 	height: 25px;
 	width: 25px;
@@ -12476,7 +12763,7 @@ table-danger,
 .empty_tab2 {
   border-radius: 15px;
   border-top-left-radius: 0px;
-  background-color: transparent;
+  background-color: var(--graphboven);
   margin: 0px;
   padding: 0px;
   position: relative;
@@ -12641,13 +12928,13 @@ color: #D3D3D3;
 }
 
 .pretty_graph2 {
-  height: 380px;
   width: 100%;
   margin: 0px;
   padding: 15px;
   border-radius: 10px;
   background-color: var(-–graphonder);
   position: relative;
+  min-height: auto; 
 }
 
 .pretty_tab {
@@ -12661,6 +12948,7 @@ color: #D3D3D3;
   padding-bottom: 0px;
   padding-right: 0px;
   position: relative;
+  overflow: auto;
 }
 .pretty_tab2 {
   border-radius: 10px;
@@ -12671,6 +12959,7 @@ color: #D3D3D3;
   padding: 15px;
   position: relative;
   box-shadow: 1px 1px 1px #1b568c; 
+  overflow: auto;
 }
 
 .pretty_tab3 {
@@ -12682,6 +12971,7 @@ color: #D3D3D3;
   padding: 15px;
   position: relative;
   box-shadow: 1px 1px 1px #1b568c; 
+  overflow: auto;
 }
 
 .pretty_bigtab {
@@ -12696,6 +12986,7 @@ color: #D3D3D3;
   padding-bottom: 15px;
   padding-right: 15px;
   position: relative;
+  overflow: auto;
 }
 
 .pretty_card {
