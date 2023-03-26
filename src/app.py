@@ -145,7 +145,13 @@ KPIFramework['d_level2_id']=KPIFramework['d_level2_id'].astype(int)
 d_kpi_tmp = pd.read_excel(open('assets/Attributes/dashboard_data/cookpi_per_pi.xlsx', 'rb'),
               sheet_name='d_kpi')
               
+Project = pd.DataFrame(pd.read_excel(open('assets/Attributes/dashboard_data/cookpi_per_pi.xlsx', 'rb'),
+              sheet_name='Project'))
+Project["Filter1"].fillna("Overig", inplace = True)      
 
+Blockchain = pd.DataFrame(pd.read_excel(open('assets/Attributes/dashboard_data/cookpi_per_pi.xlsx', 'rb'),
+              sheet_name='Blockchain'))
+Blockchain["Filter1"].fillna("Overig", inplace = True)   
 
 kpilevelcount = cookpi_attributestmp.groupby(['d_kpi_id'])['d_kpi_id'].count().reset_index(name="kpilevelcount")
 d_kpi = d_kpi_tmp[(d_kpi_tmp.live == 1)] #& (df.carrier == "B6")
@@ -195,9 +201,13 @@ Level0NameList = dfl0['LevelName_0'].unique()
 Level1NameList = dfl1['LevelName_1'].unique()
 Level2NameList = dfl2['LevelName_2'].unique().tolist()
 
-Level0Name = dfl0[['LevelEntitytype_0','LevelName_0','LevelColor_0','KPIName']]
-Level1Name = dfl1[['LevelEntitytype_1','LevelName_1','LevelColor_1','KPIName']]
-Level2Name = dfl2[['LevelEntitytype_2','LevelName_2','LevelColor_2','KPIName']]
+
+Level0Name = dfl0[['LevelEntitytype_0','LevelName_0','LevelColor_0','KPIName','Filter1_0']]
+Level1Name = dfl1[['LevelEntitytype_1','LevelName_1','LevelColor_1','KPIName','Filter1_1']]
+Level2Name = dfl2[['LevelEntitytype_2','LevelName_2','LevelColor_2','KPIName','Filter1_2']]
+Category1List = Level0Name['Filter1_0'].unique()
+  
+
 Level0Name = Level0Name.drop_duplicates()
 Level1Name = Level1Name.drop_duplicates()
 Level2Name = Level2Name.drop_duplicates()
@@ -210,6 +220,8 @@ KPI_Level0 = dict(Level0Name.set_index('KPIName')['LevelName_0'].to_dict())
 Level0NameColor = dict(Level0Name.set_index('LevelName_0')['LevelColor_0'].to_dict())
 Level1NameColor = dict(Level1Name.set_index('LevelName_1')['LevelColor_1'].to_dict())
 Level2NameColor = dict(Level2Name.set_index('LevelName_2')['LevelColor_2'].to_dict())
+#Category1List = Project['Filter1'].unique()
+
 Level0attr = dict(Level0Name.set_index('KPIName')['LevelEntitytype_0'].to_dict())
 Level1attr = dict(Level1Name.set_index('KPIName')['LevelEntitytype_1'].to_dict())
 Level2attr = dict(Level2Name.set_index('KPIName')['LevelEntitytype_2'].to_dict())
@@ -332,6 +344,32 @@ Radiograin = html.Div([
 ),
 
 
+Category1 = html.Div([
+    html.Div(dcc.Textarea(value='Category',id='Category1txt',className='h6')),
+    dcc.Dropdown(
+    id="Category1Select",
+    options=[{'label': html.Span([i],style={'background-color': ProjectOrange}), 'value': i}  for i in Category1List],#
+    multi=True,
+    optionHeight=1,
+    placeholder="Select a value",
+    value=Category1List,
+),
+],id="Category1"
+)
+
+#@app.callback(
+#    Output('Category1Select', 'value'),
+#    [Input('sweepl0filter', 'n_clicks'),
+#    ]
+#)
+#
+#def reset_filter0(n_clicks):#,n_clicks2
+#    print('removefilterl0')
+#    filterl0 = [{'label': html.Span([i],style={'background-color': ProjectOrange}), 'value': i}  for i in Category1List]
+#    print(filterl0)
+#    return filterl0
+
+
 Level0DD = html.Div([
     html.Div(dcc.Textarea(value='Level zero filters',id='dropdown0',className='h6')),
     dcc.Dropdown(
@@ -348,12 +386,12 @@ Level0DD = html.Div([
 @app.callback(
     Output('graph-level0compare', 'selectedData'),
     [Input('sweepl0', 'n_clicks'),
-  #   Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'),
+     #Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'),
     ]
 )
 
 def reset_clickDatal0(n_clicks):#,n_clicks2
-    print('removefilter')
+    print('removefilterl0')
     return None
 
 @app.callback([
@@ -365,8 +403,9 @@ def reset_clickDatal0(n_clicks):#,n_clicks2
 def Level0Update(selecteddatal0bar,selecteddatal0):#,n_clicks,KPINameSelect,clickdatal0bar,clickdatal0
     print('Level0Update')
     selectedlistl0bar_list =[]
+    selectedlistl0 =[]
     try:
-        selectedlistl0 = selecteddatal0['points'][0]['customdata'] if selecteddatal0bar is not None else [] 
+        selectedlistl0.append(selecteddatal0['points'][0]['customdata'] if selecteddatal0bar is not None else []) 
     except:
         print("noclick")
     try:
@@ -376,22 +415,27 @@ def Level0Update(selecteddatal0bar,selecteddatal0):#,n_clicks,KPINameSelect,clic
             selectedlistl0bar_listoutput = [{'label': i, 'value': i} for i in selectedlistl0bar_list]
     except:
         print("noselected")
+    print(selectedlistl0bar_list)
+    #print(selectedlistl0)
+    #changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+    print(dash.callback_context.triggered)
     if selectedlistl0bar_list:
         return [selectedlistl0bar_list]
-    elif selectedlistl0:
-        return [selectedlistl0]
+    elif selectedlistl0[0]:
+        return [selectedlistl0[0]]
     else:
         return [Level0NameList]
 
+
 Level1DD = html.Div([
     html.Div(dcc.Textarea(value='Level one filters',id='dropdown1',className='h6')),
-dcc.Dropdown(
-    id="Level1NameSelect",
-    options=[{'label': html.Span([i],style={'background-color': Level1NameColor[i]}), 'value': i} for i in Level1NameList],#, 'style': {'backgroundColor': Level0NameColor[i]}
-    multi=True,
-    optionHeight=1,
-    placeholder="Select a value",
-    value=Level1NameList,
+    dcc.Dropdown(
+        id="Level1NameSelect",
+        options=[{'label': html.Span([i],style={'background-color': Level1NameColor[i]}), 'value': i} for i in Level1NameList],#, 'style': {'backgroundColor': Level0NameColor[i]}
+        multi=True,
+        optionHeight=1,
+        placeholder="Select a value",
+        value=Level1NameList,
 ),
 ],id="Level1DD"
 )
@@ -402,27 +446,38 @@ dcc.Dropdown(
 )
 
 def reset_clickDatal1(n_clicks):
-    print('removefilter')
+    print('removefilterl1')
     return None
 
 @app.callback([
               Output("Level1NameSelect", "value"),
              ],             
               Input('graph-level1compare', 'selectedData'),
-              Input('sweepl1', 'n_clicks'),
+              Input('graphoveralltime', 'selectedData'),
+             # Input('sweepl1', 'n_clicks'),
              )
-def Level1Update(selecteddatal1bar,n_clicks):
-    print('triggeredl1bar')
-    selectedlistl1 = [
-        i['y']
-        for i in selecteddatal1bar['points']
-    ] if selecteddatal1bar is not None else []
-    
-    if selecteddatal1bar:
-        print('triggeredl1bar')
+def Level1Update(selecteddatal1bar,selecteddatal1):#,n_clicks
+    print('Level1Update')
+    selectedlistl1bar_list =[]
+    try:
+        selectedlistl1 = selecteddatal1['points'][0]['customdata'] if selecteddatal1bar is not None else [] 
+    except:
+        print("noclick")
+    try:
+        if selecteddatal1bar['points'][0]:
+            for p in selecteddatal1bar['points']:
+                selectedlistl1bar_list.append(p['y'])
+            selectedlistl1bar_listoutput = [{'label': i, 'value': i} for i in selectedlistl1bar_list]
+    except:
+        print("noselected")
+    if selectedlistl1bar_list:
+        return [selectedlistl1bar_list]
+    elif selectedlistl1:
         return [selectedlistl1]
     else:
         return [Level1NameList]
+    
+
 
 Level2DD = html.Div([
     html.Div(dcc.Textarea(value='Level two filters',id='dropdown2',className='h6')),
@@ -443,17 +498,17 @@ Level2DD = html.Div([
 )
 
 def reset_clickDatal2(n_clicks):
-    print('removefilter')
+    print('removefilterl2')
     return None
 
 @app.callback([
               Output("Level2NameSelect", "value"),
              ],             
               Input('graph-level2compare', 'selectedData'),
-              Input('sweepl2', 'n_clicks'),
+             # Input('sweepl2', 'n_clicks'),
              )
-def Level2Update(selecteddatal2bar,n_clicks):
-    print('triggeredl1bar')
+def Level2Update(selecteddatal2bar):#,n_clicks
+    print('triggeredl2bar')
     selectedlistl2 = [
         i['y']
         for i in selecteddatal2bar['points']
@@ -546,6 +601,8 @@ KPIdropdownCompare = html.Div([
    # style={"margin": "0px","padding-right":"0px","border-bottom-right-radius":"0px"},
     id="KPIContainerCompare",
 )
+
+
 
 Perioddropdown = html.Div([
     dcc.Dropdown(
@@ -979,13 +1036,14 @@ def update_filter_l1(dfl1, GrainSelect, KPISelect,Level0NameSelect,Level1NameSel
         ]
     return dff
 
-def update_filter_l2(dfl2, GrainSelect, KPISelect,Level0NameSelect,Level1NameSelect, Level2NameSelect):
+def update_filter_l2(dfl2, GrainSelect, KPISelect,Level0NameSelect,Level1NameSelect, Level2NameSelect,Category1):
     dff = dfl2[
         (dfl2["Grain"] == GrainSelect)
         & (dfl2["KPIName"] == KPISelect)
         & (dfl2["LevelName_0"].isin(Level0NameSelect))
         & (dfl2["LevelName_1"].isin(Level1NameSelect))
         & (dfl2["LevelName_2"].isin(Level2NameSelect))
+        & (dfl2["Filter1_0"].isin(Category1))
         ]
     return dff
 
@@ -1265,12 +1323,19 @@ tabscontainer = html.Div(
 
 app.layout = html.Div([
     html.I("chevron_right",className='material-icons toggle-right',id='Opennavbar-right'),#html.I("filter_alt", id='dropdowncontrol', className="material-icons filtericon", n_clicks=0),
+    html.Div([
+        html.I("filter_alt_off",id='sweepl0filter',className="material-icons md-48"),
+       # html.I("filter_alt_off",id='sweepl1',className="material-icons md-48"),
+       # html.I("filter_alt_off",id='sweepl2',className="material-icons md-48")
+    ],style={'position':'fixed','top':'44%','right':'12px','z-index': '1','display': 'flex','flex-direction': 'column'}),
     html.Div([html.I("settings_suggest",id='open-settings',className="material-icons",n_clicks=0,style={'position':'fixed'}),
               html.I("chevron_right",className='material-icons toggle-bottom',id='Opennavbar-bottom',style={'position':'fixed'})
     ],style={'position':'fixed','top': '96.7%','right': '50%','z-index': '1'}),
-    html.I("delete_sweep",id='sweepl0',className="material-icons md-48",style={'position':'fixed','top':'52%','right':'12px','z-index': '1'}),
-    html.I("delete_sweep",id='sweepl1',className="material-icons md-48",style={'position':'fixed','top':'54%','right':'12px','z-index': '1'}),
-    html.I("delete_sweep",id='sweepl2',className="material-icons md-48",style={'position':'fixed','top':'56%','right':'12px','z-index': '1'}),
+    html.Div([
+        html.I("filter_list_off",id='sweepl0',className="material-icons md-48"),
+        html.I("filter_list_off",id='sweepl1',className="material-icons md-48"),
+        html.I("filter_list_off",id='sweepl2',className="material-icons md-48")
+    ],style={'position':'fixed','top':'52%','right':'12px','z-index': '1','display': 'flex','flex-direction': 'column'}),
     #dcc.Graph(id='animatedbar'),
     dbc.Row([
         html.Div(id='output-container-date-picker-range',
@@ -1279,6 +1344,7 @@ app.layout = html.Div([
         dbc.Modal([
             dbc.ModalBody(children=[
                 dbc.Col([mainlogo],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
+                dbc.Col([Category1],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
                 dbc.Col([Level0DD],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
                 dbc.Col([Level1DD],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
                 dbc.Col([Level2DD],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={"margin-bottom": '2px'}),
@@ -1292,20 +1358,6 @@ app.layout = html.Div([
         ],
         id="modalfilter",
         className="modalfilter",
-        is_open=False,
-        ),
-        dbc.Modal([
-            dbc.ModalBody(children=[
-            ],id="graphsets"
-            ),
-            dbc.ModalFooter(
-                    dbc.Button(
-                        "Close", id="close-filter-bottom", className="ms-auto", n_clicks=0
-                    ),style={'border-top': '0px'}
-                ),
-        ],
-        id="modalfilter-bottom",
-        className="modalfilter-bottom",
         is_open=False,
         ),
     dbc.Col(fade,className="col-sm-12 col-md-12 col-lg-2 col-xl-2",style={'display': 'none'}),
@@ -1568,6 +1620,7 @@ datetotmp.append(str(dfl0['Period_int'].max())[0:10])
               Output('sweepl0', 'style'),
               Output('sweepl1', 'style'),
               Output('sweepl2', 'style'),
+            #  Output('ProjectDropdown1', 'style'),
              ],              
               Input('GrainSelect', 'value'),
               Input('KPISelect', 'value'),
@@ -1582,25 +1635,29 @@ datetotmp.append(str(dfl0['Period_int'].max())[0:10])
               Input("Level0NameSelect", "value"),
               Input("Level1NameSelect", "value"),
               Input("Level2NameSelect", "value"),
+              Input("Category1Select", "value"),
               )
-def clean_data(GrainSelect,KPISelect,KPIGroupSelect,relayoutDatal0,relayoutDatal1,relayoutDatal2,tabsdrilldown,Level0NameSelect,Level1NameSelect,Level2NameSelect):#,*args,sweepl1 relayoutl1barclickdatal2bar,clickdatal0,clickdatal1,clickdatal2
+def clean_data(GrainSelect,KPISelect,KPIGroupSelect,relayoutDatal0,relayoutDatal1,relayoutDatal2,tabsdrilldown,Level0NameSelect,Level1NameSelect,Level2NameSelect,Category1):#,*args,sweepl1 relayoutl1barclickdatal2bar,clickdatal0,clickdatal1,clickdatal2
     print('execute clean_data')
     dfll2 = []
     dfll0notime = []
     dfll1notime = []
     dfll2notime = []
     dfllCompare = []
-    dff2 = pd.DataFrame(update_filter_l2(dfl2, GrainSelect, KPISelect,Level0NameSelect, Level1NameSelect, Level2NameSelect))
+    dffcompare = []
+    dff2 = pd.DataFrame(update_filter_l2(dfl2, GrainSelect, KPISelect,Level0NameSelect, Level1NameSelect, Level2NameSelect,Category1))
     dffcompare0 = dfl0[
         (dfl0["Grain"] == GrainSelect)
         & (dfl0["LevelName_0"].isin(Level0NameSelect))
         & (dfl0["KPIGroup"].isin(KPIGroupSelect))
+        & (dfl0["Filter1_0"].isin(Category1))
         ]
     dffcompare1 = dfl1[
         (dfl1["Grain"] == GrainSelect)
         & (dfl1["LevelName_0"].isin(Level0NameSelect))
         & (dfl1["LevelName_1"].isin(Level1NameSelect))
         & (dfl1["KPIGroup"].isin(KPIGroupSelect))
+        & (dfl1["Filter1_0"].isin(Category1))
         ]
     dffcompare2 = dfl2[
         (dfl2["Grain"] == GrainSelect)
@@ -1608,29 +1665,49 @@ def clean_data(GrainSelect,KPISelect,KPIGroupSelect,relayoutDatal0,relayoutDatal
         & (dfl2["LevelName_1"].isin(Level1NameSelect))
         & (dfl2["LevelName_2"].isin(Level2NameSelect))
         & (dfl2["KPIGroup"].isin(KPIGroupSelect))
+        & (dfl2["Filter1_0"].isin(Category1))
         ]
-    #recalculation the calculated values because for example one attribute of level x+1 can be found under multiple attributes x (for example attribute 'protocol version: V2' can me found both under 'Aave' and 'Compound')
-    dffcompare = []
     if tabsdrilldown == 'tab-0':
         relayoutdata1 = relayoutDatal0
      #   clickdata1 = clickdatal0
         changeid = 'graphlevel0.relayoutData'
         dffcompare.append(dffcompare0)
+        levelindicator = 'level0'
     elif tabsdrilldown == 'tab-1':
         relayoutdata1 = relayoutDatal1
      #   clickdata1 = clickdatal1
         changeid = 'graphoveralltime.relayoutData'
         dffcompare.append(dffcompare1)
+        levelindicator = 'level1'
     elif tabsdrilldown == 'tab-2':
         relayoutdata1 = relayoutDatal2
     #    clickdata1 = clickdatal2
         changeid = 'graph-with-slider.relayoutData'
         dffcompare.append(dffcompare2)
+        levelindicator = 'level2'
     else:
         relayoutdata1 = relayoutDatal0
         changeid = 'graphlevel0.relayoutData'
       #  clickdata1 = clickdatal0
         dffcompare.append(dffcompare0)
+        levelindicator = 'level0'
+    cookpi_attributes = cookpi_attributestmp[(cookpi_attributestmp.d_kpi_id == KPINameToID[KPISelect])]
+    result = {}
+    level0 =[]
+    level1 =[]
+    level2 =[]
+    for index,row in cookpi_attributes.iterrows():
+        if row['Level_ID_present'] == 'd_level0_id':
+            result[row['Level_ID_present']] = row['dds_name']
+            level0.append(result['d_level0_id'])
+        elif row['Level_ID_present'] == 'd_level1_id':
+            result[row['Level_ID_present']] = row['dds_name']
+            level1.append(result['d_level1_id'])
+        elif row['Level_ID_present'] == 'd_level2_id':
+            result[row['Level_ID_present']] = row['dds_name']
+            level2.append(result['d_level2_id']) #used to fill the name of the dropdownlist
+    
+        
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
     if relayoutdata1 == {'autosize': True} or relayoutdata1 is None:
         pass
@@ -1746,22 +1823,6 @@ def clean_data(GrainSelect,KPISelect,KPIGroupSelect,relayoutDatal0,relayoutDatal
     #timefiltered & kpi filtered without time
     dffl2jsonnotime = dfll2notime[0].to_json(date_format='iso', orient='split')
     #timefiltered & kpi filtered without time
-
-    cookpi_attributes = cookpi_attributestmp[(cookpi_attributestmp.d_kpi_id == KPINameToID[KPISelect])]
-    result = {}
-    level0 =[]
-    level1 =[]
-    level2 =[]
-    for index,row in cookpi_attributes.iterrows():
-        if row['Level_ID_present'] == 'd_level0_id':
-            result[row['Level_ID_present']] = row['dds_name']
-            level0.append(result['d_level0_id'])
-        elif row['Level_ID_present'] == 'd_level1_id':
-            result[row['Level_ID_present']] = row['dds_name']
-            level1.append(result['d_level1_id'])
-        elif row['Level_ID_present'] == 'd_level2_id':
-            result[row['Level_ID_present']] = row['dds_name']
-            level2.append(result['d_level2_id']) #used to fill the name of the dropdownlist
     clickdatasend = dfll2[0]['PeriodName'].unique()
     Periodchosencount = []
     Periodchosencount.clear()
@@ -1782,34 +1843,34 @@ def clean_data(GrainSelect,KPISelect,KPIGroupSelect,relayoutDatal0,relayoutDatal
         string_prefix = string_prefix + 'End Date: ' + end_date_string
     if len(string_prefix) == len('You have selected: '):
         string_prefix = 'Select a date to see it displayed here'
-    level1options=dfll2[0]["LevelName_1"].unique()
     if Level0NameSelect == list(Level0NameList):
-        sweep0style = {'position':'fixed','top':'52%','opacity':'0.4','right':'10px','z-index': '1'}
+        sweep0style = {'opacity':'0.2'}
     else:
-        sweep0style = {'position':'fixed','top':'52%','right':'10px','z-index': '1'}
+        sweep0style = {}
     if Level1NameSelect == list(Level1NameList):
-        sweep1style = {'position':'fixed','top':'54%','right':'10px','opacity':'0.4','z-index': '1'}
+        sweep1style = {'opacity':'0.2'}
     else:
-        sweep1style = {'position':'fixed','top':'54%','right':'10px','z-index': '1'}
+        sweep1style = {}
     if Level2NameSelect == list(Level2NameList):
-        sweep2style = {'position':'fixed','top':'56%','right':'10px','opacity':'0.4','z-index': '1'}
+        sweep2style = {'opacity':'0.2'}
     else:
-        sweep2style = {'position':'fixed','top':'56%','right':'10px','z-index': '1'}
+        sweep2style = {}
     return dffl0json,dffl1json,dffl2json,dffl0jsonnotime,dffl1jsonnotime,dffl2jsonnotime,dffcomparejson,string_prefix,'bs' if not level0 else level0[0],'bs' if not level1 else level1[0],'bs' if not level2 else level2[0],sweep0style,sweep1style,sweep2style#,style,style,style,style,style#,clickdatasend,dffcomparejson
 
 datefromtmp.clear()
 datetotmp.clear()  
 
-@app.callback(
-    Output('cardsid', 'children')
+@app.callback([
+    Output('cardsid', 'children'),
+    ]
     ,
-     Input('dflcomparekpi', 'data'),
+    Input('dflcomparekpi', 'data'),
     Input("KPISelect", "value"),
     Input("KPIGroupSelect", "value"),
     Input("breakpoints", "widthBreakpoint"),
 )
 
-def updatekpiindicator(dffcompare,KPISelect,KPIGroupSelect,widthBreakpoint):
+def updatekpiindicator(dffcompare,KPISelect,KPIGroupSelect,widthBreakpoint):#
     print('execute updatekpiindicator')
     accordionlist=[]
     accordionlist3=[]
@@ -2057,8 +2118,8 @@ def updatekpiindicator(dffcompare,KPISelect,KPIGroupSelect,widthBreakpoint):
     ]),
     ]
     
-
 kpi =[]
+
 #print(eval(carddivnclicks3new[0]+','+kpigrouplistinput3[0]) if carddivnclicks3new else eval(carddivnclicks3[0]+','+kpigrouplistinput3[0]))
 @app.callback([
     Output('KPISelect', 'value'),
@@ -2072,37 +2133,33 @@ kpi =[]
     ]
  )
 
-def update_df_KPIGroup(n_clicks,n_clicks2,KPIGroupSelect,*args): 
+def update_df_KPIGroup(n_clicks,n_clicks2,KPIGroupSelect,*args):#
     print('execute update_df_KPIGroup')   
     dffKPISelect = d_kpi[
         (d_kpi["KPIGroup"].isin(KPIGroupSelect))
     ]
     dffKPISelect.sort_values(by=['Sorting'])
     KPINameListi = dffKPISelect['KPIName'].unique()
-    tmpchangedlist=dash.callback_context.triggered
-    kpi =[]
-    kpi.clear()
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
     try:
         valuelist = list(json.loads(changed_id).values()) 
     except json.decoder.JSONDecodeError as e:
         print("Unable to decode JSON: ", e)
     try:
-        if "filter-dropdown-ex3-reset" in valuelist: 
-            kpi = valuelist[0]
+        if len(dash.callback_context.triggered)!= 1:
+            print('nothingtoseehere')
+        elif "filter-dropdown-ex3-reset" in valuelist: 
+            kpi.append(valuelist[0])
             print('bloei')
         elif "filter-dropdown-ex3" in valuelist: 
-            kpi = valuelist[0]
+            kpi.append(valuelist[0])
         elif 'kpigroup' in changed_id[0:8]:
-            kpi = KPINameListi[0]
+            kpi.append(KPINameListi[0])
     except:
         print('bs!')
-    #kpilist = [index['prop_id'].split('{"index":"')[1].split('","type"')[0] for index in tmpchangedlist]
-   # print(kpilist)
-   # my_string = tmpchangedlist[0]['prop_id']  # extract the value of 'prop_id'
-   # my_value = my_string.split(':')[1].split(',')[0].strip('"')
-    print(kpi)
-    return [KPINameListi[0] if not kpi else kpi]
+    return [KPINameListi[0] if not kpi else kpi[-1]]
+
+
 ######################################################################################################################
 ######################################################################################################################
 ################################################----tab 0 aanmaken----###############################################
@@ -2172,9 +2229,74 @@ def update_df_KPI(KPISelect,KPIGroupSelect,*args):#,
     return eval(carddivstylereturn3[0])#,eval(xstyles2[0])
 """
 
+@app.callback([
+    Output("Category1Select", "options"),
+    Output("Level0NameSelect", "options"),
+    Output("Level1NameSelect", "options"),
+    Output("Level2NameSelect", "options")
+],
+   # Output('animatedbar', 'figure'),
+     Input("Category1Select", "value"),
+     Input("Level0NameSelect", "value"),
+     Input("Level1NameSelect", "value"),
+     Input("Level2NameSelect", "value"),
+     Input("KPISelect", "value"),
+     Input('tabsdrilldown','active_tab')
+)
+
+def DropdownOptions(Category1Select,Level0NameSelect,Level1NameSelect,Level2NameSelect,KPISelect,tabsdrilldown):  #,*args ,Level2NameSelect,toggle, relayoutData
+   print('execute DropdownOptions')
+   Category1filtered = dfl0[
+    (dfl0["KPIName"]  == KPISelect)
+        ]
+   dff0onlykpifiltered = dfl0[
+    (dfl0["Filter1_0"].isin(Category1Select))
+    & (dfl0["KPIName"]  == KPISelect)
+        ]
+   dff1onlykpifiltered = dfl1[
+        (dfl1["LevelName_0"].isin(Level0NameSelect))
+        & (dfl1["Filter1_0"].isin(Category1Select))
+        & (dfl1["KPIName"]  == KPISelect)
+        ]
+   dff2onlykpifiltered = dfl2[
+        (dfl2["LevelName_0"].isin(Level0NameSelect))
+        & (dfl2["LevelName_1"].isin(Level1NameSelect))
+        & (dfl2["Filter1_0"].isin(Category1Select))
+        & (dfl2["KPIName"]  == KPISelect)
+        ]
+   Category1Select =  [{'label': html.Span([i],style={'background-color': ProjectOrange}), 'value': i}  for i in Category1filtered["Filter1_0"].unique()]
+   Level0NameSelect = [{'label': html.Span([i],style={'background-color': Level0NameColor[i]}), 'value': i} for i in dff0onlykpifiltered["LevelName_0"].unique()]
+   Level1NameSelect = [{'label': html.Span([i],style={'background-color': Level1NameColor[i]}), 'value': i} for i in dff1onlykpifiltered["LevelName_1"].unique()]
+   Level2NameSelect = [{'label': html.Span([i],style={'background-color': Level2NameColor[i]}), 'value': i} for i in dff2onlykpifiltered["LevelName_2"].unique()]
+   #print(Category1Select)
+   #print(Level0NameSelect)
+   #print(Level1NameSelect)
+   #print(Level2NameSelect)
+   return Category1Select,Level0NameSelect,Level1NameSelect,Level2NameSelect
+
+@app.callback([
+    Output("Category1Select", "value"),
+    ],
+    Input('sweepl0filter', 'n_clicks'),
+    State("KPISelect", "value"),
+)
+
+def dropdown1_reset(n_clicks,KPISelect):  #,*args ,Level2NameSelect,toggle, relayoutData
+   print('execute dropdown1_reset')
+   print(KPISelect)
+   Category1filtered = dfl0[(dfl0["KPIName"] == KPISelect)]
+   output=[]
+   Category1Select =  [i for i in Category1filtered["Filter1_0"].unique()]
+   for i in Category1Select:
+       output.append(i)
+   print(type(Category1Select))
+   return [Category1Select]
+
 #graphlevel0
 @app.callback(
     Output('graphlevel0', 'figure'),
+   # Output("Category1Select", "value"),
+  #  Output("Level0NameSelect", "options"),
    # Output('animatedbar', 'figure'),
     
      Input('dfl0', 'data'),
@@ -2190,6 +2312,12 @@ def update_kpiagg(data00,GrainSelect,KPISelect,CumulativeSwitch,PercentageTotalS
     print('execute update_kpiagg')
     data0 = pd.read_json(data00, orient='split')
     dff = data0 #update_filter_l0(data0, GrainSelect, KPISelect)  # ,Level2NameSelect
+    level0options=[{'label': html.Span([i],style={'background-color': Level0NameColor[i]}), 'value': i} for i in dff["LevelName_0"].unique()]#dff["LevelName_0"].unique()
+    #level1options=dfll2[0]["LevelName_1"].unique()
+    #level2options=dfll2[0]["LevelName_1"].unique()
+    level0filteroptions=[{'label': html.Span([i],style={'background-color': ProjectOrange}), 'value': i}  for i in dff["Filter1_0"].unique()] #dff["Filter1_0"].unique()
+    #level1filteroptions=dff["Filter1_1"].unique()
+    #level2filteroptions=dff["Filter1_2"].unique()
     traces3 = []
     dataframe = Cumloop0(CumulativeSwitch)
     Notation = KPISelectedStyle(KPISelect)
@@ -2378,7 +2506,7 @@ def update_kpiagg(data00,GrainSelect,KPISelect,CumulativeSwitch,PercentageTotalS
                 hovermode='x-unified',
                 transition={'duration': 500},
             )
-        }#,animatedreturn
+        }#,level0filteroptions,level0options#,animatedreturn
 
 
 @app.callback(
@@ -2387,13 +2515,13 @@ def update_kpiagg(data00,GrainSelect,KPISelect,CumulativeSwitch,PercentageTotalS
     # Input('dfl1', 'data'),
      Input("KPISelect", "value"),
 
-     Input('graphlevel0', 'selectedData'),
+    # Input('graphlevel0', 'selectedData'),
      Input("Totaalswitch", "label"),
      Input("breakpoints", "widthBreakpoint"),
     # eval(kpigrouplistinput3[0]),  
      ]
 )
-def update_level0Graph(data00,KPISelect,selectedData,Totaalswitch,widthBreakpoint): #,hoverData,*args
+def update_level0Graph(data00,KPISelect,Totaalswitch,widthBreakpoint): #,hoverData,*args
     print('update_level0Graph')
     dff0 = pd.read_json(data00, orient='split')
     traces = []
@@ -2517,7 +2645,7 @@ def update_level0Graph(data00,KPISelect,selectedData,Totaalswitch,widthBreakpoin
 #graphoveralltime
 @app.callback([
     Output('graphoveralltime', 'figure'),
-    Output('Level2NameSelect', 'options'),
+ #   Output('Level2NameSelect', 'options'),
     ],
     [Input('dfl0', 'data'),
      Input('dfl1', 'data'),
@@ -2772,7 +2900,7 @@ def update_mainfigure(data00,data11,data22,GrainSelect,KPISelect,Totaalswitch,Cu
                 hovermode='x-unified',
                 transition={'duration': 500},
             )
-        },options
+        }#,options
 
 
 @app.callback(
@@ -3784,15 +3912,6 @@ def toggle_modal(n1, n2, is_open):
         return not is_open
     return is_open
 
-@app.callback(
-    Output("modalfilter-bottom", "is_open"),
-    [Input("Opennavbar-bottom", "n_clicks"), Input("close-filter-bottom", "n_clicks")],
-    [State("modalfilter-bottom", "is_open")],
-)
-def toggle_modal(n1, n2, is_open):
-    if n1 or n2:
-        return not is_open
-    return is_open
 
 app.clientside_callback(
     """

@@ -12789,6 +12789,7 @@ color: white;
 	font-size: 30px;
 	margin-top: 1px;
     margin-bottom: 1px;
+	overflow: auto;
 }
 
 .dash-dropdown .Select-value {
@@ -12796,6 +12797,7 @@ border-color: transparent;
 background-color: transparent;
 margin: 1px;
 }
+
 
 .dash-dropdown .Select--multi .Select-value-label {
 border-radius: 15px;
@@ -12811,6 +12813,7 @@ margin-top: 0px;
 background-color: #00394a;
 border-width: 0px;
 background: transparent;
+overflow:auto;
 }
 
 .dash-dropdown .is-focused:not(.is-open)>.Select-control {
@@ -12834,23 +12837,31 @@ border-color: transparent;
 }
 
 .Select, .Select div, .Select input, .Select span{
-	padding: 5px;
+	padding: 6px;
 	border-radius: 10px;
 }
 
 .dash-dropdown .Select-menu-outer {
-    background-color: #2f3445;
+    background-color: green;
     font-size: 26px;
     border: 1px solid;
+	overflow: hidden;
+
 }
+
+.Select-menu-outer span {
+	font-size: 26px;
+}
+
 
 .dash-dropdown .Select-option {
   background-color: #00394a;
   box-sizing: border-box;
   border-radius: 15px;
   border-width: 10px;
-  height: 200px;
-width: 200px;
+  height: 500px;
+  margin:20px;
+  width: 200px;
 }
 
 .dash-dropdown .react-select .a{
@@ -12904,15 +12915,23 @@ color: white;
 }
 
 .dash-dropdown .VirtualizedSelectFocusedOption {
-background-color: red;
+background-color: blueviolet;
 color: white;
 font-size: 20px;
+margin:20px;
+overflow: auto;
 }
 .dash-dropdown .VirtualizedSelectFocusedOption :hover {
 	background-color: red;
 	font-size: 120px;
 	}
 	
+.select-aria-only{
+	font-size: 20px;
+
+}
+
+
 .custom-select {
 background-color: transparent;
 color: #D3D3D3;
