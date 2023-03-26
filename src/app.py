@@ -394,6 +394,7 @@ def reset_clickDatal0(n_clicks):#,n_clicks2
     print('removefilterl0')
     return None
 
+
 @app.callback([
               Output("Level0NameSelect", "value"),
              ],             
@@ -2274,23 +2275,23 @@ def DropdownOptions(Category1Select,Level0NameSelect,Level1NameSelect,Level2Name
    #print(Level2NameSelect)
    return Category1Select,Level0NameSelect,Level1NameSelect,Level2NameSelect
 
-@app.callback([
-    Output("Category1Select", "value"),
-    ],
-    Input('sweepl0filter', 'n_clicks'),
-    State("KPISelect", "value"),
-)
-
-def dropdown1_reset(n_clicks,KPISelect):  #,*args ,Level2NameSelect,toggle, relayoutData
-   print('execute dropdown1_reset')
-   print(KPISelect)
-   Category1filtered = dfl0[(dfl0["KPIName"] == KPISelect)]
-   output=[]
-   Category1Select =  [i for i in Category1filtered["Filter1_0"].unique()]
-   for i in Category1Select:
-       output.append(i)
-   print(type(Category1Select))
-   return [Category1Select]
+#@app.callback([
+#    Output("Category1Select", "value"),
+#    ],
+#    Input('sweepl0filter', 'n_clicks'),
+#    State("KPISelect", "value"),
+#)
+#
+#def dropdown1_reset(n_clicks,KPISelect):  #,*args ,Level2NameSelect,toggle, relayoutData
+#   print('execute dropdown1_reset')
+#   print(KPISelect)
+#   Category1filtered = dfl0[(dfl0["KPIName"] == KPISelect)]
+#   output=[]
+#   Category1Select =  [i for i in Category1filtered["Filter1_0"].unique()]
+#   for i in Category1Select:
+#       output.append(i)
+#   print(Category1Select)
+#   return [Category1Select]
 
 #graphlevel0
 @app.callback(
@@ -2643,10 +2644,9 @@ def update_level0Graph(data00,KPISelect,Totaalswitch,widthBreakpoint): #,hoverDa
 ######################################################################################################################
 
 #graphoveralltime
-@app.callback([
+@app.callback(
     Output('graphoveralltime', 'figure'),
  #   Output('Level2NameSelect', 'options'),
-    ],
     [Input('dfl0', 'data'),
      Input('dfl1', 'data'),
      Input('dfl2', 'data'),
@@ -2817,7 +2817,7 @@ def update_mainfigure(data00,data11,data22,GrainSelect,KPISelect,Totaalswitch,Cu
         plot_bgcolor='transparent',
         paper_bgcolor='transparent' 
         )
-        },options
+        }
     else:
         return {
             'data': tracestotal,
@@ -3086,8 +3086,9 @@ def update_level1Graph(data00,data11,KPISelect,Totaalswitch,widthBreakpoint): #,
 
 #graph-with-slider
 @app.callback(
-     Output('graph-with-slider', 'figure'),
-   # Output('Level2NameSelect','options')],
+     Output('graph-with-slider', 'figure')
+   # Output('Level2NameSelect','options')
+    ,
     [Input('dfl1', 'data'),
      Input('dfl2', 'data'),
      Input('GrainSelect', 'value'),
@@ -3139,7 +3140,7 @@ def update_figure(data11,data22,GrainSelect, KPISelect,Totaalswitch,CumulativeSw
                     xanchor="left",
                 )
     Level2NameList = dff2['LevelName_2'].unique().tolist()
-    options = [{'label': str(i), 'value': str(i)} for i in Level2NameList]
+    #options = [{'label': str(i), 'value': str(i)} for i in Level2NameList]
     tracestotal = []
     traces = []
     traces2 = []
