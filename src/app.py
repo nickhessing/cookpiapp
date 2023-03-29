@@ -1748,18 +1748,22 @@ def clean_data(GrainSelect,KPISelect,KPIGroupSelect,relayoutDatal0,relayoutDatal
     dfll2pol[0]
     .lazy()
     .select(pl.exclude("^.*(_1|_2)$")) #'^prefix_.*$'
+    .sort(["Period_int", "LevelName_0"])
     .collect()
+    
     )
     testtmp1pol = (
     dfll2pol[0]
     .lazy()
     .select(pl.exclude("^.*(_0|_2)$")) #'^prefix_.*$'
+    .sort(["Period_int", "LevelName_1"])
     .collect()
     )
     testtmp2pol = (
     dfll2pol[0]
     .lazy()
     .select(pl.exclude("^.*(_0|_1)$")) #'^prefix_.*$'
+    .sort(["Period_int", "LevelName_2"])
     .collect()
     )
     #testtmp0pol = dfll2pol[0].filter(regex='^(?!.*(_1|_2)$)')
@@ -1910,7 +1914,7 @@ def clean_data(GrainSelect,KPISelect,KPIGroupSelect,relayoutDatal0,relayoutDatal
             pl.col("Numerator").sum(),
         ]
     )
-   # .sort("Period_int")
+    .sort(["LevelName_0"])
    # .limit(5)
     )
 
@@ -1923,6 +1927,7 @@ def clean_data(GrainSelect,KPISelect,KPIGroupSelect,relayoutDatal0,relayoutDatal
             pl.col("Numerator").sum(),
         ]
     )
+    .sort(["LevelName_1"])
    # .sort("Period_int")
     #.limit(5)
     )
@@ -1935,7 +1940,8 @@ def clean_data(GrainSelect,KPISelect,KPIGroupSelect,relayoutDatal0,relayoutDatal
             pl.col("Numerator").sum(),
         ]
     )
-    )
+    .sort(["LevelName_2"])
+    )   
     
     #dfll0notime.append(testtmp00.groupby(columnsdff0,as_index=False, sort=False).agg(
     #        {'Denominator': eval(AggregateNumDenom(KPIDenomAgg[KPISelect])),'Numerator': eval(AggregateNumDenom(KPINumAgg[KPISelect]))})
