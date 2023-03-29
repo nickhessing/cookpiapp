@@ -180,64 +180,92 @@ def AggregateNumDenom(Calculation):
 keysl0 = ['d_kpi_id', 'd_level0_id']
 keysl1 = ['d_kpi_id', 'd_level0_id', 'd_level1_id']
 ListGrain = ['int_day', 'int_month', 'int_quarter', 'int_year']
-
-dfl0 = pd.DataFrame(
-        pd.read_csv(r'assets/Attributes/dashboard_data/dfl0.csv',sep=',', decimal='.',low_memory=False))
-dfl0json = dfl0.to_json(date_format='iso', orient='split')
-dfl0Compare = dfl0
-
 dfl0polars = pl.read_csv(r"assets/Attributes/dashboard_data/dfl0.csv")
 dfl1polars = pl.read_csv(r"assets/Attributes/dashboard_data/dfl1.csv")
 dfl2polars = pl.read_csv(r"assets/Attributes/dashboard_data/dfl2.csv")
 
-print(dfl2polars)
+"""
+dfl0 = pd.DataFrame(
+        pd.read_csv(r'assets/Attributes/dashboard_data/dfl0.csv',sep=',', decimal='.',low_memory=False))
+dfl0Compare = dfl0
+
 
 dfl1 = pd.DataFrame(
 
         pd.read_csv(r'assets/Attributes/dashboard_data/dfl1.csv',sep=',', decimal='.',low_memory=False))
-dfl1json = dfl1.to_json(date_format='iso', orient='split')
 dfl1Compare = dfl1
 
 
 dfl2 = pd.DataFrame(
         pd.read_csv(r'assets/Attributes/dashboard_data/dfl2.csv',sep=',', decimal='.',low_memory=False))
-dfl2json = dfl2.to_json(date_format='iso', orient='split')
 dfl2Compare = dfl2
+"""
 
-GrainNameList = dfl0['Grain'].unique()
-Level0NameList = dfl0['LevelName_0'].unique()
-Level0NameList= Level0NameList#[0:10]
-Level1NameList = dfl1['LevelName_1'].unique()
-Level2NameList = dfl2['LevelName_2'].unique().tolist()
+GrainNameListtmp = pl.DataFrame(dfl0polars["Grain"].unique())
+tmp =GrainNameListtmp.rows(named=True)
+GrainNameList = [i['Grain'] for i in tmp] 
+#Level0NameList = dfl0['LevelName_0'].unique()
+Level0NameListtmp = pl.DataFrame(dfl0polars["LevelName_0"].unique())
+tmp =Level0NameListtmp.rows(named=True)
+Level0NameList = [i['LevelName_0'] for i in tmp] 
+
+Level1NameListtmp = pl.DataFrame(dfl1polars["LevelName_1"].unique())
+tmp =Level1NameListtmp.rows(named=True)
+Level1NameList = [i['LevelName_1'] for i in tmp] 
+
+Level2NameListtmp = pl.DataFrame(dfl2polars["LevelName_2"].unique())
+tmp =Level2NameListtmp.rows(named=True)
+Level2NameList = [i['LevelName_2'] for i in tmp] 
+
+#Level1NameList = dfl1['LevelName_1'].unique()
+#Level2NameList = dfl2['LevelName_2'].unique().tolist()
+
+Level0Name = dfl0polars.select(['LevelEntitytype_0','LevelName_0','LevelColor_0','KPIName','Filter1_0']).unique()
+Level1Name = dfl1polars.select(['LevelEntitytype_1','LevelName_1','LevelColor_1','KPIName','Filter1_1']).unique()
+Level2Name = dfl2polars.select(['LevelEntitytype_2','LevelName_2','LevelColor_2','KPIName','Filter1_2']).unique()
+
+#Level0Name = dfl0[['LevelEntitytype_0','LevelName_0','LevelColor_0','KPIName','Filter1_0']]
+#Level1Name = dfl1[['LevelEntitytype_1','LevelName_1','LevelColor_1','KPIName','Filter1_1']]
+#Level2Name = dfl2[['LevelEntitytype_2','LevelName_2','LevelColor_2','KPIName','Filter1_2']]
+#Category1List = Level0Name['Filter1_0'].unique()
+
+Category1Listtmp = pl.DataFrame(dfl0polars["Filter1_0"].unique())
+tmp =Category1Listtmp.rows(named=True)
+Category1List = [i['Filter1_0'] for i in tmp] 
+
+#Level0Name = Level0Name.drop_duplicates()
+#Level1Name = Level1Name.drop_duplicates()
+#Level2Name = Level2Name.drop_duplicates()
+
+Level0NameColortmp = Level0Name.select(['LevelName_0','LevelColor_0'])
+Level0NameColor =Level0NameColortmp.rows(named=True)
+Level0NameColor = {level['LevelName_0']: level['LevelColor_0'] for level in Level0NameColor}
+#Level0NameColor = dict(Level0Name.set_index('LevelName_0')['LevelColor_0'].to_dict())
+Level1NameColortmp = Level1Name.select(['LevelName_1','LevelColor_1'])
+Level1NameColor =Level1NameColortmp.rows(named=True)
+Level1NameColor = {level['LevelName_1']: level['LevelColor_1'] for level in Level1NameColor}
+
+Level2NameColortmp = Level2Name.select(['LevelName_2','LevelColor_2'])
+Level2NameColor =Level2NameColortmp.rows(named=True)
+Level2NameColor = {level['LevelName_2']: level['LevelColor_2'] for level in Level2NameColor}
 
 
-Level0Name = dfl0[['LevelEntitytype_0','LevelName_0','LevelColor_0','KPIName','Filter1_0']]
-Level1Name = dfl1[['LevelEntitytype_1','LevelName_1','LevelColor_1','KPIName','Filter1_1']]
-Level2Name = dfl2[['LevelEntitytype_2','LevelName_2','LevelColor_2','KPIName','Filter1_2']]
-Category1List = Level0Name['Filter1_0'].unique()
 
-#dfl0polars.drop(['LevelNameShort_0', 'LevelDescription_0', 'LevelEntitytype_0', 'LevelColor_0'])
-#dfl1polars.drop(['LevelNameShort_0', 'LevelDescription_0', 'LevelEntitytype_0', 'LevelColor_0'])
-#dfl2polars.drop(['LevelNameShort_0', 'LevelDescription_0', 'LevelEntitytype_0', 'LevelColor_0'])
-  
+Level0attrtmp = Level0Name.select(['KPIName','LevelEntitytype_0'])
+Level0attr =Level0attrtmp.rows(named=True)
+Level0attr = {level['KPIName']: level['LevelEntitytype_0'] for level in Level0attr}
 
-Level0Name = Level0Name.drop_duplicates()
-Level1Name = Level1Name.drop_duplicates()
-Level2Name = Level2Name.drop_duplicates()
+Level1attrtmp = Level1Name.select(['KPIName','LevelEntitytype_1'])
+Level1attr =Level1attrtmp.rows(named=True)
+Level1attr = {level['KPIName']: level['LevelEntitytype_1'] for level in Level1attr}
 
-GrainNameListCompare = dfl0Compare['Grain'].unique()
-Level1NameListCompare = dfl1Compare['LevelName_1'].unique()
-Level2NameListCompare = dfl2['LevelName_2'].unique().tolist()
+Level2attrtmp = Level2Name.select(['KPIName','LevelEntitytype_2'])
+Level2attr =Level2attrtmp.rows(named=True)
+Level2attr = {level['KPIName']: level['LevelEntitytype_2'] for level in Level2attr}
 
-KPI_Level0 = dict(Level0Name.set_index('KPIName')['LevelName_0'].to_dict())
-Level0NameColor = dict(Level0Name.set_index('LevelName_0')['LevelColor_0'].to_dict())
-Level1NameColor = dict(Level1Name.set_index('LevelName_1')['LevelColor_1'].to_dict())
-Level2NameColor = dict(Level2Name.set_index('LevelName_2')['LevelColor_2'].to_dict())
-#Category1List = Project['Filter1'].unique()
-
-Level0attr = dict(Level0Name.set_index('KPIName')['LevelEntitytype_0'].to_dict())
-Level1attr = dict(Level1Name.set_index('KPIName')['LevelEntitytype_1'].to_dict())
-Level2attr = dict(Level2Name.set_index('KPIName')['LevelEntitytype_2'].to_dict())
+#Level0attr = dict(Level0Name.set_index('KPIName')['LevelEntitytype_0'].to_dict())
+#Level1attr = dict(Level1Name.set_index('KPIName')['LevelEntitytype_1'].to_dict())
+#Level2attr = dict(Level2Name.set_index('KPIName')['LevelEntitytype_2'].to_dict())
 
 
 KPINameListCompare = d_kpi['KPIName'].unique()
@@ -1566,8 +1594,10 @@ def hide_graph(NavItem1,NavItem2,NavItem3,KPISelect):
 
 datefromtmp = []
 datetotmp = []
-datefromtmp.append(str(dfl0['Period_int'].min())[0:10])
-datetotmp.append(str(dfl0['Period_int'].max())[0:10])
+#datefromtmp.append(str(dfl0['Period_int'].min())[0:10])
+#datetotmp.append(str(dfl0['Period_int'].max())[0:10])
+datefromtmp.append('2020-01-01')
+datetotmp.append('2023-09-01')
 
 @app.callback([
               Output('dfl0', 'data'),
@@ -2369,24 +2399,17 @@ def update_df_KPI(KPISelect,KPIGroupSelect,*args):#,
 
 def DropdownOptions(Category1Select,Level0NameSelect,Level1NameSelect,Level2NameSelect,KPISelect,tabsdrilldown):  #,*args ,Level2NameSelect,toggle, relayoutData
    print('execute DropdownOptions')
-   Category1filtered = dfl0[
-    (dfl0["KPIName"]  == KPISelect)
-        ]
-   dff0onlykpifiltered = dfl0[
-    (dfl0["Filter1_0"].isin(Category1Select))
-    & (dfl0["KPIName"]  == KPISelect)
-        ]
-   dff1onlykpifiltered = dfl1[
-        (dfl1["LevelName_0"].isin(Level0NameSelect))
-        & (dfl1["Filter1_0"].isin(Category1Select))
-        & (dfl1["KPIName"]  == KPISelect)
-        ]
-   dff2onlykpifiltered = dfl2[
-        (dfl2["LevelName_0"].isin(Level0NameSelect))
-        & (dfl2["LevelName_1"].isin(Level1NameSelect))
-        & (dfl2["Filter1_0"].isin(Category1Select))
-        & (dfl2["KPIName"]  == KPISelect)
-        ]
+   Category1filtered = dfl0polars.filter((pl.col("KPIName") == KPISelect)
+                            )
+   dff0onlykpifiltered = dfl0polars.filter((pl.col("KPIName") == KPISelect)
+                            & (pl.col("Filter1_0").is_in(Category1Select)))
+   dff1onlykpifiltered = dfl1polars.filter((pl.col("KPIName") == KPISelect)
+                            & (pl.col("LevelName_0").is_in(Level0NameSelect))
+                            & (pl.col("Filter1_0").is_in(Category1Select)))
+   dff2onlykpifiltered = dfl2polars.filter((pl.col("KPIName") == KPISelect)
+                            & (pl.col("LevelName_0").is_in(Level0NameSelect))
+                            & (pl.col("LevelName_1").is_in(Level1NameSelect))
+                            & (pl.col("Filter1_0").is_in(Category1Select)))
    Category1Select =  [{'label': html.Span([i],style={'background-color': ProjectOrange}), 'value': i}  for i in Category1filtered["Filter1_0"].unique()]
    Level0NameSelect = [{'label': html.Span([i],style={'background-color': Level0NameColor[i]}), 'value': i} for i in dff0onlykpifiltered["LevelName_0"].unique()]
    Level1NameSelect = [{'label': html.Span([i],style={'background-color': Level1NameColor[i]}), 'value': i} for i in dff1onlykpifiltered["LevelName_1"].unique()]
@@ -2477,7 +2500,7 @@ def update_kpiagg(data00,GrainSelect,KPISelect,CumulativeSwitch,PercentageTotalS
                     x=1.01,
                     xanchor="left",
                 )
-    for i in dff['LevelName_0'].unique():
+    for i in data0['LevelName_0'].unique():
         df_by_Level0Name = dff[dff['LevelName_0'] == i]
         ##df_by_Level0NameCum = dff[dff['Level0Name'] == i]
         ##df_by_Level0NameCum['Numerator'] = df_by_Level0NameCum['Numerator'].cumsum()
@@ -2662,7 +2685,7 @@ def update_level0Graph(data00,KPISelect,Totaalswitch,widthBreakpoint): #,hoverDa
     Calculation = CalculationDEF(KPISelect)
     AggregateNum = NumaggregateDEF(KPISelect)
     AggregateDenom = DenomaggregateDEF(KPISelect)
-    for j in dfl0.LevelName_0.unique():
+    for j in dff0.LevelName_0.unique():
         df_by_Level0Name = dff0[dff0['LevelName_0'] == j]
         x2 = eval(CalculationLogic0(Calculation))
         traces.append(dict(
@@ -3075,7 +3098,7 @@ def update_level1Graph(data00,data11,KPISelect,Totaalswitch,widthBreakpoint): #,
     Calculation = CalculationDEF(KPISelect)
     AggregateNum = NumaggregateDEF(KPISelect)
     AggregateDenom = DenomaggregateDEF(KPISelect)
-    for j in dfl1.LevelName_1.unique():
+    for j in data1['LevelName_1'].unique():
         df_by_Level1Name = dff1[dff1['LevelName_1'] == j]
         x = eval(CalculationLogic1(Calculation))
         for g in appendList1:
@@ -3104,7 +3127,7 @@ def update_level1Graph(data00,data11,KPISelect,Totaalswitch,widthBreakpoint): #,
                 ),
                 ]
             ))
-    for j in dfl0.LevelName_0.unique():
+    for j in data0.LevelName_0.unique():
         df_by_Level0Name = dff0[dff0['LevelName_0'] == j]
         x2 = eval(CalculationLogic0(Calculation))
         for g in appendList2:
@@ -3498,7 +3521,7 @@ def update_level2Graph(data11,data22,KPISelect,Totaalswitch,widthBreakpoint):#,c
     Calculation = CalculationDEF(KPISelect)
     AggregateNum = NumaggregateDEF(KPISelect)
     AggregateDenom = DenomaggregateDEF(KPISelect)
-    for i in dfl2.LevelName_2.unique():
+    for i in data2.LevelName_2.unique():
         df_by_Level2Name = dff2[dff2['LevelName_2'] == i]
         x = eval(CalculationLogic2(Calculation))
         for z in appendList1:
@@ -3528,7 +3551,7 @@ def update_level2Graph(data11,data22,KPISelect,Totaalswitch,widthBreakpoint):#,c
                 ),
                 ]
             ))
-    for j in dfl1.LevelName_1.unique():
+    for j in dff1['LevelName_1'].unique():
         df_by_Level1Name = dff1[dff1['LevelName_1'] == j]
         x2 = eval(CalculationLogic1(Calculation))
         for g in appendList2:
