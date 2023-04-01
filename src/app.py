@@ -224,6 +224,27 @@ Level0Name = dfl0polars.select(['LevelEntitytype_0','LevelName_0','LevelColor_0'
 Level1Name = dfl1polars.select(['LevelEntitytype_1','LevelName_1','LevelColor_1','KPIName','Filter1_1']).unique()
 Level2Name = dfl2polars.select(['LevelEntitytype_2','LevelName_2','LevelColor_2','KPIName','Filter1_2']).unique()
 
+dfl0polars.drop_in_place("LevelColor_0")
+dfl0polars.drop_in_place("LevelEntitytype_0")
+dfl0polars.drop_in_place("LevelDescription_0")
+dfl0polars.drop_in_place("KPIType")
+dfl0polars.drop_in_place("Denominator_LP")
+dfl0polars.drop_in_place("Numerator_LP")
+
+dfl1polars.drop_in_place("LevelColor_1")
+dfl1polars.drop_in_place("LevelEntitytype_1")
+dfl1polars.drop_in_place("LevelDescription_1")
+dfl1polars.drop_in_place("KPIType")
+dfl1polars.drop_in_place("Denominator_LP")
+dfl1polars.drop_in_place("Numerator_LP")
+
+dfl2polars.drop_in_place("LevelColor_2")
+dfl2polars.drop_in_place("LevelEntitytype_2")
+dfl2polars.drop_in_place("LevelDescription_2")
+dfl2polars.drop_in_place("KPIType")
+dfl2polars.drop_in_place("Denominator_LP")
+dfl2polars.drop_in_place("Numerator_LP")
+
 #Level0Name = dfl0[['LevelEntitytype_0','LevelName_0','LevelColor_0','KPIName','Filter1_0']]
 #Level1Name = dfl1[['LevelEntitytype_1','LevelName_1','LevelColor_1','KPIName','Filter1_1']]
 #Level2Name = dfl2[['LevelEntitytype_2','LevelName_2','LevelColor_2','KPIName','Filter1_2']]
@@ -248,8 +269,6 @@ Level1NameColor = {level['LevelName_1']: level['LevelColor_1'] for level in Leve
 Level2NameColortmp = Level2Name.select(['LevelName_2','LevelColor_2'])
 Level2NameColor =Level2NameColortmp.rows(named=True)
 Level2NameColor = {level['LevelName_2']: level['LevelColor_2'] for level in Level2NameColor}
-
-
 
 Level0attrtmp = Level0Name.select(['KPIName','LevelEntitytype_0'])
 Level0attr =Level0attrtmp.rows(named=True)
@@ -456,7 +475,7 @@ def Level0Update(selecteddatal0bar,selecteddatal0,n_clicks,Level0NameSelect):#,n
         if selecteddatal0bar['points'][0]:
             for p in selecteddatal0bar['points']:
                 selectedlistl0bar_list.append(p['y'])
-            selectedlistl0bar_listoutput = [{'label': i, 'value': i} for i in selectedlistl0bar_list]
+            selectedlistl1bar_listoutput = [{'label': i, 'value': i} for i in selectedlistl0bar_list]
     except:
         print()
     if selectedlistl0bar_list:
@@ -481,14 +500,6 @@ Level1DD = html.Div([
 ],id="Level1DD"
 )
 
-@app.callback(
-    Output('graph-level1compare', 'selectedData'),
-    [Input('sweepl1', 'n_clicks')]
-)
-
-def reset_clickDatal1(n_clicks):
-    print('removefilterl1')
-    return None
 
 @app.callback([
               Output("Level1NameSelect", "value"),
@@ -536,15 +547,6 @@ Level2DD = html.Div([
 ],id="Level2DD"
 )
 
-
-@app.callback(
-    Output('graph-level2compare', 'selectedData'),
-    [Input('sweepl2', 'n_clicks')]
-)
-
-def reset_clickDatal2(n_clicks):
-    print('removefilterl2')
-    return None
 
 @app.callback([
               Output("Level2NameSelect", "value"),
@@ -610,8 +612,6 @@ kpigrouplistinput3.append(kpigrouplistinput2)
 
 kpigroupstyleoutput2=','.join(kpigroupstyleoutput)
 kpigroupstyleoutput3.append(kpigroupstyleoutput2)
-
-
 
 
 KPIGroup =[]
@@ -839,14 +839,6 @@ def linesormarkers(Grain):
     else:
         return 'lines+markers'
 
-def CalculationLogicOveral(Calculation):
-    if Calculation == 2:
-        CalculationString = "i / j"
-        return CalculationString
-    elif Calculation == 1:
-        CalculationString = "i"
-        return CalculationString
-
 def CalculationLogic0Cum(Calculation):
     if Calculation == 2:
         CalculationString = "df_by_Level0Name.NumeratorCum / df_by_Level0Name.DenominatorCum"
@@ -877,14 +869,6 @@ def CalculationLogic0(Calculation):
         return CalculationString
     elif Calculation == 1:
         CalculationString = "df_by_Level0Name.Numerator"
-        return CalculationString
-
-def CalculationLogic0Relatief(Calculation):
-    if Calculation == 2:
-        CalculationString = "df_by_Level0Name.Numerator / df_by_Level0Name.Denominator"
-        return CalculationString
-    elif Calculation == 1:
-        CalculationString = "df_by_Level0Name.Numerator" - "df_by_Level0Name.Numerator_LP"
         return CalculationString
 
 def CalculationLogic2(Calculation):
@@ -1070,12 +1054,6 @@ def update_filter_compare_l0(dfl0Compare, GrainSelect, KPISelectCompare):
         ]
     return dffcomp
 
-def update_filter_nokpi(dfl0, GrainSelect,KPIGroup): 
-    dff = dfl0[
-        (dfl0["Grain"] == GrainSelect)
-         & (dfl0["KPIGroup"].isin(KPIGroup)) 
-        ]
-    return dff
 
 def update_filter_l0(dfl0, GrainSelect, KPISelect,Level0NameSelect):
     dff = dfl0[
@@ -1800,8 +1778,8 @@ def clean_data(GrainSelect,KPISelect,KPIGroupSelect,relayoutDatal0,relayoutDatal
     columnsdff0pol.remove('d_level2_id')
     columnsdff0pol.remove('Numerator')
     columnsdff0pol.remove('Denominator')
-    columnsdff0pol.remove('Numerator_LP')
-    columnsdff0pol.remove('Denominator_LP')
+    #columnsdff0pol.remove('Numerator_LP')
+    #columnsdff0pol.remove('Denominator_LP')
 
     #columnsdff1 = testtmp1.columns.tolist()
     columnsdff1pol = testtmp1pol.columns
@@ -1813,8 +1791,8 @@ def clean_data(GrainSelect,KPISelect,KPIGroupSelect,relayoutDatal0,relayoutDatal
     columnsdff1pol.remove('d_level2_id')
     columnsdff1pol.remove('Numerator')
     columnsdff1pol.remove('Denominator')
-    columnsdff1pol.remove('Numerator_LP')
-    columnsdff1pol.remove('Denominator_LP')
+    #columnsdff1pol.remove('Numerator_LP')
+    #columnsdff1pol.remove('Denominator_LP')
 
 
     #columnsdff2 = testtmp2.columns.tolist()
@@ -1827,8 +1805,8 @@ def clean_data(GrainSelect,KPISelect,KPIGroupSelect,relayoutDatal0,relayoutDatal
     columnsdff2pol.remove('d_level1_id')
     columnsdff2pol.remove('Numerator')
     columnsdff2pol.remove('Denominator')
-    columnsdff2pol.remove('Numerator_LP')
-    columnsdff2pol.remove('Denominator_LP')
+    #columnsdff2pol.remove('Numerator_LP')
+    #columnsdff2pol.remove('Denominator_LP')
     
     dff0pol = (
     testtmp0pol.lazy()
@@ -2121,7 +2099,6 @@ def updatekpiindicator(dffcompare,KPISelect,KPIGroupSelect,widthBreakpoint):#
             Notation = KPISelectedStyle(kpi)
             Notationlist=Notationtmp[0]
             Calculation = CalculationDEF(kpi)
-            CalculationLogic = CalculationLogicOveral(Calculation)
             AggregateNum = AggregateNumDenom(Calculation)
             AggregateDenom = AggregateNumDenom(Calculation)
             meannum = []
@@ -2452,11 +2429,11 @@ def DropdownOptions(Category1Select,Level0NameSelect,Level1NameSelect,Level2Name
    # Output('animatedbar', 'figure'),
     
      Input('dfl0', 'data'),
-     State('GrainSelect', 'value'),
-     State("KPISelect", "value"),
-     State("CumulativeSwitch", "label"),
-     State("PercentageTotalSwitch", "label"),
-     State("ShowValueSwitch", "label"),
+     Input('GrainSelect', 'value'),
+     Input("KPISelect", "value"),
+     Input("CumulativeSwitch", "label"),
+     Input("PercentageTotalSwitch", "label"),
+     Input("ShowValueSwitch", "label"),
      State("breakpoints", "widthBreakpoint"),
 )
 
@@ -2669,7 +2646,7 @@ def update_kpiagg(data00,GrainSelect,KPISelect,CumulativeSwitch,PercentageTotalS
      State("KPISelect", "value"),
 
     # Input('graphlevel0', 'selectedData'),
-     State("Totaalswitch", "label"),
+     Input("Totaalswitch", "label"),
      State("breakpoints", "widthBreakpoint"),
     # eval(kpigrouplistinput3[0]),  
      ]
@@ -2705,10 +2682,10 @@ def update_level0Graph(data00,KPISelect,Totaalswitch,widthBreakpoint): #,hoverDa
             type='bar',
             marker=dict(
                 opacity=1,
-                color=df_by_Level0Name.LevelColor_0,
+                color=Level0NameColor[j],
                 color_discrete_map='identity',
                 line=dict(width=0.1,
-                          color=df_by_Level0Name.LevelColor_0,
+                          color=Level0NameColor[j],
                           color_discrete_map='identity',
                           opacity=1,
                           ),
@@ -2805,10 +2782,10 @@ def update_level0Graph(data00,KPISelect,Totaalswitch,widthBreakpoint): #,hoverDa
      Input('dfl2', 'data'),
      State('GrainSelect', 'value'),
      State("KPISelect", "value"),
-     State("Totaalswitch", "label"),
-     State("CumulativeSwitch", "label"),
-     State("PercentageTotalSwitch", "label"),
-     State("ShowValueSwitch", "label"),
+     Input("Totaalswitch", "label"),
+     Input("CumulativeSwitch", "label"),
+     Input("PercentageTotalSwitch", "label"),
+     Input("ShowValueSwitch", "label"),
      State("breakpoints", "widthBreakpoint"),
      #eval(kpigrouplistinput3[0]),  
    #  Input("DBColorVar", "value"),
@@ -2886,13 +2863,13 @@ def update_mainfigure(data00,data11,data22,GrainSelect,KPISelect,Totaalswitch,Cu
                line=dict(
                  width=3,
                  shape="spline",
-                 color=eval(dataframe1[0]).LevelColor_1,
+                 color=Level1NameColor[i],
                ),
                marker=dict(
                    size = 5,
                    line = dict(width=0.1
                                ),
-                   color=eval(dataframe1[0]).LevelColor_1,
+                   color=Level1NameColor[i],
                ),
                type=visualDEF(KPISelect),
                name=i,
@@ -2927,7 +2904,7 @@ def update_mainfigure(data00,data11,data22,GrainSelect,KPISelect,Totaalswitch,Cu
                 opacity=1,
                 marker=dict(
                     size = 5,
-                    color=eval(dataframe0[0]).LevelColor_0,
+                    color=Level0NameColor[v],
                     color_discrete_map='identity', 
                     line=dict(width=0.1,
                              color = 'white'
@@ -3065,7 +3042,7 @@ def update_mainfigure(data00,data11,data22,GrainSelect,KPISelect,Totaalswitch,Cu
   #   Input("Level1NameSelect", "value"),
   #   Input("Level2NameSelect", "value"),
    #  Input('graphoveralltime', 'clickData'),
-     State("Totaalswitch", "label"),
+     Input("Totaalswitch", "label"),
      State("breakpoints", "widthBreakpoint"),
     # eval(kpigrouplistinput3[0]),  
      ]
@@ -3118,7 +3095,7 @@ def update_level1Graph(data00,data11,KPISelect,Totaalswitch,widthBreakpoint): #,
                 text_auto=True,
                 type='bar',
                 marker=dict(
-                    color=df_by_Level1Name.LevelColor_1,
+                    color=Level1NameColor[j],
                     color_discrete_map='identity',
                 ),
                 orientation="h",
@@ -3148,10 +3125,10 @@ def update_level1Graph(data00,data11,KPISelect,Totaalswitch,widthBreakpoint): #,
                 type='bar',
                 marker=dict(
                     opacity=1,
-                    color=df_by_Level0Name.LevelColor_0,
+                    color=Level0NameColor[j],
                     color_discrete_map='identity',
                     line=dict(width=0.1,
-                              color=df_by_Level0Name.LevelColor_0,
+                              color=Level0NameColor[j],
                               color_discrete_map='identity',
                               opacity=1,
                               ),
@@ -3248,10 +3225,10 @@ def update_level1Graph(data00,data11,KPISelect,Totaalswitch,widthBreakpoint): #,
      Input('dfl2', 'data'),
      State('GrainSelect', 'value'),
      State("KPISelect", "value"),
-     State("Totaalswitch", "label"),
-     State("CumulativeSwitch", "label"),
-     State("PercentageTotalSwitch", "label"),
-     State("ShowValueSwitch", "label"),
+     Input("Totaalswitch", "label"),
+     Input("CumulativeSwitch", "label"),
+     Input("PercentageTotalSwitch", "label"),
+     Input("ShowValueSwitch", "label"),
      State("breakpoints", "widthBreakpoint"),
      #eval(kpigrouplistinput3[0]),  
      ]
@@ -3372,7 +3349,7 @@ def update_figure(data11,data22,GrainSelect, KPISelect,Totaalswitch,CumulativeSw
                 mode=linesormarkers(GrainSelect),
                 marker=dict(
                     size = 5,
-                    color=eval(dataframe[0]).LevelColor_1,
+                    color=Level1NameColor[v],
                     line=dict(width=0.1,
                               color = 'white'
                                )
@@ -3488,7 +3465,7 @@ def update_figure(data11,data22,GrainSelect, KPISelect,Totaalswitch,CumulativeSw
      Input('dfl2notime', 'data'),
    #  Input('GrainSelect', 'value'),
      State("KPISelect", "value"),
-     State("Totaalswitch", "label"),
+     Input("Totaalswitch", "label"),
      State("breakpoints","widthBreakpoint")
     # eval(kpigrouplistinput3[0]),  
      ]
@@ -3540,7 +3517,7 @@ def update_level2Graph(data11,data22,KPISelect,Totaalswitch,widthBreakpoint):#,c
                 textformat=eval(Notation[0]),
                 text_auto=True,
                 marker = dict(
-                        color=df_by_Level2Name.LevelColor_2,
+                        color=Level2NameColor[i],
                         color_discrete_map='identity',
                         line = dict(width=0.1)
                 ),
@@ -3572,9 +3549,9 @@ def update_level2Graph(data11,data22,KPISelect,Totaalswitch,widthBreakpoint):#,c
                 type='bar',
                 marker=dict(
                     opacity=1,
-                    color=df_by_Level1Name.LevelColor_1,
+                    color=Level1NameColor[j],
                     color_discrete_map='identity',
-                    line=dict(color=df_by_Level1Name.LevelColor_1,
+                    line=dict(color=Level1NameColor[j],
                               width=0.1
                               ),
                 ),
