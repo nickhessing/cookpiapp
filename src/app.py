@@ -62,8 +62,8 @@ import base64
 import time
 from uuid import uuid4
 import polars as pl
-from dash_extensions.enrich import DashProxy, Output, Input, State, ServersideOutput, html, dcc,FileSystemStore,ServersideOutputTransform
-
+from dash_extensions.enrich import RedisStore,DashProxy, Output, Input, State, ServersideOutput, html, dcc,FileSystemStore,ServersideOutputTransform
+from flask_caching import Cache
 
 external_stylesheets = [
 {
@@ -72,11 +72,21 @@ external_stylesheets = [
 },
 ]
 #app = dash.Dash(__name__,suppress_callback_exceptions=True)#background_callback_manager=background_callback_manager
-app = DashProxy(__name__,transforms=[ServersideOutputTransform(arg_check=False)],suppress_callback_exceptions=True,external_stylesheets=external_stylesheets)
+app = DashProxy(__name__,
+                transforms=[ServersideOutputTransform(arg_check=False)]#backend = RedisStore(),
+                ,suppress_callback_exceptions=True,external_stylesheets=external_stylesheets)
 
 server = app.server
 
 app.css.config.serve_locally = True
+
+#CACHE_CONFIG = {
+#    # try 'FileSystemCache' if you don't want to setup redis
+#    'CACHE_TYPE': 'redis',
+#    'CACHE_REDIS_URL': os.environ.get('REDIS_URL', 'redis://localhost:6379')
+#}
+#cache = Cache()
+#cache.init_app(app.server, config=CACHE_CONFIG)
 
 my_backend = FileSystemStore(cache_dir="C:/Users/nickh/OneDrive/Documents/Projects/cookkpi/dashboard/src/assets/Attributes/redis")
 
@@ -1804,15 +1814,15 @@ datefromtmp.append('2021-01-01')
 datetotmp.append('2023-09-01')
 
 @app.callback([
-              ServersideOutput('dfgroups', 'data',backend=my_backend),
-              ServersideOutput('dfl0', 'data',backend=my_backend),
-              ServersideOutput('dfl1', 'data',backend=my_backend),
-              ServersideOutput('dfl2', 'data',backend=my_backend),
-              ServersideOutput('dfl0notime', 'data',backend=my_backend),
-              ServersideOutput('dfl1notime', 'data',backend=my_backend),
-              ServersideOutput('dfl2notime', 'data',backend=my_backend),
+              ServersideOutput('dfgroups', 'data'),
+              ServersideOutput('dfl0', 'data'),
+              ServersideOutput('dfl1', 'data'),
+              ServersideOutput('dfl2', 'data'),
+              ServersideOutput('dfl0notime', 'data'),
+              ServersideOutput('dfl1notime', 'data'),
+              ServersideOutput('dfl2notime', 'data'),
             #  Output('dffcomparefilter', 'data'),
-              ServersideOutput('dflcomparekpi', 'data',backend=my_backend),#,backend=my_backend
+              ServersideOutput('dflcomparekpi', 'data'),#,backend=my_backend
               Output('output-container-date-picker-range', 'children'),
               Output('dropdown0', 'value'),
               Output('dropdown1', 'value'),
