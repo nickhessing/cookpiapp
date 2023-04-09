@@ -63,7 +63,7 @@ import time
 from uuid import uuid4
 import polars as pl
 from dash_extensions.enrich import RedisStore,DashProxy, Output, Input, State, ServersideOutput, html, dcc,FileSystemStore,ServersideOutputTransform
-from flask_caching import Cache
+#from flask_caching import Cache
 
 external_stylesheets = [
 {
