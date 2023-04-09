@@ -62,7 +62,23 @@ import base64
 import time
 from uuid import uuid4
 import polars as pl
-from dash_extensions.enrich import Dash, ServersideOutput, Output, Input, State, Trigger
+from dash_extensions.enrich import DashProxy, Output, Input, State, ServersideOutput, html, dcc,FileSystemStore,ServersideOutputTransform
+
+
+external_stylesheets = [
+{
+    'href': 'https://fonts.googleapis.com/icon?family=Material+Icons',
+    'rel': 'stylesheet',
+},
+]
+#app = dash.Dash(__name__,suppress_callback_exceptions=True)#background_callback_manager=background_callback_manager
+app = DashProxy(__name__,transforms=[ServersideOutputTransform(arg_check=False)],suppress_callback_exceptions=True,external_stylesheets=external_stylesheets)
+
+server = app.server
+
+app.css.config.serve_locally = True
+
+my_backend = FileSystemStore(cache_dir="C:/Users/nickh/OneDrive/Documents/Projects/cookkpi/dashboard/src/assets/Attributes/redis")
 
 """
 launch_uid = uuid4()
@@ -327,18 +343,8 @@ css_directory = os.getcwd()
 stylesheets = ['stylesheet.css']
 static_css_route = '/static/'
 
-external_stylesheets = [
-{
-    'href': 'https://fonts.googleapis.com/icon?family=Material+Icons',
-    'rel': 'stylesheet',
-},
-]
 
-app = dash.Dash(__name__,external_stylesheets=external_stylesheets,suppress_callback_exceptions=True)#background_callback_manager=background_callback_manager
 
-server = app.server
-
-app.css.config.serve_locally = True
 
 bgcolor = "#f3f3f1"
 template = {"layout": {"paper_bgcolor": bgcolor, "plot_bgcolor": bgcolor}}
@@ -373,7 +379,7 @@ KPIdropdown = html.Div([
 KPIGroupdropdown = html.Div([
     dcc.Dropdown(
         id="KPIGroupSelect",
-        value=KPIGroupList[0],
+        value=KPIGroupList,
         multi=True,
         options=[{'label': i, 'value': i} for i in KPIGroupList],
         
@@ -413,7 +419,7 @@ Category1 = html.Div([
     multi=True,
     optionHeight=1,
     placeholder="Select a value",
-    value=Category1List,
+    value=Category1List,#'Derivatives',
 ),
 ],id="Category1"
 )
@@ -444,51 +450,6 @@ Level0DD = html.Div([
 ],id="Level0DD"
 )
 
-@app.callback(
-    Output('graph-level0compare', 'selectedData'),
-    [Input('sweepl0', 'n_clicks'),
-     #Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'),
-    ]
-)
-
-def reset_clickDatal0(n_clicks):#,n_clicks2
-    print('removefilterl0')
-    return None
-
-
-selectedlistl0bar_list =[]
-@app.callback([
-              Output("Level0NameSelect", "value"),
-             ],             
-              Input('graph-level0compare', 'selectedData'),
-              Input('sweepl0', 'n_clicks'),
-              Input("Level0NameSelect", "value"),
-              Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'),
-             )
-def Level0Update(selecteddatal0bar,n_clicks,Level0NameSelect,reset):#,selecteddatal0,n_clicks,KPINameSelect,clickdatal0bar,clickdatal0
-    print('Level0Update')
-    selectedlistl0bar_list.clear()
-    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
-    changed_id2 = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
-    try:
-        if 'sweepl0' in changed_id:
-            selectedlistl0bar_list.clear()
-            for d in Level0NameList:
-                selectedlistl0bar_list.append(d)
-        elif selecteddatal0bar['points']:
-            selectedlistl0bar_list.clear()
-            for p in selecteddatal0bar['points']:
-                selectedlistl0bar_list.append(p['y'])
-        elif "filter-dropdown-ex3-reset" in list(json.loads(changed_id2).values()):
-            selectedlistl0bar_list.clear()
-            for j in Level0NameList:
-                selectedlistl0bar_list.append(j)
-    except:
-        print()
-    if len(selectedlistl0bar_list)>0:
-        return [selectedlistl0bar_list]
-    else:
-        return [Level0NameSelect]
 
 Level1DD = html.Div([
     html.Div(dcc.Textarea(value='Level one filters',id='dropdown1',className='h6')),
@@ -507,24 +468,25 @@ Level1DD = html.Div([
     Output('graphoveralltime', 'selectedData'),
     [Input('sweepl1', 'n_clicks'),
      #Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'),
-    ]
+    ], session_check=False, prevent_initial_call=True
 )
 
 def reset_clickDatal1(n_clicks):#,n_clicks2
     print('removefilterl1')
     return None
 
-selectedlistl1bar_list =[]
+
 @app.callback([
               Output("Level1NameSelect", "value"),
              ],             
               Input('graph-level1compare', 'selectedData'),
               Input('sweepl1', 'n_clicks'),
               Input("Level1NameSelect", "value"),
-              Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'),
+              Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'), prevent_initial_call=True
              )
 def Level1Update(selecteddatal1bar,n_clicks,Level1NameSelect,reset):#,selecteddatal0,n_clicks,KPINameSelect,clickdatal0bar,clickdatal0
     print('Level1Update')
+    selectedlistl1bar_list =[]
     selectedlistl1bar_list.clear()
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
     changed_id2 = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
@@ -544,10 +506,9 @@ def Level1Update(selecteddatal1bar,n_clicks,Level1NameSelect,reset):#,selectedda
     except:
         print()
     if len(selectedlistl1bar_list)>0:
-        return [selectedlistl1bar_list]
+        return selectedlistl1bar_list
     else:
-        return [Level1NameSelect]
-    
+        raise dash.exceptions.PreventUpdate
 
 
 Level2DD = html.Div([
@@ -566,24 +527,25 @@ Level2DD = html.Div([
     Output('graph-with-slider', 'selectedData'),
     [Input('sweepl2', 'n_clicks'),
      #Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'),
-    ]
+    ], session_check=False, prevent_initial_call=True
 )
 
 def reset_clickDatal2(n_clicks):#,n_clicks2
     print('removefilterl2')
     return None
 
-selectedlistl2bar_list =[]
+
 @app.callback([
               Output("Level2NameSelect", "value"),
              ],             
               Input('graph-level2compare', 'selectedData'),
               Input('sweepl2', 'n_clicks'),
               Input("Level2NameSelect", "value"),
-              Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'),
+              Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'), prevent_initial_call=True
              )
 def Level2Update(selecteddatal2bar,n_clicks,Level2NameSelect,reset):#,selecteddatal0,n_clicks,KPINameSelect,clickdatal0bar,clickdatal0
     print('Level2Update')
+    selectedlistl2bar_list =[]
     selectedlistl2bar_list.clear()
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
     changed_id2 = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
@@ -603,11 +565,10 @@ def Level2Update(selecteddatal2bar,n_clicks,Level2NameSelect,reset):#,selectedda
     except:
         print()
     if len(selectedlistl2bar_list)>0:
-        return [selectedlistl2bar_list]
+        return selectedlistl2bar_list
     else:
-        return [Level2NameSelect]
+        return Level2NameSelect
     
-
 
 kpigrouplistinput =[]
 kpigrouplistinput3 =[]
@@ -831,6 +792,75 @@ def linesormarkers(Grain):
         return 'lines'
     else:
         return 'lines+markers'
+
+def rangeselector(Grain):
+    if Grain == 'D':
+        buttons=list([dict(count=7,
+                           label="1w",
+                           step="day",
+                           stepmode="backward"),
+                      dict(count=14,
+                           label="2w",
+                           step="day",
+                           stepmode="backward"),
+                      dict(count=1,
+                           label="1m",
+                           step="month",
+                           stepmode="backward"),
+                      dict(count=3,
+                           label="3m",
+                           step="month",
+                           stepmode="backward"),
+                      dict(count=1,
+                           label="YTD",
+                           step="year",
+                           stepmode="todate"),
+                      ])
+    elif Grain == 'M':     
+        buttons=list([dict(count=1,
+                           label="1m",
+                           step="month",
+                           stepmode="backward"),
+                      dict(count=6,
+                           label="6m",
+                           step="month",
+                           stepmode="backward"),
+                      dict(count=1,
+                           label="YTD",
+                           step="year",
+                           stepmode="todate"),
+                      dict(count=1,
+                           label="1y",
+                           step="year",
+                           stepmode="backward"),
+                      dict(count=10,
+                           label="All",
+                           step="year",
+                           stepmode="backward")
+                      ])
+    else:
+        buttons=list([dict(count=1,
+                           label="1m",
+                           step="month",
+                           stepmode="backward"),
+                      dict(count=6,
+                           label="6m",
+                           step="month",
+                           stepmode="backward"),
+                      dict(count=1,
+                           label="YTD",
+                           step="year",
+                           stepmode="todate"),
+                      dict(count=1,
+                           label="1y",
+                           step="year",
+                           stepmode="backward"),
+                      dict(count=10,
+                           label="All",
+                           step="year",
+                           stepmode="backward")
+                      ])
+    return buttons
 
 def CalculationLogic0Cum(Calculation):
     if Calculation == 2:
@@ -1441,16 +1471,16 @@ app.layout = html.Div([
     #dcc.Store(id='dff0',data=dfl0json,storage_type='memory'),
     #dcc.Store(id='dff1',data=dfl1json,storage_type='memory'),
     #dcc.Store(id='dff2',data=dfl2json,storage_type='memory'),
-    dcc.Store(id='dfl0',data=[],storage_type='memory'),
-    dcc.Store(id='dfl1',data=[],storage_type='memory'),
-    dcc.Store(id='dfl2',data=[],storage_type='memory'),
-    dcc.Store(id='dfl0notime',data=[],storage_type='memory'),
-    dcc.Store(id='dfl1notime',data=[],storage_type='memory'),
-    dcc.Store(id='dfl2notime',data=[],storage_type='memory'),
-    dcc.Store(id='dffcomparefilter',data=[],storage_type='memory'),
-    dcc.Store(id='dflcomparekpi',data=[],storage_type='memory'),
-    dcc.Store(id='selectedkpigroup',data=[],storage_type='memory'),
-    dcc.Store(id='dfgroups',data=[],storage_type='memory'),
+    dcc.Store(id='dfl0'),
+    dcc.Store(id='dfl1'),
+    dcc.Store(id='dfl2'),
+    dcc.Store(id='dfl0notime'),
+    dcc.Store(id='dfl1notime'),
+    dcc.Store(id='dfl2notime'),
+    dcc.Store(id='dffcomparefilter'),
+    dcc.Store(id='dflcomparekpi'),
+    dcc.Store(id='selectedkpigroup'),
+    dcc.Store(id='dfgroups'),
     WindowBreakpoints(
             id="breakpoints",
             # Define the breakpoint thresholds
@@ -1493,6 +1523,279 @@ app.layout = html.Div([
 #)
 
 
+KPIGroup =[]
+
+@app.callback([
+             Output("KPIGroupSelect", 'value'),
+             ],
+            Input({'type': 'kpigroup-ex3', 'index': ALL}, 'n_clicks'), prevent_initial_call=True
+           # eval(kpigrouplistinput3[0])
+            )
+def KPIgrouplighter(n_clicks):#*args
+    print('execute KPIgrouplighter')
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
+    valuelist =[]
+    try:
+        valuelisttmp = list(json.loads(changed_id).values()) 
+        valuelist.append(valuelisttmp)
+        print(valuelist)
+    except json.decoder.JSONDecodeError as e:
+        print("Unable to decode JSON: ", e)
+    KPIGroupList = d_kpi['KPIGroup'].unique().tolist()
+    print(valuelist)
+    print(changed_id)
+    #try:
+    #    if len(dash.callback_context.triggered)!= 1:
+    #        print('nothingtoseehere')
+    #    elif "filter-dropdown-ex3-reset" in valuelist: 
+    #        kpigroup.append(valuelist[0])
+    #        print('bloei')
+    #    elif "filter-dropdown-ex3" in valuelist: 
+    #        kpigroup.append(valuelist[0])
+    #    elif 'kpigroup' in changed_id[0:8]:
+    #        kpigroup.append(KPINameListi[0])
+    #except:
+    #    print('bs!')
+    if changed_id =='{"index":"kpigroup0","type":"kpigroup-ex3"}':
+        KPIGrouptmp1 = []
+        for i in range(len(KPIGroupList)):
+            KPIGrouptmp1.append(KPIGroupList[i])
+        KPIGroup.append(KPIGrouptmp1)
+        kpicountout.clear() 
+        kpicountout.append(len(KPINameList))
+    elif valuelist:
+        KPIGroup.append(valuelist[0])
+    if not KPIGroup:
+        print('listisempty')
+        KPIGrouptmp3 = []
+        for i in range(len(KPIGroupList)):
+            KPIGrouptmp3.append(KPIGroupList[i])
+        KPIGroup.append(KPIGrouptmp3)
+        kpicountout.clear() 
+        kpicountout.append(len(KPINameList))
+    KPIGroup2 = KPIGroup[-1]
+    print(KPIGroup2)
+    return KPIGroup2
+
+
+kpi =[]
+
+#print(eval(carddivnclicks3new[0]+','+kpigrouplistinput3[0]) if carddivnclicks3new else eval(carddivnclicks3[0]+','+kpigrouplistinput3[0]))
+@app.callback([
+    Output('KPISelect', 'value'),
+  #  Output({'type': 'output-ex3', 'index': MATCH}, 'children'),
+    ],
+    [
+    Input({'type': 'filter-dropdown-ex3', 'index': ALL}, 'n_clicks'),
+    Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'),
+    Input('KPIGroupSelect', 'value'),
+    Input({'type': 'kpigroup-ex3', 'index': ALL}, 'n_clicks'),
+    #eval(kpigrouplistinput3[0])
+    ], prevent_initial_call=True
+ )
+
+def update_df_KPIGroup(n_clicks,n_clicks2,KPIGroupSelect,n_clicks3):#,*args
+    print('execute update_df_KPIGroup')   
+    dffKPISelect = d_kpi[
+        (d_kpi["KPIGroup"].isin(KPIGroupSelect))
+    ]
+    dffKPISelect.sort_values(by=['Sorting'])
+    KPINameListi = dffKPISelect['KPIName'].unique()
+    try:
+        changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
+        valuelist = list(json.loads(changed_id).values()) 
+    except json.decoder.JSONDecodeError as e:
+        print("Unable to decode JSON: ", e)
+    try:
+        changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
+        if len(dash.callback_context.triggered)!= 1:
+            print('nothingtoseehere')
+        elif "filter-dropdown-ex3-reset" in valuelist: 
+            kpi.append(valuelist[0])
+            print('bloei')
+            print(valuelist)
+            print('bloei')
+        elif "filter-dropdown-ex3" in valuelist: 
+            kpi.append(valuelist[0])
+        elif 'kpigroup' in changed_id[0:8]:
+            kpi.append(KPINameListi[0])
+    except:
+        print('bs!')
+    return KPINameListi[0] if not kpi else kpi[-1]
+
+
+######################################################################################################################
+######################################################################################################################
+################################################----tab 0 aanmaken----###############################################
+######################################################################################################################
+######################################################################################################################
+
+
+@app.callback(
+    Output('graph-level0compare', 'selectedData'),
+    [Input('sweepl0', 'n_clicks'),
+     #Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'),
+    ], session_check=False, prevent_initial_call=True
+)
+
+def reset_clickDatal0(n_clicks):#,n_clicks2
+    print('removefilterl0')
+    return None
+
+
+@app.callback([
+              Output("Level0NameSelect", "value"),
+             ],             
+              Input('graph-level0compare', 'selectedData'),
+              Input('sweepl0', 'n_clicks'),
+              Input("Level0NameSelect", "value"),
+              Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'), prevent_initial_call=True
+             )
+def Level0Update(selecteddatal0bar,n_clicks,Level0NameSelect,reset):#,selecteddatal0,n_clicks,KPINameSelect,clickdatal0bar,clickdatal0
+    print('Level0Update')
+    selectedlistl0bar_list =[]
+    selectedlistl0bar_list.clear()
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+    changed_id2 = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
+    try:
+        if 'sweepl0' in changed_id:
+            selectedlistl0bar_list.clear()
+            for d in Level0NameList:
+                selectedlistl0bar_list.append(d)
+        elif selecteddatal0bar['points']:
+            selectedlistl0bar_list.clear()
+            for p in selecteddatal0bar['points']:
+                selectedlistl0bar_list.append(p['y'])
+        elif "filter-dropdown-ex3-reset" in list(json.loads(changed_id2).values()):
+            selectedlistl0bar_list.clear()
+            for j in Level0NameList:
+                selectedlistl0bar_list.append(j)
+    except:
+        print()
+    if len(selectedlistl0bar_list)>0:
+        return selectedlistl0bar_list
+    else:
+        raise dash.exceptions.PreventUpdate
+
+"""
+@app.callback(
+    eval(carddivstyle3[0]),
+      #  Output('kpigroup0', 'style'),
+      #  Output('kpigroup1', 'style'),
+      #  Output('kpigroup2', 'style'),
+      #  Output('kpigroup3', 'style'),
+      #  Output('kpigroup4', 'style'),
+    [   
+    Input("KPISelect", "value"),
+    Input("KPIGroupSelect", "value"),
+    eval(kpigrouplistinput3[0]),
+    eval(carddivnclicks3[0])
+    ]
+)
+
+def update_df_KPI(KPISelect,KPIGroupSelect,*args):#,
+    print('execute update_df_KPI')
+    #dff1 = dfl1[
+    #(dfl1["KPIName"] == KPISelect)
+    #]
+    dff = dfl1[
+        (dfl1["KPIGroup"].isin(KPIGroupSelect))
+    ]
+    KPIListFiltered = d_kpi[
+            (d_kpi["KPIGroup"].isin(KPIGroupSelect))
+        ]
+    KPIListFiltered.sort_values(by=['Sorting'])
+    KPINameListo = KPIListFiltered['KPIName'].unique()
+   # listtop =[{'label': i, 'value': i} for i in dff1["Level1Name"].unique()]
+    cardstyle = []
+    cardstyle.clear()
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+    for i in KPINameListo:
+        if i == KPISelect:
+            cardstyle.append({'box-shadow': f'0px -0px 9px 0px {BeautifulSignalColor}'})
+        else:
+            cardstyle.append({'box-shadow':'0px 0px 9px 0px transparent'})
+    if IsCum(KPISelect) == 1:
+        IsCumStyle= {'display': 'block'}
+    else:
+        IsCumStyle= {'display': 'none'}
+    xstyles = []
+    xstyles2 =[]
+    xstyles.clear()
+    xstyles2.clear()       
+
+    KPIGroupList = d_kpi['KPIGroup'].unique().tolist()
+    for i,kpigroup in enumerate(KPIGroupList):
+        xstyles2.append(f'xstyles[{i}]')
+        if  KPIGroupSelect == KPIGroupList:
+            if i == 0:
+                xstyles.append({'color':buttonlogocolor,'background-color':buttoncolor})
+            else:
+                xstyles.append({})
+        elif kpigroup == KPIGroupSelect:
+            xstyles.append({'color':buttonlogocolor,'background-color':buttoncolor})
+        else:
+            xstyles.append({})
+    return eval(carddivstylereturn3[0])#,eval(xstyles2[0])
+"""
+
+@app.callback([
+    Output("Category1Select", "options"),
+    Output("Level0NameSelect", "options"),
+    Output("Level1NameSelect", "options"),
+    Output("Level2NameSelect", "options")
+],
+   # Output('animatedbar', 'figure'),
+     Input("Category1Select", "value"),
+     Input("Level0NameSelect", "value"),
+     Input("Level1NameSelect", "value"),
+     Input("Level2NameSelect", "value"),
+     Input("KPISelect", "value"),
+     Input('tabsdrilldown','active_tab'), prevent_initial_call=True
+)
+
+def DropdownOptions(Category1Select,Level0NameSelect,Level1NameSelect,Level2NameSelect,KPISelect,tabsdrilldown):  #,*args ,Level2NameSelect,toggle, relayoutData
+   print('execute DropdownOptions')
+   Category1filtered = dfl0polars.filter((pl.col("KPIName") == KPISelect)
+                            )
+   dff0onlykpifiltered = dfl0polars.filter((pl.col("KPIName") == KPISelect)
+                            & (pl.col("Filter1_0").is_in(Category1Select)))
+   dff1onlykpifiltered = dfl1polars.filter((pl.col("KPIName") == KPISelect)
+                            & (pl.col("LevelName_0").is_in(Level0NameSelect))
+                            & (pl.col("Filter1_0").is_in(Category1Select)))
+   dff2onlykpifiltered = dfl2polars.filter((pl.col("KPIName") == KPISelect)
+                            & (pl.col("LevelName_0").is_in(Level0NameSelect))
+                            & (pl.col("LevelName_1").is_in(Level1NameSelect))
+                            & (pl.col("Filter1_0").is_in(Category1Select)))
+   Category1Select =  [{'label': html.Span([i],style={'background-color': ProjectOrange}), 'value': i}  for i in Category1filtered["Filter1_0"].unique()]
+   Level0NameSelect = [{'label': html.Span([i],style={'background-color': Level0NameColor[i]}), 'value': i} for i in dff0onlykpifiltered["LevelName_0"].unique()]
+   Level1NameSelect = [{'label': html.Span([i],style={'background-color': Level1NameColor[i]}), 'value': i} for i in dff1onlykpifiltered["LevelName_1"].unique()]
+   Level2NameSelect = [{'label': html.Span([i],style={'background-color': Level2NameColor[i]}), 'value': i} for i in dff2onlykpifiltered["LevelName_2"].unique()]
+   #print(Category1Select)
+   #print(Level0NameSelect)
+   #print(Level1NameSelect)
+   #print(Level2NameSelect)
+   return Category1Select,Level0NameSelect,Level1NameSelect,Level2NameSelect
+
+#@app.callback([
+#    Output("Category1Select", "value"),
+#    ],
+#    Input('sweepl0filter', 'n_clicks'),
+#    State("KPISelect", "value"),
+#)
+#
+#def dropdown1_reset(n_clicks,KPISelect):  #,*args ,Level2NameSelect,toggle, relayoutData
+#   print('execute dropdown1_reset')
+#   print(KPISelect)
+#   Category1filtered = dfl0[(dfl0["KPIName"] == KPISelect)]
+#   output=[]
+#   Category1Select =  [i for i in Category1filtered["Filter1_0"].unique()]
+#   for i in Category1Select:
+#       output.append(i)
+#   print(Category1Select)
+#   return [Category1Select]
+
+
 datefromtmp = []
 datetotmp = []
 #datefromtmp.append(str(dfl0['Period_int'].min())[0:10])
@@ -1501,15 +1804,15 @@ datefromtmp.append('2021-01-01')
 datetotmp.append('2023-09-01')
 
 @app.callback([
-              Output('dfgroups', 'data'),
-              Output('dfl0', 'data'),
-              Output('dfl1', 'data'),
-              Output('dfl2', 'data'),
-              Output('dfl0notime', 'data'),
-              Output('dfl1notime', 'data'),
-              Output('dfl2notime', 'data'),
+              ServersideOutput('dfgroups', 'data',backend=my_backend),
+              ServersideOutput('dfl0', 'data',backend=my_backend),
+              ServersideOutput('dfl1', 'data',backend=my_backend),
+              ServersideOutput('dfl2', 'data',backend=my_backend),
+              ServersideOutput('dfl0notime', 'data',backend=my_backend),
+              ServersideOutput('dfl1notime', 'data',backend=my_backend),
+              ServersideOutput('dfl2notime', 'data',backend=my_backend),
             #  Output('dffcomparefilter', 'data'),
-              Output('dflcomparekpi', 'data'),
+              ServersideOutput('dflcomparekpi', 'data',backend=my_backend),#,backend=my_backend
               Output('output-container-date-picker-range', 'children'),
               Output('dropdown0', 'value'),
               Output('dropdown1', 'value'),
@@ -1532,10 +1835,17 @@ datetotmp.append('2023-09-01')
               Input("Level0NameSelect", "value"),
               Input("Level1NameSelect", "value"),
               Input("Level2NameSelect", "value"),
-              Input("Category1Select", "value"),
-              )
+              Input("Category1Select", "value")
+              ,memoize=True)
 def clean_data(GrainSelect,KPISelect,KPIGroupSelect,relayoutDatal0,relayoutDatal1,relayoutDatal2,tabsdrilldown,Level0NameSelect,Level1NameSelect,Level2NameSelect,Category1):#,*args,sweepl1 relayoutl1barclickdatal2bar,clickdatal0,clickdatal1,clickdatal2
     print('execute clean_data')
+    print(Level0NameSelect)
+    print('gap')
+    print(Level1NameSelect)
+    print('gap')
+    print(Level2NameSelect)
+    print('gap')
+    print(Category1)
     dfll2 = []
     dfll0pol = []
     dfll1pol = []
@@ -1680,8 +1990,6 @@ def clean_data(GrainSelect,KPISelect,KPIGroupSelect,relayoutDatal0,relayoutDatal
        # dfllCompare.append(dffcompare[0][dffcompare[0]['Period_int'].between(datefromtmp[-1], datetotmp[-1])].reset_index(drop=True))
         dfllComparepolar.append(dffpolars[0].filter((pl.col('Period_int')>= datefromtmp[-1]) 
                                                     &(pl.col('Period_int')<= datetotmp[-1])))
-        
-    print(dfllComparepolar[0])
     
     #testtmp0 = dfll2[0].filter(regex='^(?!.*(_1|_2)$)')
     #testtmp1 = dfll2[0].filter(regex='^(?!.*(_0|_2)$)')
@@ -1775,7 +2083,6 @@ def clean_data(GrainSelect,KPISelect,KPIGroupSelect,relayoutDatal0,relayoutDatal
     
     noemer = f'pl.col("Denominator").{eval(AggregateNumDenom(KPIDenomAgg[KPISelect]))}()'
     teller = f'pl.col("Numerator").{eval(AggregateNumDenom(KPINumAgg[KPISelect]))}()'
-    print(noemer)
     dff0pol = (
     testtmp0pol.lazy()
     .groupby(columnsdff0pol)
@@ -1903,32 +2210,38 @@ def clean_data(GrainSelect,KPISelect,KPIGroupSelect,relayoutDatal0,relayoutDatal
 
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
     #dffcomparejson = dfllCompare[0].to_json(date_format='iso', orient='split')
-    dffcomparejsontmp = dfllComparepolar[0].write_json()
-    dffcomparejson = {i['name']: i['values'] for i in json.loads(dffcomparejsontmp)['columns']} 
+    dffcomparejson = dfllComparepolar[0]
+    ##dffcomparejsontmp = dfllComparepolar[0].write_json()
+    ##dffcomparejson = {i['name']: i['values'] for i in json.loads(dffcomparejsontmp)['columns']} 
     #timefiltered
    # print(dff01.to_json(date_format='iso', orient='split'))
-    dffl0jsontmp = dff0pol.collect().write_json()
-    dffl0json = {i['name']: i['values'] for i in json.loads(dffl0jsontmp)['columns']} 
+    dffl0json = dff0pol.collect()
+    ##dffl0jsontmp = dff0pol.collect().write_json()
+    ##dffl0json = {i['name']: i['values'] for i in json.loads(dffl0jsontmp)['columns']} 
 
     #timefiltered & kpi filtered
-    dffl1jsontmp = dff1pol.collect().write_json()
-    dffl1json = {i['name']: i['values'] for i in json.loads(dffl1jsontmp)['columns']} 
+    dffl1json = dff1pol.collect()
+    ##dffl1jsontmp = dff1pol.collect().write_json()
+    ##dffl1json = {i['name']: i['values'] for i in json.loads(dffl1jsontmp)['columns']} 
     #timefiltered & kpi filtered
-    dffl2jsontmp = dff2pol.collect().write_json()
-    dffl2json = {i['name']: i['values'] for i in json.loads(dffl2jsontmp)['columns']} 
+    dffl2json = dff2pol.collect()
+    ##dffl2jsontmp = dff2pol.collect().write_json()
+    ##dffl2json = {i['name']: i['values'] for i in json.loads(dffl2jsontmp)['columns']} 
     #timefiltered & kpi filtered
-    dffl0jsonnotimetmp = dfll0notime.collect().write_json()
-    dffl0jsonnotime = {i['name']: i['values'] for i in json.loads(dffl0jsonnotimetmp)['columns']} 
+    dffl0jsonnotime = dfll0notime.collect()
+    ##dffl0jsonnotimetmp = dfll0notime.collect().write_json()
+    ##dffl0jsonnotime = {i['name']: i['values'] for i in json.loads(dffl0jsonnotimetmp)['columns']} 
     #timefiltered & kpi filtered without time
-    dffl1jsonnotimetmp = dfll1notime.collect().write_json()
-    dffl1jsonnotime = {i['name']: i['values'] for i in json.loads(dffl1jsonnotimetmp)['columns']} 
+    dffl1jsonnotime = dfll1notime.collect()
+    ##dffl1jsonnotimetmp = dfll1notime.collect().write_json()
+    ##dffl1jsonnotime = {i['name']: i['values'] for i in json.loads(dffl1jsonnotimetmp)['columns']} 
    #timefiltered & kpi filtered without time
-    dffl2jsonnotimetmp = dfll2notime.collect().write_json()
-    dffl2jsonnotime = {i['name']: i['values'] for i in json.loads(dffl2jsonnotimetmp)['columns']} 
+    dffl2jsonnotime = dfll2notime.collect()
+    ##dffl2jsonnotimetmp = dfll2notime.collect().write_json()
+    ##dffl2jsonnotime = {i['name']: i['values'] for i in json.loads(dffl2jsonnotimetmp)['columns']} 
 
-    dffgroupstmp = dflpolarsgroup.write_json()
-    dffgroups = {i['name']: i['values'] for i in json.loads(dffgroupstmp)['columns']} 
-    print(dffgroups)
+    dffgroups = dflpolarsgroup
+    #dffgroups = {i['name']: i['values'] for i in json.loads(dffgroupstmp)['columns']} 
     #clickdatasend = dfll2[0]['PeriodName'].unique()
     #Periodchosencount = []
     #Periodchosencount.clear()
@@ -1976,7 +2289,7 @@ datetotmp.clear()
     Input('dflcomparekpi', 'data'),
     Input("KPISelect", "value"),
     Input("KPIGroupSelect", "value"),
-    Input("breakpoints", "widthBreakpoint"),
+    Input("breakpoints", "widthBreakpoint"), session_check=False, prevent_initial_call=True
 )
 
 def updatekpiindicator(dfgroups,dffcompare,KPISelect,KPIGroupSelect,widthBreakpoint):#
@@ -1995,8 +2308,8 @@ def updatekpiindicator(dfgroups,dffcompare,KPISelect,KPIGroupSelect,widthBreakpo
     carousellistnew.clear()
    # dfl0 = pd.read_json(dfl0, orient='split')
     #dffcompare = pd.read_json(dffcompare, orient='split')
-    dftouse = pd.DataFrame(dffcompare)
-    dfgroups = pd.DataFrame(dfgroups)
+    dftouse = dffcompare.to_pandas()#pd.DataFrame(dffcompare)
+    dfgroups = dfgroups #pd.DataFrame(dfgroups)
    # dfl2 = pd.read_json(dfl2click, orient='split')
     #dataCompare = pd.read_json(compareset, orient='split')
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
@@ -2058,7 +2371,6 @@ def updatekpiindicator(dfgroups,dffcompare,KPISelect,KPIGroupSelect,widthBreakpo
     popbody.clear()
   #  outputlasttxtlogo.clear()
     code_executed = False
-    print('haaloooo')
     sidemenulist.append(
       f"""html.Li(html.A([
                  html.I('category',className='material-icons icon'),
@@ -2071,13 +2383,19 @@ def updatekpiindicator(dfgroups,dffcompare,KPISelect,KPIGroupSelect,widthBreakpo
         number=str(numbertmp)
         numberid=str(numberidtmp)
         GroupImage2 = GroupImage[numbertmp]
+        print(KPIGroupSelect)
+        print(kpigroup)
+        if KPIGroupSelect == kpigroup:
+            stylegroup = {'color':buttonlogocolor,'background-color':buttoncolor}
+        else:
+            stylegroup = {}
         KPIGroupList2 = KPIGroupList[numbertmp]
         if kpigroup in KPIGroupListmodelfilter:
             if kpigroup in KPIGroupListmodelfilter: 
                 sidemenulist.append(
                     f"""html.Li(html.A([
                             html.I('{GroupImage2}',className='material-icons icon'),
-                            html.Span('{KPIGroupList2}',className='text nav-text')],href='#',id=dict(type='kpigroup-ex3',index ='{kpigroup}'))
+                            html.Span('{KPIGroupList2}',className='text nav-text')],style={stylegroup},href='#',id=dict(type='kpigroup-ex3',index ='{kpigroup}'))
                             ,className='nav-link')"""
                 ) 
         else:
@@ -2321,16 +2639,13 @@ def updatekpiindicator(dfgroups,dffcompare,KPISelect,KPIGroupSelect,widthBreakpo
                     ],className="sidebar close",id='nav')]
                     ]
     return divlist[0],divlist[1]
-        
+
 
 @app.callback([Output('tabscontainer', 'style'),
              Output('graph-level1compare', 'style'),
              Output('graphoveralltime', 'style'),
              Output('tabscompare', 'style'),
              Output('graph-compare-kpi', 'style'),
-             Output('NavItem1', 'style'),
-             Output('NavItem2', 'style'),
-             Output('NavItem3', 'style'),
              Output('Tab0drilldown', 'label'),
              Output('Tab1drilldown', 'label'),
              Output('Tab2drilldown', 'label'),
@@ -2339,12 +2654,9 @@ def updatekpiindicator(dfgroups,dffcompare,KPISelect,KPIGroupSelect,widthBreakpo
              Output('Tab2drilldown', 'tab_class_name')             
              ],
              [#Input({'type': 'kpigroup-ex3', 'index': ALL}, 'n_clicks'),
-              Input('NavItem1','n_clicks'),
-              Input('NavItem2','n_clicks'),
-              Input('NavItem3','n_clicks'),
               Input('KPISelect','value')
               ])
-def hide_graph(NavItem1,NavItem2,NavItem3,KPISelect):
+def hide_graph(KPISelect):
     print('execute hide_graph')
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
     tab_class_name=[]
@@ -2392,234 +2704,39 @@ def hide_graph(NavItem1,NavItem2,NavItem3,KPISelect):
         color1 = {'color':buttonlogocolor, 'background-color': buttoncolor}
         color2 = {}
         color3 = {}
-    return msg,msg,msg,msg2,msg2,color1,color2,color3,Levelattrr[0],Levelattrr[1],Levelattrr[2],tab_class_name[0],tab_class_name[1],tab_class_name[2]
+    return msg,msg,msg,msg2,msg2,Levelattrr[0],Levelattrr[1],Levelattrr[2],tab_class_name[0],tab_class_name[1],tab_class_name[2]
 
-
-KPIGroup =[]
 
 @app.callback([
-             Output("KPIGroupSelect", 'value'),
+             Output('NavItem1', 'style'),
+             Output('NavItem2', 'style'),
+             Output('NavItem3', 'style'),      
              ],
-            Input({'type': 'kpigroup-ex3', 'index': ALL}, 'n_clicks'),
-           # eval(kpigrouplistinput3[0])
-            )
-def KPIgrouplighter(n_clicks):#*args
-    print('execute KPIgrouplighter')
-    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
-    valuelist =[]
-    try:
-        valuelisttmp = list(json.loads(changed_id).values()) 
-        valuelist.append(valuelisttmp)
-        print(valuelist)
-    except json.decoder.JSONDecodeError as e:
-        print("Unable to decode JSON: ", e)
-    KPIGroupList = d_kpi['KPIGroup'].unique().tolist()
-    print(valuelist)
-    print(changed_id)
-    #try:
-    #    if len(dash.callback_context.triggered)!= 1:
-    #        print('nothingtoseehere')
-    #    elif "filter-dropdown-ex3-reset" in valuelist: 
-    #        kpigroup.append(valuelist[0])
-    #        print('bloei')
-    #    elif "filter-dropdown-ex3" in valuelist: 
-    #        kpigroup.append(valuelist[0])
-    #    elif 'kpigroup' in changed_id[0:8]:
-    #        kpigroup.append(KPINameListi[0])
-    #except:
-    #    print('bs!')
-    if changed_id =='{"index":"kpigroup0","type":"kpigroup-ex3"}':
-        KPIGrouptmp1 = []
-        for i in range(len(KPIGroupList)):
-            KPIGrouptmp1.append(KPIGroupList[i])
-        KPIGroup.append(KPIGrouptmp1)
-        kpicountout.clear() 
-        kpicountout.append(len(KPINameList))
-    elif valuelist:
-        KPIGroup.append(valuelist[0])
-    if not KPIGroup:
-        print('listisempty')
-        KPIGrouptmp3 = []
-        for i in range(len(KPIGroupList)):
-            KPIGrouptmp3.append(KPIGroupList[i])
-        KPIGroup.append(KPIGrouptmp3)
-        kpicountout.clear() 
-        kpicountout.append(len(KPINameList))
-    KPIGroup2 = KPIGroup[-1]
-    print(KPIGroup2)
-    return [KPIGroup2]
-
-
-kpi =[]
-
-#print(eval(carddivnclicks3new[0]+','+kpigrouplistinput3[0]) if carddivnclicks3new else eval(carddivnclicks3[0]+','+kpigrouplistinput3[0]))
-@app.callback([
-    Output('KPISelect', 'value'),
-  #  Output({'type': 'output-ex3', 'index': MATCH}, 'children'),
-    ],
-    [
-    Input({'type': 'filter-dropdown-ex3', 'index': ALL}, 'n_clicks'),
-    Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'),
-    Input('KPIGroupSelect', 'value'),
-    Input({'type': 'kpigroup-ex3', 'index': ALL}, 'n_clicks'),
-    #eval(kpigrouplistinput3[0])
-    ]
- )
-
-def update_df_KPIGroup(n_clicks,n_clicks2,KPIGroupSelect,n_clicks3):#,*args
-    print('execute update_df_KPIGroup')   
-    dffKPISelect = d_kpi[
-        (d_kpi["KPIGroup"].isin(KPIGroupSelect))
-    ]
-    dffKPISelect.sort_values(by=['Sorting'])
-    KPINameListi = dffKPISelect['KPIName'].unique()
-    try:
-        changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
-        valuelist = list(json.loads(changed_id).values()) 
-    except json.decoder.JSONDecodeError as e:
-        print("Unable to decode JSON: ", e)
-    try:
-        changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
-        if len(dash.callback_context.triggered)!= 1:
-            print('nothingtoseehere')
-        elif "filter-dropdown-ex3-reset" in valuelist: 
-            kpi.append(valuelist[0])
-            print('bloei')
-            print(valuelist)
-            print('bloei')
-        elif "filter-dropdown-ex3" in valuelist: 
-            kpi.append(valuelist[0])
-        elif 'kpigroup' in changed_id[0:8]:
-            kpi.append(KPINameListi[0])
-    except:
-        print('bs!')
-    return [KPINameListi[0] if not kpi else kpi[-1]]
-
-
-######################################################################################################################
-######################################################################################################################
-################################################----tab 0 aanmaken----###############################################
-######################################################################################################################
-######################################################################################################################
-
-
-"""
-@app.callback(
-    eval(carddivstyle3[0]),
-      #  Output('kpigroup0', 'style'),
-      #  Output('kpigroup1', 'style'),
-      #  Output('kpigroup2', 'style'),
-      #  Output('kpigroup3', 'style'),
-      #  Output('kpigroup4', 'style'),
-    [   
-    Input("KPISelect", "value"),
-    Input("KPIGroupSelect", "value"),
-    eval(kpigrouplistinput3[0]),
-    eval(carddivnclicks3[0])
-    ]
-)
-
-def update_df_KPI(KPISelect,KPIGroupSelect,*args):#,
-    print('execute update_df_KPI')
-    #dff1 = dfl1[
-    #(dfl1["KPIName"] == KPISelect)
-    #]
-    dff = dfl1[
-        (dfl1["KPIGroup"].isin(KPIGroupSelect))
-    ]
-    KPIListFiltered = d_kpi[
-            (d_kpi["KPIGroup"].isin(KPIGroupSelect))
-        ]
-    KPIListFiltered.sort_values(by=['Sorting'])
-    KPINameListo = KPIListFiltered['KPIName'].unique()
-   # listtop =[{'label': i, 'value': i} for i in dff1["Level1Name"].unique()]
-    cardstyle = []
-    cardstyle.clear()
+             [#Input({'type': 'kpigroup-ex3', 'index': ALL}, 'n_clicks'),
+              Input('NavItem1','n_clicks'),
+              Input('NavItem2','n_clicks'),
+              Input('NavItem3','n_clicks'),
+              ])
+def hide_graph(NavItem1,NavItem2,NavItem3):
+    print('execute hide_graph')
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
-    for i in KPINameListo:
-        if i == KPISelect:
-            cardstyle.append({'box-shadow': f'0px -0px 9px 0px {BeautifulSignalColor}'})
-        else:
-            cardstyle.append({'box-shadow':'0px 0px 9px 0px transparent'})
-    if IsCum(KPISelect) == 1:
-        IsCumStyle= {'display': 'block'}
+    if 'NavItem1' in changed_id:
+        color1 = {'color':buttonlogocolor,'background-color':buttoncolor}
+        color2 = {}
+        color3 = {}
+    elif 'NavItem2' in changed_id:
+        color1 = {}
+        color2 = {'color':buttonlogocolor,'background-color':buttoncolor}
+        color3 = {}
+    elif 'NavItem3' in changed_id:
+        color1 = {}
+        color2 = {}
+        color3 = {'color':buttonlogocolor,'background-color': buttoncolor}
     else:
-        IsCumStyle= {'display': 'none'}
-    xstyles = []
-    xstyles2 =[]
-    xstyles.clear()
-    xstyles2.clear()       
-
-    KPIGroupList = d_kpi['KPIGroup'].unique().tolist()
-    for i,kpigroup in enumerate(KPIGroupList):
-        xstyles2.append(f'xstyles[{i}]')
-        if  KPIGroupSelect == KPIGroupList:
-            if i == 0:
-                xstyles.append({'color':buttonlogocolor,'background-color':buttoncolor})
-            else:
-                xstyles.append({})
-        elif kpigroup == KPIGroupSelect:
-            xstyles.append({'color':buttonlogocolor,'background-color':buttoncolor})
-        else:
-            xstyles.append({})
-    return eval(carddivstylereturn3[0])#,eval(xstyles2[0])
-"""
-
-@app.callback([
-    Output("Category1Select", "options"),
-    Output("Level0NameSelect", "options"),
-    Output("Level1NameSelect", "options"),
-    Output("Level2NameSelect", "options")
-],
-   # Output('animatedbar', 'figure'),
-     Input("Category1Select", "value"),
-     Input("Level0NameSelect", "value"),
-     Input("Level1NameSelect", "value"),
-     Input("Level2NameSelect", "value"),
-     Input("KPISelect", "value"),
-     Input('tabsdrilldown','active_tab')
-)
-
-def DropdownOptions(Category1Select,Level0NameSelect,Level1NameSelect,Level2NameSelect,KPISelect,tabsdrilldown):  #,*args ,Level2NameSelect,toggle, relayoutData
-   print('execute DropdownOptions')
-   Category1filtered = dfl0polars.filter((pl.col("KPIName") == KPISelect)
-                            )
-   dff0onlykpifiltered = dfl0polars.filter((pl.col("KPIName") == KPISelect)
-                            & (pl.col("Filter1_0").is_in(Category1Select)))
-   dff1onlykpifiltered = dfl1polars.filter((pl.col("KPIName") == KPISelect)
-                            & (pl.col("LevelName_0").is_in(Level0NameSelect))
-                            & (pl.col("Filter1_0").is_in(Category1Select)))
-   dff2onlykpifiltered = dfl2polars.filter((pl.col("KPIName") == KPISelect)
-                            & (pl.col("LevelName_0").is_in(Level0NameSelect))
-                            & (pl.col("LevelName_1").is_in(Level1NameSelect))
-                            & (pl.col("Filter1_0").is_in(Category1Select)))
-   Category1Select =  [{'label': html.Span([i],style={'background-color': ProjectOrange}), 'value': i}  for i in Category1filtered["Filter1_0"].unique()]
-   Level0NameSelect = [{'label': html.Span([i],style={'background-color': Level0NameColor[i]}), 'value': i} for i in dff0onlykpifiltered["LevelName_0"].unique()]
-   Level1NameSelect = [{'label': html.Span([i],style={'background-color': Level1NameColor[i]}), 'value': i} for i in dff1onlykpifiltered["LevelName_1"].unique()]
-   Level2NameSelect = [{'label': html.Span([i],style={'background-color': Level2NameColor[i]}), 'value': i} for i in dff2onlykpifiltered["LevelName_2"].unique()]
-   #print(Category1Select)
-   #print(Level0NameSelect)
-   #print(Level1NameSelect)
-   #print(Level2NameSelect)
-   return Category1Select,Level0NameSelect,Level1NameSelect,Level2NameSelect
-
-#@app.callback([
-#    Output("Category1Select", "value"),
-#    ],
-#    Input('sweepl0filter', 'n_clicks'),
-#    State("KPISelect", "value"),
-#)
-#
-#def dropdown1_reset(n_clicks,KPISelect):  #,*args ,Level2NameSelect,toggle, relayoutData
-#   print('execute dropdown1_reset')
-#   print(KPISelect)
-#   Category1filtered = dfl0[(dfl0["KPIName"] == KPISelect)]
-#   output=[]
-#   Category1Select =  [i for i in Category1filtered["Filter1_0"].unique()]
-#   for i in Category1Select:
-#       output.append(i)
-#   print(Category1Select)
-#   return [Category1Select]
+        color1 = {'color':buttonlogocolor, 'background-color': buttoncolor}
+        color2 = {}
+        color3 = {}
+    return color1,color2,color3
 
 #graphlevel0
 @app.callback(
@@ -2640,7 +2757,9 @@ def DropdownOptions(Category1Select,Level0NameSelect,Level1NameSelect,Level2Name
 def update_kpiagg(data00,GrainSelect,KPISelect,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch,widthBreakpoint):  #,*args ,Level2NameSelect,toggle, relayoutData
     print('execute update_kpiagg')
     #update_filter_l0(data0, GrainSelect, KPISelect)  # ,Level2NameSelect
-    data0 = pd.DataFrame(data00)
+    data0 = data00.to_pandas() # pd.DataFrame(data00)
+    print(data0)
+    print(type(data0))
     dff = data0
     #level0options=[{'label': html.Span([i],style={'background-color': Level0NameColor[i]}), 'value': i} for i in dff["LevelName_0"].unique()]#dff["LevelName_0"].unique()
     #level1options=dfll2[0]["LevelName_1"].unique()
@@ -2766,36 +2885,11 @@ def update_kpiagg(data00,GrainSelect,KPISelect,CumulativeSwitch,PercentageTotalS
                            title='',
                            showgrid=False,
                            gridwidth=0,
-                           showspikes=True,
+                          # showspikes=True,
                            showline=False,
                            color=fontcolor,
                            rangeselector=dict(
-                               buttons=list([
-                                   dict(count=7,
-                                        label="1w",
-                                        step="day",
-                                        stepmode="backward"),
-                                   dict(count=1,
-                                        label="1m",
-                                        step="month",
-                                        stepmode="backward"),
-                                   dict(count=6,
-                                        label="6m",
-                                        step="month",
-                                        stepmode="backward"),
-                                   dict(count=1,
-                                        label="YTD",
-                                        step="year",
-                                        stepmode="todate"),
-                                   dict(count=1,
-                                        label="1y",
-                                        step="year",
-                                        stepmode="backward"),
-                                   dict(count=10,
-                                        label="All",
-                                        step="year",
-                                        stepmode="backward")
-                               ])
+                               buttons=rangeselector(GrainSelect)
                            ),
                            rangeslider=dict(
                                visible=False
@@ -2812,7 +2906,7 @@ def update_kpiagg(data00,GrainSelect,KPISelect,CumulativeSwitch,PercentageTotalS
                            showline=False,
                            autorange=True,
                            fixedrange=True,
-                           showspikes=True,
+                          # showspikes=True,
                            color=fontcolor,
                            gridwidth=0.5,
                            font=dict(
@@ -2857,7 +2951,7 @@ def update_kpiagg(data00,GrainSelect,KPISelect,CumulativeSwitch,PercentageTotalS
 )
 def update_level0Graph(data00,KPISelect,Totaalswitch,widthBreakpoint): #,hoverData,*args
     print('update_level0Graph')
-    dff0 = pd.DataFrame(data00)
+    dff0 = data00.to_pandas() #pd.DataFrame(data00)
     #dff0 = pd.read_json(data00, orient='split')
     traces = []
     if widthBreakpoint=='sm':
@@ -2997,9 +3091,9 @@ def update_level0Graph(data00,KPISelect,Totaalswitch,widthBreakpoint): #,hoverDa
 )
 def update_mainfigure(data00,data11,data22,GrainSelect,KPISelect,Totaalswitch,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch,widthBreakpoint):#,*args
     print('execute update_mainfigure')
-    data0 = pd.DataFrame(data00)#(data00, orient='split')
-    data1 = pd.DataFrame(data11) #pd.read_json(data11, orient='split')
-    data2 = pd.DataFrame(data22) #pd.read_json(data22, orient='split')
+    data0 =data00.to_pandas()# pd.DataFrame(data00)#(data00, orient='split')
+    data1 =data11.to_pandas()# pd.DataFrame(data11) #pd.read_json(data11, orient='split')
+    data2 =data22.to_pandas()# pd.DataFrame(data22) #pd.read_json(data22, orient='split')
     dff0 = data0 
     dff1 = data1  
     dff2 = data2 
@@ -3164,28 +3258,7 @@ def update_mainfigure(data00,data11,data22,GrainSelect,KPISelect,Totaalswitch,Cu
                            autorange=True,
                            showgrid=False,
                            rangeselector=dict(
-                               buttons=list([
-                                   dict(count=1,
-                                        label="1m",
-                                        step="month",
-                                        stepmode="backward"),
-                                   dict(count=6,
-                                        label="6m",
-                                        step="month",
-                                        stepmode="backward"),
-                                   dict(count=1,
-                                        label="YTD",
-                                        step="year",
-                                        stepmode="todate"),
-                                   dict(count=1,
-                                        label="1y",
-                                        step="year",
-                                        stepmode="backward"),
-                                   dict(count=10,
-                                        label="All",
-                                        step="year",
-                                        stepmode="backward")
-                               ])
+                               buttons=rangeselector(GrainSelect)
                            ),
                            rangeslider=dict(
                                visible=False
@@ -3253,8 +3326,8 @@ def update_mainfigure(data00,data11,data22,GrainSelect,KPISelect,Totaalswitch,Cu
 )
 def update_level1Graph(data00,data11,KPISelect,Totaalswitch,widthBreakpoint): #,KPIGroupSelect,Level1NameSelect,Level2NameSelect,hoverData,*args
     print('execute update_level1Graph')
-    data0 = pd.DataFrame(data00)
-    data1 = pd.DataFrame(data11)
+    data0 =data00.to_pandas()#pd.DataFrame(data00)
+    data1 =data11.to_pandas()#pd.DataFrame(data11)
     #data0 = pd.read_json(data00, orient='split')
     #data1 = pd.read_json(data11, orient='split')
     dff1tmp = data1 
@@ -3442,8 +3515,8 @@ def update_level1Graph(data00,data11,KPISelect,Totaalswitch,widthBreakpoint): #,
 
 def update_figure(data11,data22,GrainSelect, KPISelect,Totaalswitch,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch,widthBreakpoint):#,*args
     print('execute update_figure')
-    data1 = pd.DataFrame(data11) #pd.read_json(data11, orient='split')
-    data2 = pd.DataFrame(data22)
+    data1 =data11.to_pandas()# pd.DataFrame(data11) #pd.read_json(data11, orient='split')
+    data2 =data22.to_pandas()# pd.DataFrame(data22)
     #data1 = pd.read_json(data11, orient='split')
     #data2 = pd.read_json(data22, orient='split')
     dff2 = data2 
@@ -3587,29 +3660,8 @@ def update_figure(data11,data22,GrainSelect, KPISelect,Totaalswitch,CumulativeSw
             xaxis=dict(type='string',
                        title='',
                        rangeselector=dict(
-                           buttons=list([
-                               dict(count=1,
-                                    label="1m",
-                                    step="month",
-                                    stepmode="backward"),
-                               dict(count=6,
-                                    label="6m",
-                                    step="month",
-                                    stepmode="backward"),
-                               dict(count=1,
-                                    label="YTD",
-                                    step="year",
-                                    stepmode="todate"),
-                               dict(count=1,
-                                    label="1y",
-                                    step="year",
-                                    stepmode="backward"),
-                               dict(count=10,
-                                    label="All",
-                                    step="year",
-                                    stepmode="backward")
-                           ])
-                       ),
+                               buttons=rangeselector(GrainSelect)
+                           ),
                        rangeslider=dict(
                            visible=False,
                            style=dict(
@@ -3676,8 +3728,8 @@ def update_figure(data11,data22,GrainSelect, KPISelect,Totaalswitch,CumulativeSw
 )
 def update_level2Graph(data11,data22,KPISelect,Totaalswitch,widthBreakpoint):#,clickData,*args
     print('execute update_level2Graph')
-    data1 = pd.DataFrame(data11)
-    data2 = pd.DataFrame(data22)
+    data1 =data11.to_pandas()# pd.DataFrame(data11)
+    data2 =data22.to_pandas()# pd.DataFrame(data22)
     #data1 = pd.read_json(data11, orient='split')
     #data2 = pd.read_json(data22, orient='split')
     dff2tmp = data2 
@@ -4254,20 +4306,20 @@ def toggle_modal(n1, n2, is_open):
     return is_open
 
 
-app.clientside_callback(
-    """
-    function(className) {
-        var selectValue = document.querySelector('.' + className);
-        selectValue.addEventListener('click', function(e) {
-            if (e.target.classList.contains('Select-value')) {
-                e.target.remove();
-            }
-        });
-    }
-    """,
-    Output("Level0DD", "children"),
-    Input("Level0DD", "id"),
-)
+#app.clientside_callback(
+#    """
+#    function(className) {
+#        var selectValue = document.querySelector('.' + className);
+#        selectValue.addEventListener('click', function(e) {
+#            if (e.target.classList.contains('Select-value')) {
+#                e.target.remove();
+#            }
+#        });
+#    }
+#    """,
+#    Output("Level0DD", "children"),
+#    Input("Level0DD", "id"),
+#)
 
 app.clientside_callback(
     """window.onload=function () {
