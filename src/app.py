@@ -71,9 +71,23 @@ external_stylesheets = [
     'rel': 'stylesheet',
 },
 ]
+
+if 'REDIS_URL' in os.environ:
+    # Use Redis & Celery if REDIS_URL set as an env variable
+    from celery import Celery
+    celery_app = Celery(__name__, broker=os.environ['redis://red-cgq4m39jvhtgl25d06g0:6379'], backend=os.environ['redis://red-cgq4m39jvhtgl25d06g0:6379'])
+    background_callback_manager = CeleryManager(celery_app)
+
+else:
+    # Diskcache for non-production apps when developing locally
+    import diskcache
+    cache = diskcache.Cache("./cache")
+    background_callback_manager = DiskcacheManager(cache)
+
 #app = dash.Dash(__name__,suppress_callback_exceptions=True)#background_callback_manager=background_callback_manager
 app = DashProxy(__name__,
                 transforms=[ServersideOutputTransform(arg_check=False)]#backend = RedisStore(),
+                ,background_callback_manager=background_callback_manager
                 ,suppress_callback_exceptions=True,external_stylesheets=external_stylesheets)
 
 server = app.server
@@ -1547,13 +1561,11 @@ def KPIgrouplighter(n_clicks):#*args
     valuelist =[]
     try:
         valuelisttmp = list(json.loads(changed_id).values()) 
-        valuelist.append(valuelisttmp)
-        print(valuelist)
+        valuelist.clear()
+        valuelist.append(valuelisttmp[0])
     except json.decoder.JSONDecodeError as e:
         print("Unable to decode JSON: ", e)
     KPIGroupList = d_kpi['KPIGroup'].unique().tolist()
-    print(valuelist)
-    print(changed_id)
     #try:
     #    if len(dash.callback_context.triggered)!= 1:
     #        print('nothingtoseehere')
@@ -1574,9 +1586,8 @@ def KPIgrouplighter(n_clicks):#*args
         kpicountout.clear() 
         kpicountout.append(len(KPINameList))
     elif valuelist:
-        KPIGroup.append(valuelist[0])
+        KPIGroup.append([valuelist[0]])
     if not KPIGroup:
-        print('listisempty')
         KPIGrouptmp3 = []
         for i in range(len(KPIGroupList)):
             KPIGrouptmp3.append(KPIGroupList[i])
@@ -1584,6 +1595,7 @@ def KPIgrouplighter(n_clicks):#*args
         kpicountout.clear() 
         kpicountout.append(len(KPINameList))
     KPIGroup2 = KPIGroup[-1]
+    print('KPIGroup2')
     print(KPIGroup2)
     return KPIGroup2
 
@@ -1622,9 +1634,6 @@ def update_df_KPIGroup(n_clicks,n_clicks2,KPIGroupSelect,n_clicks3):#,*args
             print('nothingtoseehere')
         elif "filter-dropdown-ex3-reset" in valuelist: 
             kpi.append(valuelist[0])
-            print('bloei')
-            print(valuelist)
-            print('bloei')
         elif "filter-dropdown-ex3" in valuelist: 
             kpi.append(valuelist[0])
         elif 'kpigroup' in changed_id[0:8]:
@@ -1849,13 +1858,6 @@ datetotmp.append('2023-09-01')
               ,memoize=True)
 def clean_data(GrainSelect,KPISelect,KPIGroupSelect,relayoutDatal0,relayoutDatal1,relayoutDatal2,tabsdrilldown,Level0NameSelect,Level1NameSelect,Level2NameSelect,Category1):#,*args,sweepl1 relayoutl1barclickdatal2bar,clickdatal0,clickdatal1,clickdatal2
     print('execute clean_data')
-    print(Level0NameSelect)
-    print('gap')
-    print(Level1NameSelect)
-    print('gap')
-    print(Level2NameSelect)
-    print('gap')
-    print(Category1)
     dfll2 = []
     dfll0pol = []
     dfll1pol = []
@@ -2359,7 +2361,6 @@ def updatekpiindicator(dfgroups,dffcompare,KPISelect,KPIGroupSelect,widthBreakpo
     for l in KPIGroupListFiltered:
         if l not in KPIGroupListmodelfilter:
             KPIGroupListIterate.append(l)
-    print(KPINameListIterate)
     #KPINameListIterate.remove(KPISelect)
     #KPINameListIterate.insert(0,KPISelect)
     outputactual =[]
@@ -2381,10 +2382,11 @@ def updatekpiindicator(dfgroups,dffcompare,KPISelect,KPIGroupSelect,widthBreakpo
     popbody.clear()
   #  outputlasttxtlogo.clear()
     code_executed = False
+    stylegroup = {'color':buttonlogocolor,'background-color':buttoncolor}
     sidemenulist.append(
       f"""html.Li(html.A([
                  html.I('category',className='material-icons icon'),
-                 html.Span('All categories',className='text nav-text')],href='#',id=dict(type='kpigroup-ex3',index ='kpigroup0'))
+                 html.Span('All categories',className='text nav-text')],style={stylegroup if len(KPIGroupSelect)>1 else {}},href='#',id=dict(type='kpigroup-ex3',index ='kpigroup0'))
                 ,className='nav-link')"""
     )
     for i,kpigroup in enumerate(KPIGroupListIterate):
@@ -2395,17 +2397,17 @@ def updatekpiindicator(dfgroups,dffcompare,KPISelect,KPIGroupSelect,widthBreakpo
         GroupImage2 = GroupImage[numbertmp]
         print(KPIGroupSelect)
         print(kpigroup)
-        if KPIGroupSelect == kpigroup:
-            stylegroup = {'color':buttonlogocolor,'background-color':buttoncolor}
+        if KPIGroupSelect[0] == kpigroup:
+            stylegroup1 = {'color':buttonlogocolor,'background-color':buttoncolor}
         else:
-            stylegroup = {}
+            stylegroup1 = {}
         KPIGroupList2 = KPIGroupList[numbertmp]
         if kpigroup in KPIGroupListmodelfilter:
             if kpigroup in KPIGroupListmodelfilter: 
                 sidemenulist.append(
                     f"""html.Li(html.A([
                             html.I('{GroupImage2}',className='material-icons icon'),
-                            html.Span('{KPIGroupList2}',className='text nav-text')],style={stylegroup},href='#',id=dict(type='kpigroup-ex3',index ='{kpigroup}'))
+                            html.Span('{KPIGroupList2}',className='text nav-text')],href='#',id=dict(type='kpigroup-ex3',index ='{kpigroup}'),style={stylegroup1 if len(KPIGroupSelect)==1 else {}})
                             ,className='nav-link')"""
                 ) 
         else:
@@ -2768,8 +2770,6 @@ def update_kpiagg(data00,GrainSelect,KPISelect,CumulativeSwitch,PercentageTotalS
     print('execute update_kpiagg')
     #update_filter_l0(data0, GrainSelect, KPISelect)  # ,Level2NameSelect
     data0 = data00.to_pandas() # pd.DataFrame(data00)
-    print(data0)
-    print(type(data0))
     dff = data0
     #level0options=[{'label': html.Span([i],style={'background-color': Level0NameColor[i]}), 'value': i} for i in dff["LevelName_0"].unique()]#dff["LevelName_0"].unique()
     #level1options=dfll2[0]["LevelName_1"].unique()
