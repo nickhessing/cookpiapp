@@ -15,3 +15,4 @@ dash_breakpoints==0.1.0
 polars==0.16.16
 pyarrow==11.0.0
 dash_extensions==0.1.8
+diskcache==5.4.0
