@@ -64,6 +64,7 @@ from uuid import uuid4
 import polars as pl
 from dash_extensions.enrich import RedisStore,DashProxy, Output, Input, State, ServersideOutput, html, dcc,FileSystemStore,ServersideOutputTransform
 #from flask_caching import Cache
+import redis
 
 external_stylesheets = [
 {
@@ -73,8 +74,6 @@ external_stylesheets = [
 ]
 
 
-import os
-import redis
 
 # Connect to your internal Redis instance using the REDIS_URL environment variable
 # The REDIS_URL is set to the internal Redis URL e.g. redis://red-343245ndffg023:6379
