@@ -72,10 +72,10 @@ external_stylesheets = [
 },
 ]
 
-if 'redis://red-cgq4m39jvhtgl25d06g0:6379' in os.environ:
+if 'redis://red-cgr84kgrddl6f7enda00:6379' in os.environ:
     # Use Redis & Celery if REDIS_URL set as an env variable
     from celery import Celery
-    celery_app = Celery(__name__, broker=os.environ['redis://red-cgq4m39jvhtgl25d06g0:6379'], backend=os.environ['redis://red-cgq4m39jvhtgl25d06g0:6379'])
+    celery_app = Celery(__name__, broker=os.environ['redis://red-cgr84kgrddl6f7enda00:6379'], backend=os.environ['redis://red-cgr84kgrddl6f7enda00:6379'])
     background_callback_manager = CeleryManager(celery_app)
 
 else:
