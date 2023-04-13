@@ -72,9 +72,9 @@ external_stylesheets = [
     'rel': 'stylesheet',
 },
 ]
-print(os.environ)
-my_backend = RedisStore(redis_url=os.environ['redis://red-cgr84kgrddl6f7enda00:6379'])
 
+my_backend = RedisStore(redis_url=os.environ['redis://red-cgr84kgrddl6f7enda00:6379'])
+print(os.environ)
 # Connect to your internal Redis instance using the REDIS_URL environment variable
 # The REDIS_URL is set to the internal Redis URL e.g. redis://red-343245ndffg023:6379
 
@@ -100,6 +100,7 @@ app = DashProxy(__name__,
                 ,suppress_callback_exceptions=True,external_stylesheets=external_stylesheets)
 
 server = app.server
+app.secret_key = os.getenv('FLASK_SECRET_KEY', "super-secret")
 
 app.css.config.serve_locally = True
 
