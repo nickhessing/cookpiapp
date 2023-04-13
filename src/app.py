@@ -111,7 +111,7 @@ app.css.config.serve_locally = True
 #cache = Cache()
 #cache.init_app(app.server, config=CACHE_CONFIG)
 
-my_backend = FileSystemStore(cache_dir="C:/Users/nickh/OneDrive/Documents/Projects/cookkpi/dashboard/src/assets/Attributes/redis")
+#my_backend = FileSystemStore(cache_dir="C:/Users/nickh/OneDrive/Documents/Projects/cookkpi/dashboard/src/assets/Attributes/redis")
 
 """
 launch_uid = uuid4()
