@@ -72,7 +72,7 @@ external_stylesheets = [
     'rel': 'stylesheet',
 },
 ]
-
+print(os.environ)
 my_backend = RedisStore(redis_url=os.environ['redis://red-cgr84kgrddl6f7enda00:6379'])
 
 # Connect to your internal Redis instance using the REDIS_URL environment variable
