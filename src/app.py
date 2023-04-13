@@ -101,7 +101,7 @@ app = DashProxy(__name__,
               #  ,background_callback_manager=background_callback_manager
                 ,suppress_callback_exceptions=True,external_stylesheets=external_stylesheets)#
 
-#server = app.server
+server = app.server
 app.secret_key = os.getenv('FLASK_SECRET_KEY', "super-secret")
 
 app.css.config.serve_locally = True
