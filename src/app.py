@@ -73,16 +73,16 @@ external_stylesheets = [
 },
 ]
 
-
+my_backend = RedisStore(cache_dir="some_dir")
 
 # Connect to your internal Redis instance using the REDIS_URL environment variable
 # The REDIS_URL is set to the internal Redis URL e.g. redis://red-343245ndffg023:6379
 
 #if 'redis://red-cgr84kgrddl6f7enda00:6379' in os.environ:
     # Use Redis & Celery if REDIS_URL set as an env variable
-from celery import Celery
-celery_app = Celery(__name__, broker=os.environ['redis://red-cgr84kgrddl6f7enda00:6379'], backend=os.environ['redis://red-cgr84kgrddl6f7enda00:6379'])
-background_callback_manager = CeleryManager(celery_app)
+#from celery import Celery
+#celery_app = Celery(__name__, broker=os.environ['redis://red-cgr84kgrddl6f7enda00:6379']) #, backend=os.environ['redis://red-cgr84kgrddl6f7enda00:6379']
+#background_callback_manager = CeleryManager(celery_app)
 #r = redis.from_url(os.environ['redis://red-cgr84kgrddl6f7enda00:6379'])
 #r.set('key', 'redis-py')
 #r.get('key')
@@ -95,8 +95,8 @@ background_callback_manager = CeleryManager(celery_app)
 
 #app = dash.Dash(__name__,suppress_callback_exceptions=True)#background_callback_manager=background_callback_manager
 app = DashProxy(__name__,
-                transforms=[ServersideOutputTransform(arg_check=False)]#backend = RedisStore(),
-                ,background_callback_manager=background_callback_manager
+                transforms=[ServersideOutputTransform(backend=RedisStore(),arg_check=False)]#backend = RedisStore(),
+              #  ,background_callback_manager=background_callback_manager
                 ,suppress_callback_exceptions=True,external_stylesheets=external_stylesheets)
 
 #server = app.server
