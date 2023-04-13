@@ -1,5 +1,18 @@
 services:
   # See https://render.com/docs/blueprint-spec for more info on render blueprints
+  - type: worker
+    name: queue
+    region: oregon
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "celery --app tasks worker --loglevel info --concurrency 4"
+    autoDeploy: false
+    envVars:
+      - key: CELERY_BROKER_URL
+        fromService:
+          name: cookpiredis
+          type: redis
+          property: connectionString
   - type: web
     name: cookpishare
     env: python
@@ -11,3 +24,28 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.7.4
+      - key: redis://red-cgr84kgrddl6f7enda00:6379 # this must match the name of the environment variable used in production.rb
+        fromService:
+          type: redis
+          name: cookpiredis
+          property: connectionString
+  - type: web
+    name: flower
+    region: oregon
+    plan: free
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "celery flower --app tasks --loglevel info"
+    autoDeploy: false
+    envVars:
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: cookpiredis
+          property: connectionString
+  - type: redis
+    name: cookpiredis
+    region: oregon
+    plan: starter # we choose a plan with persistence to ensure tasks are not lost upon restart
+    maxmemoryPolicy: noeviction # recommended policy for queues
+    ipAllowList: [] # only allow internal connections
