@@ -78,20 +78,20 @@ external_stylesheets = [
 # Connect to your internal Redis instance using the REDIS_URL environment variable
 # The REDIS_URL is set to the internal Redis URL e.g. redis://red-343245ndffg023:6379
 
-if 'redis://red-cgr84kgrddl6f7enda00:6379' in os.environ:
+#if 'redis://red-cgr84kgrddl6f7enda00:6379' in os.environ:
     # Use Redis & Celery if REDIS_URL set as an env variable
-    from celery import Celery
-    celery_app = Celery(__name__, broker=os.environ['redis://red-cgr84kgrddl6f7enda00:6379'], backend=os.environ['redis://red-cgr84kgrddl6f7enda00:6379'])
-    background_callback_manager = CeleryManager(celery_app)
-    r = redis.from_url(os.environ['redis://red-cgr84kgrddl6f7enda00:6379'])
-    r.set('key', 'redis-py')
-    r.get('key')
+from celery import Celery
+celery_app = Celery(__name__, broker=os.environ['redis://red-cgr84kgrddl6f7enda00:6379'], backend=os.environ['redis://red-cgr84kgrddl6f7enda00:6379'])
+background_callback_manager = CeleryManager(celery_app)
+#r = redis.from_url(os.environ['redis://red-cgr84kgrddl6f7enda00:6379'])
+#r.set('key', 'redis-py')
+#r.get('key')
 
-else:
-    # Diskcache for non-production apps when developing locally
-    import diskcache
-    cache = diskcache.Cache("./cache")
-    background_callback_manager = DiskcacheManager(cache)
+#else:
+#    # Diskcache for non-production apps when developing locally
+#    import diskcache
+#    cache = diskcache.Cache("./cache")
+#    background_callback_manager = DiskcacheManager(cache)
 
 #app = dash.Dash(__name__,suppress_callback_exceptions=True)#background_callback_manager=background_callback_manager
 app = DashProxy(__name__,
@@ -99,7 +99,7 @@ app = DashProxy(__name__,
                 ,background_callback_manager=background_callback_manager
                 ,suppress_callback_exceptions=True,external_stylesheets=external_stylesheets)
 
-server = app.server
+#server = app.server
 
 app.css.config.serve_locally = True
 
