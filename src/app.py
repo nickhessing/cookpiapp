@@ -73,6 +73,8 @@ external_stylesheets = [
 },
 ]
 
+print('starttheshow')
+
 my_backend = RedisStore(redis_url=os.environ['redis://red-cgs78qpjvhtitjuma0tg:6379'])
 print(os.environ)
 # Connect to your internal Redis instance using the REDIS_URL environment variable
