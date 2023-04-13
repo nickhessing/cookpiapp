@@ -73,7 +73,7 @@ external_stylesheets = [
 },
 ]
 
-#my_backend = RedisStore(cache_dir="some_dir")
+my_backend = RedisStore(cache_dir="redis://red-cgr84kgrddl6f7enda00:6379")
 
 # Connect to your internal Redis instance using the REDIS_URL environment variable
 # The REDIS_URL is set to the internal Redis URL e.g. redis://red-343245ndffg023:6379
@@ -95,7 +95,7 @@ external_stylesheets = [
 
 #app = dash.Dash(__name__,suppress_callback_exceptions=True)#background_callback_manager=background_callback_manager
 app = DashProxy(__name__,
-                transforms=[ServersideOutputTransform(backend=RedisStore(),arg_check=False)]#backend = RedisStore(),
+                transforms=[ServersideOutputTransform(backend=my_backend,arg_check=False)]#backend = RedisStore(),
               #  ,background_callback_manager=background_callback_manager
                 ,suppress_callback_exceptions=True,external_stylesheets=external_stylesheets)
 
