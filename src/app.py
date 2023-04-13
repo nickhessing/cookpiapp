@@ -99,7 +99,7 @@ app = DashProxy(__name__,
               #  ,background_callback_manager=background_callback_manager
                 ,suppress_callback_exceptions=True,external_stylesheets=external_stylesheets)
 
-#server = app.server
+server = app.server
 
 app.css.config.serve_locally = True
 
