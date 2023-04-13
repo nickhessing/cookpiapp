@@ -13,19 +13,6 @@ services:
           type: redis
           property: connectionString
   - type: web
-    name: app
-    region: ohio
-    env: python
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn app:app"
-    autoDeploy: false
-    envVars:
-      - key: CELERY_BROKER_URL
-        fromService:
-          name: celery-redis
-          type: redis
-          property: connectionString
-  - type: web
     name: flower
     region: ohio
     plan: free
@@ -38,6 +25,19 @@ services:
         fromService:
           type: redis
           name: celery-redis
+          property: connectionString
+  - type: web
+    name: app
+    region: ohio
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app"
+    autoDeploy: false
+    envVars:
+      - key: CELERY_BROKER_URL
+        fromService:
+          name: celery-redis
+          type: redis
           property: connectionString
   - type: redis
     name: celery-redis
