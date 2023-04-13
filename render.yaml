@@ -17,11 +17,9 @@ services:
     region: ohio
     env: python
     buildCommand: "pip install -r requirements.txt"
-    startCommand: gunicorn --chdir src app:server
+    startCommand: "gunicorn app:app"
     autoDeploy: false
     envVars:
-      - key: PYTHON_VERSION
-          value: 3.7.4
       - key: CELERY_BROKER_URL
         fromService:
           name: celery-redis
