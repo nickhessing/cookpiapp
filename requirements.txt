@@ -24,3 +24,4 @@ flower==1.0.0
 cached-property==1.5.2
 packaging==21.3
 pyparsing==3.0.8
+celery.utils.log
