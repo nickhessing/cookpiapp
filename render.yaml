@@ -18,7 +18,7 @@ services:
     region: ohio
     env: python
     buildCommand: "pip install -r requirements.txt"
-    startCommand: gunicorn --app:server
+    startCommand: "gunicorn --app app:server"
     autoDeploy: false
     envVars:
       - key: CELERY_BROKER_URL
