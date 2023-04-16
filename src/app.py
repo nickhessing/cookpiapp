@@ -75,7 +75,7 @@ external_stylesheets = [
 
 print('starttheshow')
 
-my_backend = RedisStore(redis_url=os.environ['redis://red-cgs78qpjvhtitjuma0tg:6379'])
+#my_backend = RedisStore(redis_url=os.environ['redis://red-cgs78qpjvhtitjuma0tg:6379'])
 print(os.environ)
 # Connect to your internal Redis instance using the REDIS_URL environment variable
 # The REDIS_URL is set to the internal Redis URL e.g. redis://red-343245ndffg023:6379
@@ -97,13 +97,12 @@ print(os.environ)
 
 #app = dash.Dash(__name__,suppress_callback_exceptions=True)#background_callback_manager=background_callback_manager
 app = DashProxy(__name__,
-                transforms=[ServersideOutputTransform(arg_check=False)]
-                ,backend =my_backend
+                transforms=[ServersideOutputTransform(arg_check=False)]#backend = RedisStore(),
               #  ,background_callback_manager=background_callback_manager
                 ,suppress_callback_exceptions=True,external_stylesheets=external_stylesheets)#
 
 server = app.server
-#app.secret_key = os.getenv('FLASK_SECRET_KEY', "super-secret")
+app.secret_key = os.getenv('FLASK_SECRET_KEY', "super-secret")
 
 app.css.config.serve_locally = True
 
