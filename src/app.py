@@ -164,7 +164,7 @@ lastDay = datetime.datetime(thisYear, 12, 31)
 firstDayStr = firstDay.strftime('%Y-%m-%d')
 lastDayStr = lastDay.strftime('%Y-%m-%d')
 
-cookpi_attributestmp = pd.read_excel(open('src/assets/Attributes/dashboard_data/cookpi_per_pi.xlsx', 'rb'),
+cookpi_attributestmp = pd.read_excel(open('assets/Attributes/dashboard_data/cookpi_per_pi.xlsx', 'rb'),
               sheet_name='linktable')
 #KPIFramework = pd.DataFrame(
 #        pd.read_csv(r'assets/Attributes/dashboard_data/KPIFrameworkEnd.csv',sep=',', decimal='.',low_memory=False))
@@ -196,14 +196,14 @@ cookpi_attributestmp = pd.read_excel(open('src/assets/Attributes/dashboard_data/
 #KPIFramework['d_level1_id']=KPIFramework['d_level1_id'].astype(int)
 #KPIFramework['d_level2_id']=KPIFramework['d_level2_id'].astype(int)
 
-d_kpi_tmp = pd.read_excel(open('src/assets/Attributes/dashboard_data/cookpi_per_pi.xlsx', 'rb'),
+d_kpi_tmp = pd.read_excel(open('assets/Attributes/dashboard_data/cookpi_per_pi.xlsx', 'rb'),
               sheet_name='d_kpi')
               
-Project = pd.DataFrame(pd.read_excel(open('src/assets/Attributes/dashboard_data/cookpi_per_pi.xlsx', 'rb'),
+Project = pd.DataFrame(pd.read_excel(open('assets/Attributes/dashboard_data/cookpi_per_pi.xlsx', 'rb'),
               sheet_name='Project'))
 Project["Filter1"].fillna("Overig", inplace = True)      
 
-Blockchain = pd.DataFrame(pd.read_excel(open('src/assets/Attributes/dashboard_data/cookpi_per_pi.xlsx', 'rb'),
+Blockchain = pd.DataFrame(pd.read_excel(open('assets/Attributes/dashboard_data/cookpi_per_pi.xlsx', 'rb'),
               sheet_name='Blockchain'))
 Blockchain["Filter1"].fillna("Overig", inplace = True)   
 
@@ -233,9 +233,9 @@ def AggregateNumDenom(Calculation):
 keysl0 = ['d_kpi_id', 'd_level0_id']
 keysl1 = ['d_kpi_id', 'd_level0_id', 'd_level1_id']
 ListGrain = ['int_day', 'int_month', 'int_quarter', 'int_year']
-dfl0polars = pl.read_csv(r"src/assets/Attributes/dashboard_data/dfl0.csv")
-dfl1polars = pl.read_csv(r"src/assets/Attributes/dashboard_data/dfl1.csv")
-dfl2polars = pl.read_csv(r"src/assets/Attributes/dashboard_data/dfl2.csv")
+dfl0polars = pl.read_csv(r"assets/Attributes/dashboard_data/dfl0.csv")
+dfl1polars = pl.read_csv(r"assets/Attributes/dashboard_data/dfl1.csv")
+dfl2polars = pl.read_csv(r"assets/Attributes/dashboard_data/dfl2.csv")
 
 """
 dfl0 = pd.DataFrame(
