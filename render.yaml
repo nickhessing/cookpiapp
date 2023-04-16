@@ -32,7 +32,7 @@ services:
     plan: free
     env: python
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "celery flower --chdir src tasks --loglevel info"
+    startCommand: "celery --app tasks flower --chdir src --loglevel info"
     autoDeploy: false
     envVars:
       - key: CELERY_BROKER_URL
