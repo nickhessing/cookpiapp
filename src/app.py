@@ -102,7 +102,7 @@ app = DashProxy(__name__,
                 ,suppress_callback_exceptions=True,external_stylesheets=external_stylesheets)#
 
 server = app.server
-app.secret_key = os.getenv('FLASK_SECRET_KEY', "super-secret")
+app.secret_key = os.getenv('redis://red-cgs78qpjvhtitjuma0tg:6379', "super-secret")
 
 app.css.config.serve_locally = True
 
