@@ -42,7 +42,8 @@ import pandas as pd
 import datetime
 import dash
 from dash import Dash,DiskcacheManager,Patch, CeleryManager, dcc, html, Input, Output, State, MATCH, ALL, ctx,clientside_callback, ClientsideFunction
-
+from flask_caching import Cache
+from celery import Celery
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State 
 import dash_daq as daq
@@ -62,7 +63,7 @@ from dash_extensions.enrich import RedisStore,DashProxy, Output, Input, State, S
 import redis
 import dash_loading_spinners as dls
 import subprocess
-from celery import Celery
+
 
 # Usage example:
 def save_string_to_file(filename, content):
@@ -98,53 +99,54 @@ external_stylesheets = [
 # Connect to your internal Redis instance using the REDIS_URL environment variable
 # The REDIS_URL is set to the internal Redis URL e.g. redis://red-343245ndffg023:6379
 
-#redis_instance = redis.StrictRedis.from_url(
-#    os.environ.get('REDIS_URL', 'redis://red-clg96tf14gps73cecsvg:6379')
-#    )
-#
-#if 'redis://red-clg96tf14gps73cecsvg:6379' in os.environ:
-#    # Use Redis & Celery if REDIS_URL set as an env variable
-#    from celery import Celery
-#    celery_app = Celery(__name__, broker=os.environ['redis://red-clg96tf14gps73cecsvg:6379'], backend=os.environ['redis://red-clg96tf14gps73cecsvg:6379'])
-#    background_callback_manager = CeleryManager(celery_app)
-#    r = redis.from_url(os.environ['redis://red-clg96tf14gps73cecsvg:6379'])
-#    r.set('key', 'redis-py')
-#    r.get('key')
-#
-#else:
-#    # Diskcache for non-production apps when developing locally
-#    import diskcache
-#    cache = diskcache.Cache("./cache")
-#    background_callback_manager = DiskcacheManager(cache)
+redis_instance = redis.StrictRedis.from_url(
+    os.environ.get('REDIS_URL', 'redis://red-clg96tf14gps73cecsvg:6379')
+    )
 
-app = dash.Dash(__name__)
+if 'redis://red-clg96tf14gps73cecsvg:6379' in os.environ:
+    # Use Redis & Celery if REDIS_URL set as an env variable
+    from celery import Celery
+    celery_app = Celery(__name__, broker=os.environ['redis://red-clg96tf14gps73cecsvg:6379'], backend=os.environ['redis://red-clg96tf14gps73cecsvg:6379'])
+    background_callback_manager = CeleryManager(celery_app)
+
+else:
+    from celery import Celery
+    celery_app = Celery(__name__, broker='redis://127.0.0.1:6379', backend='redis://127.0.0.1:6379')
+    background_callback_manager = CeleryManager(celery_app)
+
+#app = dash.Dash(__name__)
 #app = dash.Dash(__name__,suppress_callback_exceptions=True)#background_callback_manager=background_callback_manager
-#app = DashProxy(__name__,
-#                transforms=[ServersideOutputTransform(session_check=False, arg_check=False)]#backend = RedisStore(),
-#                ,background_callback_manager=background_callback_manager
-#                ,suppress_callback_exceptions=True,external_stylesheets=external_stylesheets)
+app = DashProxy(__name__,
+                transforms=[ServersideOutputTransform(session_check=False, arg_check=False)]#backend = RedisStore(),
+                ,background_callback_manager=background_callback_manager
+                ,suppress_callback_exceptions=True,external_stylesheets=external_stylesheets)
 
 
-def make_celery(server):
-    celery = Celery(app.import_name,
-                    backend=server.config['CELERY_RESULT_BACKEND'],
-                    broker=server.config['CELERY_BROKER_URL'])
-    celery.conf.update(server.config)
-    TaskBase = celery.Task
-    class ContextTask(TaskBase):
-        abstract = True
-        def __call__(self, *args, **kwargs):
-            with server.app_context():
-                return TaskBase.__call__(self, *args, **kwargs)
-    celery.Task = ContextTask
-    return celery
+#def make_celery(server):
+#    celery = Celery(#app.import_name,
+#                    backend=server.config['CELERY_RESULT_BACKEND'],
+#                    broker=server.config['CELERY_BROKER_URL'])
+#    celery.conf.update(server.config)
+#    TaskBase = celery.Task
+#    class ContextTask(TaskBase):
+#        abstract = True
+#        def __call__(self, *args, **kwargs):
+#            with server.app_context():
+#                return TaskBase.__call__(self, *args, **kwargs)
+#    celery.Task = ContextTask
+#    return celery
 
+if 'redis://red-clg96tf14gps73cecsvg:6379' in os.environ:
+    redis_instance = redis.StrictRedis.from_url(
+        os.environ.get('REDIS_URL', 'redis://red-clg96tf14gps73cecsvg:6379')
+        )
 
-app.server.config.update(
-    CELERY_BROKER_URL='redis://red-clg96tf14gps73cecsvg:6379',
-    CELERY_RESULT_BACKEND='redis://red-clg96tf14gps73cecsvg:6379',
-)
-celery = make_celery(app.server)
+else:
+    redis_instance = redis.StrictRedis.from_url(
+        os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379')
+        )
+
+#celery = make_celery(app.server)
 
 server = app.server
 
@@ -475,8 +477,6 @@ Radiograin = html.Div([
 #    print(filterl0)
 #    return filterl0
 
-@cache.memoize()
-@celery.task()
 
 Level0DD = html.Div([
     html.Div(dcc.Textarea(id='dropdown0',className='h6')),
@@ -503,8 +503,8 @@ Level0DD = html.Div([
               Input('button_group','value'),
              # Input('pieorbar','data'),
               Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'), prevent_initial_call=True,
-              background=True,
-              manager=background_callback_manager,
+             # background=True,
+             # manager=background_callback_manager,
              )
 def Level0Update(selecteddatal0bar,n_clicks,Level0NameSelect,WalletSwitch,button_group,reset):#,selecteddatal0,n_clicks,KPINameSelect,clickdatal0bar,clickdatal0
     print('Level0Update')
@@ -1618,7 +1618,6 @@ app.layout = html.Div([
 ],
 )
 
-
 @app.callback(
     Output("collapse", "is_open"),
     [Input("collapse-button", "n_clicks")],
@@ -1895,7 +1894,10 @@ def wegschrijvendiehap(inputfield):
         answer = result.stdout
         tmpaswer = [{'id': '12.0', 'value': '2.891323835569685308'}, {'id': '55.0', 'value': '28.091493'}, {'id': '8.0', 'value': '1.918714491283379120'}, {'id': '6.0', 'value': '158.502814222575437952'}, {'id': '9.0', 'value': '38362.771085839216539171'}]
         idlist = [int(float(item['id'])) for item in json.loads(answer)]
+        print(idlist)
         return idlist
+    else:
+        PreventUpdate
 
 
 #@app.callback([Output('coinsinwallet', 'data'), # dit is een random gekozen output
@@ -1939,7 +1941,7 @@ def coinsinwallet(coinsinwallet,CompetitorSwitch):
             result_list = [int(value) for value in result_list]
             endresult = list(coinsinwallet) + list(result_list)
             return endresult if endresult else ''
-        
+
 
 @app.callback([ServersideOutput('mastersetkpifiltered', 'data'),
               ServersideOutput('mastersetkpifilterednotime', 'data'),
