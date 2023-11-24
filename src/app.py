@@ -55,12 +55,9 @@ import os
 import pandas as pd
 import plotly.express as px
 import plotly.io as pio
-import numpy as np
 from dash_breakpoints import WindowBreakpoints
 import json
 #from dash_extensions.callback import CallbackCache, DiskCache
-import base64
-import time
 from uuid import uuid4
 import polars as pl
 from dash_extensions.enrich import RedisStore,DashProxy, Output, Input, State, ServersideOutput, html, dcc,FileSystemStore,ServersideOutputTransform
@@ -68,12 +65,6 @@ from dash_extensions.enrich import RedisStore,DashProxy, Output, Input, State, S
 import redis
 import dash_loading_spinners as dls
 import subprocess
-import ast
-import execjs
-import js2py
-import asyncio
-import requests
-import py_mini_racer
 
 # Usage example:
 def save_string_to_file(filename, content):
