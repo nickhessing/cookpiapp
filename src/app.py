@@ -64,6 +64,7 @@ from dash_extensions.enrich import RedisStore,DashProxy, Output, Input, State, S
 import redis
 import dash_loading_spinners as dls
 import subprocess
+import numpy as np
 
 
 # Usage example:
