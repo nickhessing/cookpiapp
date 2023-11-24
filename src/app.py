@@ -59,7 +59,8 @@ from dash_breakpoints import WindowBreakpoints
 import json
 from uuid import uuid4
 import polars as pl
-from dash_extensions.enrich import RedisStore,DashProxy, Output, Input, State, ServersideOutput, html, dcc,FileSystemStore,ServersideOutputTransform
+from dash_extensions.enrich import DashProxy,RedisBackend, Output, Input, State, Serverside, html, dcc, \
+    ServersideOutputTransform
 #from flask_caching import Cache
 import redis
 import dash_loading_spinners as dls
@@ -101,29 +102,37 @@ external_stylesheets = [
 # Connect to your internal Redis instance using the REDIS_URL environment variable
 # The REDIS_URL is set to the internal Redis URL e.g. redis://red-343245ndffg023:6379
 
-redis_instance = redis.StrictRedis.from_url(
-    os.environ.get('REDIS_URL', 'redis://red-clg96tf14gps73cecsvg:6379')
-    )
-
+print(os.environ)
 if 'redis://red-clg96tf14gps73cecsvg:6379' in os.environ:
+    print('os.environ in environment')
     # Use Redis & Celery if REDIS_URL set as an env variable
     from celery import Celery
     celery_app = Celery(__name__, broker=os.environ['redis://red-clg96tf14gps73cecsvg:6379'], backend=os.environ['redis://red-clg96tf14gps73cecsvg:6379'])
     background_callback_manager = CeleryManager(celery_app)
+   # backendRedis = 'redis://red-clg96tf14gps73cecsvg:6379'
+    one_backend = RedisBackend(host='red-clg96tf14gps73cecsvg', port=6379)
 
 else:
     from celery import Celery
     celery_app = Celery(__name__, broker='redis://127.0.0.1:6379', backend='redis://127.0.0.1:6379')
     background_callback_manager = CeleryManager(celery_app)
+    one_backend = RedisBackend(host='localhost', port=6379)
 
 #app = dash.Dash(__name__)
-#app = dash.Dash(__name__,suppress_callback_exceptions=True)#background_callback_manager=background_callback_manager
+#app = dash.Dash(__name__,background_callback_manager=background_callback_manager,suppress_callback_exceptions=True)
 app = DashProxy(__name__,
-                transforms=[ServersideOutputTransform(session_check=False, arg_check=False)]#backend = RedisStore(),
-                ,background_callback_manager=background_callback_manager
-                ,suppress_callback_exceptions=True,external_stylesheets=external_stylesheets)
+                transforms=[ServersideOutputTransform(backends=[one_backend])]#,]session_check=False, arg_check=False
+                #,background_callback_manager=background_callback_manager
+               # ,session_check=False, arg_check=False
+                ,suppress_callback_exceptions=True,external_stylesheets=external_stylesheets
+                )
 
 
+#app = DashProxy(__name__,
+#                transforms=[ServersideOutputTransform(session_check=False, arg_check=False,backend = RedisStore('redis://red-clg96tf14gps73cecsvg:6379'))]#,
+#                ,background_callback_manager=background_callback_manager
+#                ,suppress_callback_exceptions=True,external_stylesheets=external_stylesheets)
+#
 #def make_celery(server):
 #    celery = Celery(#app.import_name,
 #                    backend=server.config['CELERY_RESULT_BACKEND'],
@@ -162,7 +171,7 @@ app.css.config.serve_locally = True
 #cache = Cache()
 #cache.init_app(app.server, config=CACHE_CONFIG)
 
-my_backend = FileSystemStore(cache_dir="C:/Users/nickh/OneDrive/Documents/Projects/cookkpi/dashboard/src/assets/Attributes/redis")
+#my_backend = FileSystemStore(cache_dir="C:/Users/nickh/OneDrive/Documents/Projects/cookkpi/dashboard/src/assets/Attributes/redis")
 
 """
 launch_uid = uuid4()
@@ -1719,6 +1728,7 @@ def updatestartdt(GrainSelect,relayoutdata1,daterangestate):
     [State("modalwallet", "is_open")],prevent_initial_callback=True
 )
 def toggle_modal(toggle_clicks, close_clicks, is_open):
+    print('modalwallet')
     if toggle_clicks or close_clicks:
         return not is_open
     return is_open
@@ -1988,10 +1998,10 @@ def coinsinwallet(coinsinwallet,CompetitorSwitch):
         raise
 
 
-@app.callback([ServersideOutput('mastersetkpifiltered', 'data'),
-              ServersideOutput('mastersetkpifilterednotime', 'data'),
-              ServersideOutput('dfgroups', 'data'),
-              ServersideOutput('dflcomparekpi', 'data'),#,backend=my_backend
+@app.callback([Output('mastersetkpifiltered', 'data'),
+              Output('mastersetkpifilterednotime', 'data'),
+              Output('dfgroups', 'data'),
+              Output('dflcomparekpi', 'data'),#,backend=my_backend
               Output('output-container-date-picker-range', 'children'),
               Output('dropdown0', 'value'),
               Output('dropdown1', 'value'),
@@ -2252,7 +2262,9 @@ def clean_data(GrainSelect,KPISelect,KPIGroupSelect,button_group,Level0NameSelec
             string_prefix = string_prefix + 'End Date: ' + end_date_string
         if len(string_prefix) == len('You have selected: '):
             string_prefix = 'Select a date to see it displayed here'
-        return mastersetkpifiltered,mastersetkpifilteredjsonnotime,dffgroups,dffcomparejson,string_prefix,'bs' if not level0 else level0[0],'bs' if not level1 else level1[0],'bs' if not level2 else level2[0],button_groups,button_groups,pieorbar#,eval(button_sweeps_3[0]) #sweep0style,sweep1style,sweep2style,
+        print(mastersetkpifiltered)
+        return Serverside(mastersetkpifiltered),Serverside(mastersetkpifilteredjsonnotime),Serverside(dffgroups),Serverside(dffcomparejson),string_prefix,'bs' if not level0 else level0[0],'bs' if not level1 else level1[0],'bs' if not level2 else level2[0],button_groups,button_groups,pieorbar#,eval(button_sweeps_3[0]) #sweep0style,sweep1style,sweep2style,
+#pickle.dumps(
     except Exception as e:
         logging.error(f"Exception in callback: {str(e)}")
         raise
@@ -2276,7 +2288,7 @@ def clean_data(GrainSelect,KPISelect,KPIGroupSelect,button_group,Level0NameSelec
     #Input("CompetitorSwitch", "label")
     #,
     State('cardsid', 'children')
-    , session_check=False, prevent_initial_call=True
+    ,session_check=False, prevent_initial_call=True
 )
 
 def updatekpiindicator(dfgroups,dffcompare,KPISelect,KPIGroupSelect,widthBreakpoint,cardsidState):
@@ -2300,6 +2312,8 @@ def updatekpiindicator(dfgroups,dffcompare,KPISelect,KPIGroupSelect,widthBreakpo
         carousellistnew.clear()
         graphscontainer = []
         graphscontainer3 = []
+        print('coparegraph')
+        print(dffcompare)
         dftouse = dffcompare.to_pandas()#pd.DataFrame(dffcompare)
         dfgroups = dfgroups.sort("KPIGroup") #pd.DataFrame(dfgroups)
         if kpicountout[0]<slides_to_show_ifenough:
