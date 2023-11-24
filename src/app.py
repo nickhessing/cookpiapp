@@ -146,21 +146,11 @@ app = DashProxy(__name__,
 #    celery.Task = ContextTask
 #    return celery
 
-if 'redis://red-clg96tf14gps73cecsvg:6379' in os.environ:
-    redis_instance = redis.StrictRedis.from_url(
-        os.environ.get('REDIS_URL', 'redis://red-clg96tf14gps73cecsvg:6379')
-        )
-
-else:
-    redis_instance = redis.StrictRedis.from_url(
-        os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379')
-        )
-
 #celery = make_celery(app.server)
 
 server = app.server
 
-app.css.config.serve_locally = True
+#app.css.config.serve_locally = True
 
 #CACHE_CONFIG = {
 #    # try 'FileSystemCache' if you don't want to setup redis
@@ -1624,6 +1614,7 @@ app.layout = html.Div([
     dcc.Store(id='contract_addresses_internal_toproject'),
     dcc.Store(id='daterange'),
     dcc.Store(id='pieorbar'),
+    dcc.Store(id='graph-level0compare-dataset'),
     WindowBreakpoints(
             id="breakpoints",
             # Define the breakpoint thresholds
@@ -3896,10 +3887,8 @@ def update_kpiagg(GrainSelect,KPISelect,mastersetkpifiltered,CumulativeSwitch,Pe
         }
 
 """
-
-
 @app.callback(
-    Output('graph-level0compare', 'figure', allow_duplicate=True),
+    Output('graph-level0compare-dataset', 'data', allow_duplicate=True),
     [Input('mastersetkpifilterednotime', 'data'),
      Input('button_group','value'),
      Input('button_group1','value'),
@@ -3915,8 +3904,10 @@ def update_kpiagg(GrainSelect,KPISelect,mastersetkpifiltered,CumulativeSwitch,Pe
     # eval(kpigrouplistinput3[0]),  
      ],prevent_initial_call=True
 )
-def update_level0Graph(mastersetkpifilterednotime,button_group,button_group1,PercentageTotalSwitchNoTime,sweepertje,KPISelect,Totaalswitch,widthBreakpoint): #,hoverData,*args
-    print('update_level0Graph cfpandacompare')
+def update_level0Graph_data(mastersetkpifilterednotime,button_group,button_group1,PercentageTotalSwitchNoTime,sweepertje,KPISelect,Totaalswitch,widthBreakpoint): #,hoverData,*args
+    print('update_level0Graph dataset')
+    print(type(mastersetkpifilterednotime))
+    print('type(mastersetkpifilterednotime)')
     try:
         changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
         changed_id2 = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
@@ -3975,7 +3966,7 @@ def update_level0Graph(mastersetkpifilterednotime,button_group,button_group1,Per
         columns_to_remove.remove('Numerator')
         columns_to_remove.remove('Denominator')
 
-        mastersetkpifilterednotime = (
+        mastersetkpifilterednotimeee = (
         mastersetkpifilterednew.lazy()
         .groupby(columns_to_remove)
         .agg(
@@ -3986,19 +3977,125 @@ def update_level0Graph(mastersetkpifilterednotime,button_group,button_group1,Per
         )
         #.sort(["LevelName_0"])
         )
-        polarsdata = mastersetkpifilterednotime.collect()
-        data000 = polarsdata.to_pandas()
+        #polarsdatatje = mastersetkpifilterednotimeee.collect()
+        #data000 = polarsdata.to_pandas()
+        #traces = []
+        #iterationslist = data000.eval(button_group).unique()
+        #countiterations = iterationslist.shape[0]
+        #print(mastersetkpifilterednotime)
+        #print(button_group)
+        #print(button_group1)
+        #print(changed_id)
+        #print(countiterations)
+        #print(countiterations)
+        #print(countiterations)
+        #print(countiterations)
+        #print('endprint')
+        mastersetkpifilterednotimeee.fill_null(0)
+        return Serverside(mastersetkpifilterednotimeee)
+    except Exception as e:
+        logging.error(f"Exception in callback: {str(e)}")
+        raise
+
+@app.callback(
+    Output('graph-level0compare', 'figure', allow_duplicate=True),
+    [Input('graph-level0compare-dataset', 'data'),
+     Input('button_group','value'),
+     Input('button_group1','value'),
+     Input("PercentageTotalSwitchNoTime", "label"),
+     Input({'type': 'sweepertje', 'index': ALL}, 'n_clicks'),
+     #Input('graph-level0compare', 'hoverData'),
+    # Input('dfl1', 'data'),
+     State("KPISelect", "value"),
+
+    # Input('graphlevel0', 'selectedData'),
+     Input("Totaalswitch", "label"),
+     State("breakpoints", "widthBreakpoint"),
+    # eval(kpigrouplistinput3[0]),  
+     ],prevent_initial_call=True
+)
+def update_level0Graph(graphlevel0comparedataset,button_group,button_group1,PercentageTotalSwitchNoTime,sweepertje,KPISelect,Totaalswitch,widthBreakpoint): #,hoverData,*args
+    print('update_level0Graph cfpandacompare')
+    try:
+        changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+        #changed_id2 = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
+        LevelOrFilterAttribuut = button_group.split('_')[0]
+        LevelOrFilterLegend = button_group1.split('_')[0]
+        #noemer = f'pl.col("Denominator").{eval(AggregateNumDenom(KPIDenomAgg[KPISelect]))}()'
+        #teller = f'pl.col("Numerator").{eval(AggregateNumDenom(KPINumAgg[KPISelect]))}()'
+        Notation = KPISelectedStyle(KPISelect)
+        Calculation = CalculationDEF(KPISelect)
+        AggregateNum = NumaggregateDEF(KPISelect)
+        AggregateDenom = DenomaggregateDEF(KPISelect)
+        #totaaljanee = Totaalloop(Totaalswitch)
+        if widthBreakpoint=='sm':
+                title = ''
+        else:
+            title = dict(text=str(KPISelect),# + Level2Entitytype,
+                           # +' -     selected: '+str(Level2NameSelect),
+                           font=dict(#family='Montserrat',
+                                     size=22,
+                                     color=fontcolor,
+                            ),
+        )
+        #columns_to_removemasterset = mastersetkpifilterednotime.columns 
+        #if button_group1 == 'LevelName_0':
+        #    columns_to_remove_dict = {
+        #    'LevelName_0': [column for column in columns_to_removemasterset if '_1' not in column and '_2' not in column and column not in ['d_level1_id', 'd_level2_id']],
+        #    'LevelName_1': [column for column in columns_to_removemasterset if '_2' not in column and column not in ['d_level2_id']],
+        #    'LevelName_2': [column for column in columns_to_removemasterset if '_1' not in column and column not in ['d_level1_id']],
+        #    'Filter1_0': [column for column in columns_to_removemasterset if '_2' not in column and '_1' not in column and column not in ['d_level2_id', 'd_level1_id']]
+        #    }
+        #elif button_group1 == 'LevelName_1':
+        #    columns_to_remove_dict = {
+        #    'LevelName_0': [column for column in columns_to_removemasterset if '_2' not in column and column not in ['d_level2_id']],
+        #    'LevelName_1': [column for column in columns_to_removemasterset if '_0' not in column and '_2' not in column and column not in ['d_level0_id', 'd_level2_id']],
+        #    'LevelName_2': [column for column in columns_to_removemasterset if '_0' not in column and column not in ['d_level0_id']],
+        #    'Filter1_0': [column for column in columns_to_removemasterset if '_0' not in column and '_2' not in column and column not in ['d_level0_id', 'd_level2_id']]
+        #    }
+        #elif button_group1 == 'LevelName_2':
+        #    columns_to_remove_dict = {
+        #    'LevelName_0': [column for column in columns_to_removemasterset if '_1' not in column and column not in ['d_level1_id']],
+        #    'LevelName_1': [column for column in columns_to_removemasterset if '_0' not in column and column not in ['d_level0_id']],
+        #    'LevelName_2': [column for column in columns_to_removemasterset if '_0' not in column and '_1' not in column and column not in ['d_level0_id', 'd_level1_id']],
+        #    'Filter1_0': [column for column in columns_to_removemasterset if '_0' not in column and '_1' not in column and column not in ['d_level0_id', 'd_level1_id']]
+        #    }
+        #elif button_group1 == 'Filter1_0':
+        #    columns_to_remove_dict = {
+        #    'LevelName_0': [column for column in columns_to_removemasterset if '_1' not in column and '_2' not in column and column not in ['d_level1_id', 'd_level2_id']],
+        #    'LevelName_1': [column for column in columns_to_removemasterset if '_0' not in column and '_2' not in column and column not in ['d_level0_id', 'd_level2_id']],
+        #    'LevelName_2':[column for column in columns_to_removemasterset if '_0' not in column and '_1' not in column and column not in ['d_level0_id', 'd_level1_id']],
+        #    'Filter1_0': [column for column in columns_to_removemasterset if '_0' not in column and '_1' not in column and '_2' not in column and column not in ['d_level0_id', 'd_level1_id', 'd_level2_id']]
+        #    }   
+        #columns_to_remove = columns_to_remove_dict[button_group] 
+        #if 'Filter1_0' not in columns_to_remove and (button_group == 'Filter1_0' or button_group1 == 'Filter1_0'):
+        #    columns_to_remove.append('Filter1_0')
+        #mastersetkpifilterednew = mastersetkpifilterednotime.select(columns_to_remove)
+        #columns_to_remove.remove('Numerator')
+        #columns_to_remove.remove('Denominator')
+#
+        #mastersetkpifilterednotime = (
+        #mastersetkpifilterednew.lazy()
+        #.groupby(columns_to_remove)
+        #.agg(
+        #    [
+        #        eval(noemer),
+        #        eval(teller),
+        #    ]
+        #)
+        ##.sort(["LevelName_0"])
+        #)
+        print('type(graphlevel0comparedataset')
+        print(type(graphlevel0comparedataset))
+        graphlevel0comparedatasethier = graphlevel0comparedataset.collect()
+        data000 = graphlevel0comparedatasethier.to_pandas()
         traces = []
         iterationslist = data000.eval(button_group).unique()
         countiterations = iterationslist.shape[0]
-        print(mastersetkpifilterednotime)
+        print(graphlevel0comparedataset)
         print(button_group)
         print(button_group1)
         print(changed_id)
-        print(countiterations)
-        print(countiterations)
-        print(countiterations)
-        print(countiterations)
         print('endprint')
         if countiterations==1:
             print('countiterations==1 traces')
