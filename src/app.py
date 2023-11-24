@@ -1615,6 +1615,8 @@ app.layout = html.Div([
     dcc.Store(id='daterange'),
     dcc.Store(id='pieorbar'),
     dcc.Store(id='graph-level0compare-dataset'),
+    dcc.Store(id='graphlevel0data'),
+   # graphlevel0data
     WindowBreakpoints(
             id="breakpoints",
             # Define the breakpoint thresholds
@@ -2947,9 +2949,8 @@ def update_kpiaggcontainer(graphsloop,GrainSelect,dflcomparekpi,CumulativeSwitch
         logging.error(f"Exception in callback: {str(e)}")
         raise
 
-
 @app.callback(
-    Output('graphlevel0', 'figure',allow_duplicate=True),
+    Output('graphlevel0data', 'data',allow_duplicate=True),
    # Output("Category1Select", "value"),
   #  Output("Level0NameSelect", "options"),
    # Output('animatedbar', 'figure'),
@@ -2972,9 +2973,8 @@ def update_kpiaggcontainer(graphsloop,GrainSelect,dflcomparekpi,CumulativeSwitch
      ,prevent_initial_call=True
 )
 
-def update_kpiagg(GrainSelect,KPISelect,mastersetkpifiltered,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch,widthBreakpoint,button_group,button_group1,Totaalswitch):  #,*args ,Level2NameSelect,toggle, relayoutData
-    print('execute update_kpiagg')
-    print(mastersetkpifiltered)
+def update_kpiagg_data(GrainSelect,KPISelect,mastersetkpifiltered,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch,widthBreakpoint,button_group,button_group1,Totaalswitch):  #,*args ,Level2NameSelect,toggle, relayoutData
+    print('execute update_kpiagg data')
     try:
         changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
         changed_id2 = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
@@ -3045,7 +3045,7 @@ def update_kpiagg(GrainSelect,KPISelect,mastersetkpifiltered,CumulativeSwitch,Pe
         mastersetkpifilterednew = mastersetkpifiltered.select(columns_to_remove)
         mastersetkpifilterednewcol.remove('Numerator')
         mastersetkpifilterednewcol.remove('Denominator')
-        mastersetkpifilterednotime = (
+        mastersetkpifilterednotimee = (
         mastersetkpifilterednew.lazy()
         .groupby(mastersetkpifilterednewcol)
         .agg(
@@ -3056,8 +3056,112 @@ def update_kpiagg(GrainSelect,KPISelect,mastersetkpifiltered,CumulativeSwitch,Pe
         )
         #.sort(["LevelName_0"])
         )
-        polarsdata = mastersetkpifilterednotime.collect()
-        data000 = polarsdata.to_pandas()
+        mastersetkpifilterednotimee.fill_null(0)
+        mastersetkpifilterednotimee.collect()
+        return Serverside(mastersetkpifilterednotimee)
+    except Exception as e:
+        logging.error(f"Exception in callback: {str(e)}")
+        raise
+
+
+@app.callback(
+    Output('graphlevel0', 'figure',allow_duplicate=True),
+   # Output("Category1Select", "value"),
+  #  Output("Level0NameSelect", "options"),
+   # Output('animatedbar', 'figure'),
+    
+     [
+     Input('GrainSelect', 'value'),
+     Input("KPISelect", "value"),
+     Input('graphlevel0data', 'data'),
+     Input("CumulativeSwitch", "label"),
+     Input("PercentageTotalSwitch", "label"),
+     Input("ShowValueSwitch", "label"),
+     Input("breakpoints", "widthBreakpoint"),
+     Input('button_group','value'),
+     Input('button_group1','value'),
+     Input("Totaalswitch", "label")
+     ,
+
+     #State('graphlevel0', 'figure'),
+     ]
+     ,prevent_initial_call=True
+)
+
+def update_kpiagg(GrainSelect,KPISelect,graphlevel0datasetje,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch,widthBreakpoint,button_group,button_group1,Totaalswitch):  #,*args ,Level2NameSelect,toggle, relayoutData
+    print('execute update_kpiagg')
+    try:
+        dataframe = Cumloop0(CumulativeSwitch)
+        dataframe1 = Cumloop1(CumulativeSwitch)
+        Calculation = CalculationDEF(KPISelect)
+        Notation = KPISelectedStyle(KPISelect)
+        Calculation = CalculationDEF(KPISelect)
+        if widthBreakpoint=='sm':
+                title = ''
+        else:
+            title = dict(text=str(KPISelect),# + ' per ' + Level2Entitytype,
+                           # +' -     selected: '+str(Level2NameSelect),
+                           font=dict(#family='Montserrat',
+                                     size=22,
+                                     color=fontcolor,
+                            ),
+            ) 
+        if widthBreakpoint=='sm':
+            legend=dict(
+                        font=dict(
+                            size=15,
+                            color=fontcolor,
+                        ),
+                        orientation="h"
+                    )
+        else:
+            legend=dict(
+                        font=dict(
+                            size=15,
+                            color=fontcolor,
+                        ),
+                        yanchor="top",
+                        y=1,
+                        x=1.01,
+                        xanchor="left",
+                    )
+
+        #data0 = graphlevel0datasetje.to_pandas()
+        LevelOrFilter = button_group.split('_')[0]
+        LevelOrFilterNumber = button_group.split('_')[1]
+        #columns_to_remove_dict = {
+        #    'LevelName_0': [column for column in columns_to_removemasterset if '_1' not in column and '_2' not in column and column not in ['d_level1_id', 'd_level2_id']],
+        #    'LevelName_1': [column for column in columns_to_removemasterset if '_0' not in column and '_2' not in column and column not in ['d_level0_id', 'd_level2_id']],
+        #    'LevelName_2': [column for column in columns_to_removemasterset if '_0' not in column and '_1' not in column and column not in ['d_level0_id', 'd_level1_id']],
+        #    'Filter1_0': [column for column in columns_to_removemasterset if '_0' not in column and '_1' not in column and '_2' not in column and column not in ['d_level0_id', 'd_level1_id', 'd_level2_id']]
+        #}
+        ## Check the value of LevelOrFilterNumber and select the appropriate list
+        #if button_group in columns_to_remove_dict:
+        #    columns_to_remove = columns_to_remove_dict[button_group]
+        #    if LevelOrFilter=='Filter1':
+        #        columns_to_remove.append('Filter1_0')
+        #else:
+        #    print(f"LevelOrFilterNumber '{LevelOrFilterNumber}' not found in the dictionary.")
+        traces3 = []
+        #mastersetkpifilterednewcol = columns_to_remove#[column for column in columns_to_removemasterset if '_1' not in column and '_2' not in column and column not in ['d_level1_id', 'd_level2_id']]
+        ## Select only the filtered columns
+        #mastersetkpifilterednew = mastersetkpifiltered.select(columns_to_remove)
+        #mastersetkpifilterednewcol.remove('Numerator')
+        #mastersetkpifilterednewcol.remove('Denominator')
+        #mastersetkpifilterednotime = (
+        #mastersetkpifilterednew.lazy()
+        #.groupby(mastersetkpifilterednewcol)
+        #.agg(
+        #    [
+        #        eval(noemer),
+        #        eval(teller),
+        #    ]
+        #)
+        ##.sort(["LevelName_0"])
+        #)
+
+        graphlevel0dataa = graphlevel0datasetje.collect()
+        data000 = graphlevel0dataa.to_pandas()
         data000['Period_int'] = pd.to_datetime(data000['Period_int'])
         data000 = data000.sort_values(by='Period_int')
         """
@@ -4085,8 +4189,6 @@ def update_level0Graph(graphlevel0comparedataset,button_group,button_group1,Perc
         #)
         ##.sort(["LevelName_0"])
         #)
-        print('type(graphlevel0comparedataset')
-        print(type(graphlevel0comparedataset))
         graphlevel0comparedatasethier = graphlevel0comparedataset.collect()
         data000 = graphlevel0comparedatasethier.to_pandas()
         traces = []
