@@ -12,7 +12,9 @@
     --l2value-2: green;
     --l2value-3: orange;
 
-    --projectorange:#b37400;
+    --buttoncolor :  rgb(247, 239, 213);
+
+    --projectorange:rgb(247, 239, 213);
     --dropdownvalue:#222d40;
 
 
@@ -29,16 +31,16 @@
 
     --tabselecttextcolor: #f0d9b0;
     --tabdeselecttextcolor: rgb(172, 171, 162);
-    --tabdeselect: #141e30;
-    --tabhover: #b37400;
+    --tabdeselect: #1b2840;
+    --tabhover: #26405e;
     --hovershadow:  rgba(247, 232, 183, 0.949);
-    --rangeselector:#b6b4a9;
+    --rangeselector:#1a2a3d;
 
     --dropdownmenu: #243b55;
-    --dropdownmenuoptions: #b37400;
+    --dropdownmenuoptions: #df84dc;
 
     --cardselect: #6610f2;
-    --cardhover: #b37400;
+    --cardhover: #df84dc;
     --graphtypemove: #6610f2;
     --selectedcolor0: #6610f2;
     --blue: #4582ec;
@@ -76,6 +78,7 @@
     --sidebar-text-hover-color: #020b15;
     --sidebar-hover-color: #f3f6d0;
     --primary-color-light: #44bbee;
+    --primary-color: #f2730c;
     --toggle-color: #ddd;
     --text-color-side: rgb(252, 234, 174);
     --gradientbasic:#D9AFD9;

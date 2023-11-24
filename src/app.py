@@ -38,17 +38,19 @@ print(("It takes %s seconds to download "+BLOBNAME) % (t2 - t1))
 print(pd.read_csv(LOCALFILENAME))
 
 """
-
+#from main import get_active_tokens_in_wallet 
 import openpyxl
 import pandas as pd
 import datetime
 #import "./constants2.css"
 import dash
-from dash import Dash,DiskcacheManager, CeleryManager, dcc, html, Input, Output, State, MATCH, ALL, ctx
+from dash import Dash,DiskcacheManager,Patch, CeleryManager, dcc, html, Input, Output, State, MATCH, ALL, ctx,clientside_callback, ClientsideFunction
+
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State 
 import dash_daq as daq
 import dash_trich_components as dtc
+from dash.exceptions import PreventUpdate
 import glob
 import os
 import pandas as pd
@@ -65,6 +67,38 @@ import polars as pl
 from dash_extensions.enrich import RedisStore,DashProxy, Output, Input, State, ServersideOutput, html, dcc,FileSystemStore,ServersideOutputTransform
 #from flask_caching import Cache
 import redis
+import dash_loading_spinners as dls
+import subprocess
+import ast
+import execjs
+import js2py
+import asyncio
+import requests
+import py_mini_racer
+
+# Usage example:
+def save_string_to_file(filename, content):
+    with open(filename, 'w') as file:
+        file.write(content)
+
+#walletaddress = '0xDb9918673D782a8116f583937f2f4A32352F11A2'
+#walletaddress = '0x5D33Cc9F93adf8f6dF451DEDaA8f0f6bbc7003ae'
+#
+#walletaddress_str = str(walletaddress)
+#json_data_string = json.dumps(json_data_read)
+#print(json_data_string)
+#
+def execute_batchie(walletaddress_str, json_data_string):
+    try:
+        # Call the Node.js runtime with the batchrequest.js script
+        process = subprocess.run(["node", "BatchRequestSimple.js", walletaddress_str, json_data_string], 
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        return process.stdout
+    except subprocess.CalledProcessError as e:
+        # If an error occurs during the execution, you can handle it here
+        print(f"Error executing batchie: {e}")
+
+#execute_batchie(walletaddress_str, json_data_string)
 
 external_stylesheets = [
 {
@@ -73,36 +107,32 @@ external_stylesheets = [
 },
 ]
 
-print('starttheshow')
-
-#my_backend = RedisStore(redis_url=os.environ['redis://red-cgs78qpjvhtitjuma0tg:6379'])
-print(os.environ)
 # Connect to your internal Redis instance using the REDIS_URL environment variable
 # The REDIS_URL is set to the internal Redis URL e.g. redis://red-343245ndffg023:6379
 
-#if 'redis://red-cgr84kgrddl6f7enda00:6379' in os.environ:
+if 'redis://red-cgr84kgrddl6f7enda00:6379' in os.environ:
     # Use Redis & Celery if REDIS_URL set as an env variable
-#from celery import Celery
-#celery_app = Celery(__name__, broker=os.environ['redis://red-cgr84kgrddl6f7enda00:6379']) #, backend=os.environ['redis://red-cgr84kgrddl6f7enda00:6379']
-#background_callback_manager = CeleryManager(celery_app)
-#r = redis.from_url(os.environ['redis://red-cgr84kgrddl6f7enda00:6379'])
-#r.set('key', 'redis-py')
-#r.get('key')
+    from celery import Celery
+    celery_app = Celery(__name__, broker=os.environ['redis://red-cgr84kgrddl6f7enda00:6379'], backend=os.environ['redis://red-cgr84kgrddl6f7enda00:6379'])
+    background_callback_manager = CeleryManager(celery_app)
+    r = redis.from_url(os.environ['redis://red-cgr84kgrddl6f7enda00:6379'])
+    r.set('key', 'redis-py')
+    r.get('key')
 
-#else:
-#    # Diskcache for non-production apps when developing locally
-#    import diskcache
-#    cache = diskcache.Cache("./cache")
-#    background_callback_manager = DiskcacheManager(cache)
+else:
+    # Diskcache for non-production apps when developing locally
+    import diskcache
+    cache = diskcache.Cache("./cache")
+    background_callback_manager = DiskcacheManager(cache)
 
+#app = dash.Dash(__name__)
 #app = dash.Dash(__name__,suppress_callback_exceptions=True)#background_callback_manager=background_callback_manager
 app = DashProxy(__name__,
-                transforms=[ServersideOutputTransform(arg_check=False)]#backend = RedisStore(),
-              #  ,background_callback_manager=background_callback_manager
-                ,suppress_callback_exceptions=True,external_stylesheets=external_stylesheets)#
+                transforms=[ServersideOutputTransform(session_check=False, arg_check=False)]#backend = RedisStore(),
+                ,background_callback_manager=background_callback_manager
+                ,suppress_callback_exceptions=True,external_stylesheets=external_stylesheets)
 
 server = app.server
-app.secret_key = os.getenv('redis://red-cgs78qpjvhtitjuma0tg:6379', "super-secret")
 
 app.css.config.serve_locally = True
 
@@ -114,7 +144,7 @@ app.css.config.serve_locally = True
 #cache = Cache()
 #cache.init_app(app.server, config=CACHE_CONFIG)
 
-#my_backend = FileSystemStore(cache_dir="C:/Users/nickh/OneDrive/Documents/Projects/cookkpi/dashboard/src/assets/Attributes/redis")
+my_backend = FileSystemStore(cache_dir="C:/Users/nickh/OneDrive/Documents/Projects/cookkpi/dashboard/src/assets/Attributes/redis")
 
 """
 launch_uid = uuid4()
@@ -138,12 +168,15 @@ else:
 """
 
 BeautifulSignalColor="#f3f6d0"
-ProjectOrange="#b37400"
+ProjectOrange="#f2730c"
 Highlightcardcolor="#f3f6d0"
-graphcolor="#243b55" #8EC5FC #tbv export
+graphcolor="#243b55"
+topcolor= 'rgb(81 100 137)' #8EC5FC #tbv export
 fontcolor='rgb(247, 239, 213)'  #141e30
 buttoncolor="#f3f6d0"
+tabhover = '#4c7cb3' #lichterblauw
 buttonlogocolor="#020b15"
+rangeselected="#1A2B3E"
 slides_to_show_ifenough = 4
 slides_to_scroll = 4
 # to render in jupyterlab
@@ -166,48 +199,36 @@ lastDayStr = lastDay.strftime('%Y-%m-%d')
 
 cookpi_attributestmp = pd.read_excel(open('assets/Attributes/dashboard_data/cookpi_per_pi.xlsx', 'rb'),
               sheet_name='linktable')
-#KPIFramework = pd.DataFrame(
-#        pd.read_csv(r'assets/Attributes/dashboard_data/KPIFrameworkEnd.csv',sep=',', decimal='.',low_memory=False))
+filtered_df0 = cookpi_attributestmp[cookpi_attributestmp["Level_ID_present"] == "d_level0_id"]
+filtered_df1 = cookpi_attributestmp[cookpi_attributestmp["Level_ID_present"] == "d_level1_id"]
+filtered_df2 = cookpi_attributestmp[cookpi_attributestmp["Level_ID_present"] == "d_level2_id"]
+KPIName_listlevel0 = filtered_df0["KPIName"].tolist()
+KPIName_listlevel1 = filtered_df1["KPIName"].tolist()
+KPIName_listlevel2 = filtered_df2["KPIName"].tolist()
 
-#
-#KPIIDList =  cookpi_attributestmp['d_kpi_id'].unique()
-#
-#KPIFrameworklist =[]
-#
-#for i in KPIIDList:
-#    KPIFrameworkloop = KPIFrameworktmp[(KPIFrameworktmp.d_kpi_id ==i)]
-#    cookpi_attributes = cookpi_attributestmp[(cookpi_attributestmp.d_kpi_id == i)]
-#    sheettmp = cookpi_attributes[(cookpi_attributes.Level_ID_present =="d_level0_id")] 
-#    sheettmpl1 = cookpi_attributes[(cookpi_attributes.Level_ID_present =="d_level1_id")] 
-#    sheettmpl2 = cookpi_attributes[(cookpi_attributes.Level_ID_present =="d_level2_id")] 
-#    rename = dict(sheettmp.set_index('Level_ID')['Level_ID_present'].to_dict()) 
-#    renamel1 = dict(sheettmpl1.set_index('Level_ID')['Level_ID_present'].to_dict()) 
-#    renamel2 = dict(sheettmpl2.set_index('Level_ID')['Level_ID_present'].to_dict()) 
-#    rename_dict = {}
-#    rename_dict.update(rename)
-#    rename_dict.update(renamel1)
-#    rename_dict.update(renamel2)
-#    KPIFrameworkloop.rename(columns=rename_dict, inplace = True)
-#    KPIFrameworklist.append(KPIFrameworkloop)
-#
-#KPIFramework = pd.concat(KPIFrameworklist)
-
-#KPIFramework['d_level0_id']=KPIFramework['d_level0_id'].astype(int)
-#KPIFramework['d_level1_id']=KPIFramework['d_level1_id'].astype(int)
-#KPIFramework['d_level2_id']=KPIFramework['d_level2_id'].astype(int)
-
+unique_dss_tab = cookpi_attributestmp['dss_tab'].unique()
 d_kpi_tmp = pd.read_excel(open('assets/Attributes/dashboard_data/cookpi_per_pi.xlsx', 'rb'),
               sheet_name='d_kpi')
-              
-Project = pd.DataFrame(pd.read_excel(open('assets/Attributes/dashboard_data/cookpi_per_pi.xlsx', 'rb'),
-              sheet_name='Project'))
-Project["Filter1"].fillna("Overig", inplace = True)      
+attributeframetmp = []
 
-Blockchain = pd.DataFrame(pd.read_excel(open('assets/Attributes/dashboard_data/cookpi_per_pi.xlsx', 'rb'),
-              sheet_name='Blockchain'))
-Blockchain["Filter1"].fillna("Overig", inplace = True)   
+Projects = pd.read_excel(open('assets/Attributes/dashboard_data/cookpi_per_pi.xlsx', 'rb'),
+              sheet_name='Project')
+
+# Iterate through the sheets and read them into DataFrames
+for sheet_name in unique_dss_tab:
+    df = pd.DataFrame(pd.read_excel('assets/Attributes/dashboard_data/cookpi_per_pi.xlsx', sheet_name=sheet_name))
+    attributeframetmp.append(df)
+
+#you dont have to, so thats why we and frontera created seatless
+
+# Concatenate the DataFrames
+attributeframe = pd.concat(attributeframetmp)
+attributeframe1 = attributeframe.filter(regex=r'^(?!.*_ID$)')
+attributeframe1.fillna("Overig", inplace = True)  
+# Display the concatenated DataFrame      
 
 kpilevelcount = cookpi_attributestmp.groupby(['d_kpi_id'])['d_kpi_id'].count().reset_index(name="kpilevelcount")
+
 d_kpi = d_kpi_tmp[(d_kpi_tmp.live == 1)] #& (df.carrier == "B6")
 d_kpi = d_kpi.merge(kpilevelcount)
 
@@ -233,43 +254,50 @@ def AggregateNumDenom(Calculation):
 keysl0 = ['d_kpi_id', 'd_level0_id']
 keysl1 = ['d_kpi_id', 'd_level0_id', 'd_level1_id']
 ListGrain = ['int_day', 'int_month', 'int_quarter', 'int_year']
-dfl0polars = pl.read_csv(r"assets/Attributes/dashboard_data/dfl0.csv")
-dfl1polars = pl.read_csv(r"assets/Attributes/dashboard_data/dfl1.csv")
+#dfl0polars = pl.read_csv(r"assets/Attributes/dashboard_data/dfl0.csv")
+dfl0polars = pl.scan_parquet('assets/Attributes/dashboard_data/dfl0.parquet').collect()
+dfl0polars = dfl0polars.with_columns(dfl0polars["Period_int"].cast(pl.Utf8))
+#dfl1polars = pl.read_csv(r"assets/Attributes/dashboard_data/dfl1.csv")
+dfl1polars = pl.scan_parquet('assets/Attributes/dashboard_data/dfl1.parquet').collect()
+dfl1polars = dfl1polars.with_columns(dfl1polars["Period_int"].cast(pl.Utf8))
 dfl2polars = pl.read_csv(r"assets/Attributes/dashboard_data/dfl2.csv")
-
-"""
-dfl0 = pd.DataFrame(
-        pd.read_csv(r'assets/Attributes/dashboard_data/dfl0.csv',sep=',', decimal='.',low_memory=False))
-dfl0Compare = dfl0
-
-
-dfl1 = pd.DataFrame(
-
-        pd.read_csv(r'assets/Attributes/dashboard_data/dfl1.csv',sep=',', decimal='.',low_memory=False))
-dfl1Compare = dfl1
-
-
-dfl2 = pd.DataFrame(
-        pd.read_csv(r'assets/Attributes/dashboard_data/dfl2.csv',sep=',', decimal='.',low_memory=False))
-dfl2Compare = dfl2
-"""
+#dfl2polars = pl.scan_parquet('assets/Attributes/dashboard_data/dfl2.parquet').collect()
+#dfl2polars = dfl2polars.with_columns(dfl2polars["Period_int"].cast(pl.Utf8))
+dflmasterfrontpolars = pl.scan_parquet('assets/Attributes/dashboard_data/dflmasterfront.parquet').collect()
+dflmasterfrontpolars = dflmasterfrontpolars.with_columns(dflmasterfrontpolars["Period_int"].cast(pl.Utf8))
 
 GrainNameListtmp = pl.DataFrame(dfl0polars["Grain"].unique())
 tmp =GrainNameListtmp.rows(named=True)
 GrainNameList = [i['Grain'] for i in tmp] 
 #Level0NameList = dfl0['LevelName_0'].unique()
-Level0NameListtmp = pl.DataFrame(dfl0polars["LevelName_0"].unique())
+
+Level0NameListInitialShow = pl.DataFrame(dflmasterfrontpolars.filter(pl.col('InitialShow_0') ==1)["LevelName_0"].unique())
+Level0NameListtmp = pl.DataFrame(dflmasterfrontpolars["LevelName_0"].unique())
 tmp =Level0NameListtmp.rows(named=True)
 Level0NameList = [i['LevelName_0'] for i in tmp] 
+tmpIS =Level0NameListInitialShow.rows(named=True)
+Level0NameListIS = [i['LevelName_0'] for i in tmpIS] 
 
-Level1NameListtmp = pl.DataFrame(dfl1polars["LevelName_1"].unique())
+Level1NameListInitialShow = pl.DataFrame(dflmasterfrontpolars.filter(pl.col('InitialShow_1') ==1)["LevelName_1"].unique())
+Level1NameListtmp = pl.DataFrame(dflmasterfrontpolars["LevelName_1"].unique())
 tmp =Level1NameListtmp.rows(named=True)
 Level1NameList = [i['LevelName_1'] for i in tmp] 
+tmpIS =Level1NameListInitialShow.rows(named=True)
+Level1NameListIS = [i['LevelName_1'] for i in tmpIS] 
 
-Level2NameListtmp = pl.DataFrame(dfl2polars["LevelName_2"].unique())
+Level2NameListInitialShow = pl.DataFrame(dflmasterfrontpolars.filter(pl.col('InitialShow_2') == 1)["LevelName_2"].unique())
+Level2NameListtmp = pl.DataFrame(dflmasterfrontpolars["LevelName_2"].unique())
 tmp =Level2NameListtmp.rows(named=True)
 Level2NameList = [i['LevelName_2'] for i in tmp] 
+tmpIS =Level2NameListInitialShow.rows(named=True)
+Level2NameListIS = [i['LevelName_2'] for i in tmpIS] 
 
+print('Catergory0List boven')
+Catergory0Listtmp = pl.DataFrame(dflmasterfrontpolars["Filter1_0"].unique())
+tmp =Catergory0Listtmp.rows(named=True)
+Catergory0List = [i['Filter1_0'] for i in tmp] 
+print(Catergory0List)
+print('Catergory0List boven')
 #Level1NameList = dfl1['LevelName_1'].unique()
 #Level2NameList = dfl2['LevelName_2'].unique().tolist()
 
@@ -298,31 +326,24 @@ dfl2polars.drop_in_place("KPIType")
 dfl2polars.drop_in_place("Denominator_LP")
 dfl2polars.drop_in_place("Numerator_LP")
 
-#Level0Name = dfl0[['LevelEntitytype_0','LevelName_0','LevelColor_0','KPIName','Filter1_0']]
-#Level1Name = dfl1[['LevelEntitytype_1','LevelName_1','LevelColor_1','KPIName','Filter1_1']]
-#Level2Name = dfl2[['LevelEntitytype_2','LevelName_2','LevelColor_2','KPIName','Filter1_2']]
-#Category1List = Level0Name['Filter1_0'].unique()
+dflmasterfrontpolars.drop_in_place("LevelColor_2")
+dflmasterfrontpolars.drop_in_place("LevelEntitytype_2")
+dflmasterfrontpolars.drop_in_place("LevelDescription_2")
+dflmasterfrontpolars.drop_in_place("KPIType")
+dflmasterfrontpolars.drop_in_place("Denominator_LP")
+dflmasterfrontpolars.drop_in_place("Numerator_LP")
 
-Category1Listtmp = pl.DataFrame(dfl0polars["Filter1_0"].unique())
-tmp =Category1Listtmp.rows(named=True)
-Category1List = [i['Filter1_0'] for i in tmp] 
 
-#Level0Name = Level0Name.drop_duplicates()
-#Level1Name = Level1Name.drop_duplicates()
-#Level2Name = Level2Name.drop_duplicates()
-
-Level0NameColortmp = Level0Name.select(['LevelName_0','LevelColor_0'])
-Level0NameColor =Level0NameColortmp.rows(named=True)
-Level0NameColor = {level['LevelName_0']: level['LevelColor_0'] for level in Level0NameColor}
-#Level0NameColor = dict(Level0Name.set_index('LevelName_0')['LevelColor_0'].to_dict())
-Level1NameColortmp = Level1Name.select(['LevelName_1','LevelColor_1'])
-Level1NameColor =Level1NameColortmp.rows(named=True)
-Level1NameColor = {level['LevelName_1']: level['LevelColor_1'] for level in Level1NameColor}
-
-Level2NameColortmp = Level2Name.select(['LevelName_2','LevelColor_2'])
-Level2NameColor =Level2NameColortmp.rows(named=True)
-Level2NameColor = {level['LevelName_2']: level['LevelColor_2'] for level in Level2NameColor}
-
+colorframe = attributeframe1[~((attributeframe1['LevelColor'] == 'Overig') | (attributeframe1['Filter1Color'] == 'Overig'))]
+LevelNameColor = dict(zip(attributeframe1['LevelName'], attributeframe1['LevelColor']))
+FilterColor = dict(zip(attributeframe1['Filter1'], attributeframe1['Filter1Color']))
+#FilterColortmp2 = {k: v for k, v in FilterColortmp.items() if v}
+##Filter1Color = list({value for value in Filter1Colortmp.values()})
+#FilterColor = {}
+#for value, label in FilterColortmp2.items():
+#    if value not in FilterColor:
+#        FilterColor[value] = label
+#print(FilterColor)
 Level0attrtmp = Level0Name.select(['KPIName','LevelEntitytype_0'])
 Level0attr =Level0attrtmp.rows(named=True)
 Level0attr = {level['KPIName']: level['LevelEntitytype_0'] for level in Level0attr}
@@ -334,11 +355,6 @@ Level1attr = {level['KPIName']: level['LevelEntitytype_1'] for level in Level1at
 Level2attrtmp = Level2Name.select(['KPIName','LevelEntitytype_2'])
 Level2attr =Level2attrtmp.rows(named=True)
 Level2attr = {level['KPIName']: level['LevelEntitytype_2'] for level in Level2attr}
-
-#Level0attr = dict(Level0Name.set_index('KPIName')['LevelEntitytype_0'].to_dict())
-#Level1attr = dict(Level1Name.set_index('KPIName')['LevelEntitytype_1'].to_dict())
-#Level2attr = dict(Level2Name.set_index('KPIName')['LevelEntitytype_2'].to_dict())
-
 
 KPINameListCompare = d_kpi['KPIName'].unique()
 KPINameToID = dict(d_kpi.set_index('KPIName')['d_kpi_id'].to_dict())
@@ -356,16 +372,6 @@ GroupImage = d_kpi['GroupImage'].unique()
 KPICountPerGroup = dict(d_kpi.groupby('KPIGroup')['KPIName'].count().to_dict())
 KPILevelCountList = dict(d_kpi.set_index('KPIName')['kpilevelcount'].to_dict())
 
-#columnsdftotal = KPIFramework.columns.tolist()
-#columnsdftotal.remove('d_level0_id')
-#columnsdftotal.remove('d_level1_id')
-#columnsdftotal.remove('d_level2_id')
-#columnsdftotal.remove('Numerator')
-#columnsdftotal.remove('Denominator')
-#columnsdftotal.remove('Numerator_LP')
-#columnsdftotal.remove('Denominator_LP')
-#columnsdftotal.remove('Period_int_lp')
-
 kpicountout = [len(KPINameList)]
 kpigroupcountout = [len(KPIGroupList)]
 KPIattributes =[]
@@ -378,9 +384,6 @@ template_theme2 = "stylesheet2.css"
 css_directory = os.getcwd()
 stylesheets = ['stylesheet.css']
 static_css_route = '/static/'
-
-
-
 
 bgcolor = "#f3f3f1"
 template = {"layout": {"paper_bgcolor": bgcolor, "plot_bgcolor": bgcolor}}
@@ -446,20 +449,6 @@ Radiograin = html.Div([
  ],
 )
 
-
-Category1 = html.Div([
-    html.Div(dcc.Textarea(value='Category',id='Category1txt',className='h6')),
-    dcc.Dropdown(
-    id="Category1Select",
-    options=[{'label': html.Span([i],style={'background-color': ProjectOrange}), 'value': i}  for i in Category1List],#
-    multi=True,
-    optionHeight=1,
-    placeholder="Select a value",
-    value=Category1List,#'Derivatives',
-),
-],id="Category1"
-)
-
 #@app.callback(
 #    Output('Category1Select', 'value'),
 #    [Input('sweepl0filter', 'n_clicks'),
@@ -468,41 +457,95 @@ Category1 = html.Div([
 #
 #def reset_filter0(n_clicks):#,n_clicks2
 #    print('removefilterl0')
-#    filterl0 = [{'label': html.Span([i],style={'background-color': ProjectOrange}), 'value': i}  for i in Category1List]
+#    filterl0 = [{'label': html.Span([i],style={'background-color': ProjectOrange}), 'value': i}  for i in Catergory0List]
 #    print(filterl0)
 #    return filterl0
 
 
 Level0DD = html.Div([
-    html.Div(dcc.Textarea(value='Level zero filters',id='dropdown0',className='h6')),
+    html.Div(dcc.Textarea(id='dropdown0',className='h6')),
     dcc.Dropdown(
     id="Level0NameSelect",
-    options=[{'label': html.Span([i],style={'background-color': Level0NameColor[i]}), 'value': i} for i in Level0NameList],#, 'style': {'backgroundColor': Level0NameColor[i]}
+    options=[{'label': html.Span([i],style={'background-color': LevelNameColor[i]}), 'value': i} for i in Level0NameList],#, 'style': {'backgroundColor': LevelNameColor[i]}
     multi=True,
     optionHeight=1,
     placeholder="Select a value",
-    value=Level0NameList,
+    value=Level0NameListIS,
+    persistence=True,
+    persistence_type='local'  
 ),
 ],id="Level0DD"
 )
 
+@app.callback([
+              Output("Level0NameSelect", "value"),
+             ],             
+              Input('graph-level0compare', 'selectedData'),
+              Input({'type': 'sweepertje', 'index': ALL}, 'n_clicks'),
+              Input("Level0NameSelect", "value"),
+              Input('WalletSwitch','label'),
+              Input('button_group','value'),
+             # Input('pieorbar','data'),
+              Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'), prevent_initial_call=True,
+              background=True,
+              manager=background_callback_manager,
+             )
+def Level0Update(selecteddatal0bar,n_clicks,Level0NameSelect,WalletSwitch,button_group,reset):#,selecteddatal0,n_clicks,KPINameSelect,clickdatal0bar,clickdatal0
+    print('Level0Update')
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+    changed_id2 = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
+    selectedlistl0bar_list =[]
+    selectedlistl0bar_list.clear()   
+    if len(selecteddatal0bar['points'])==1:
+        pieorbar='pie'
+    else:
+        pieorbar='bar'
+    try:
+        if '{"index":"LevelName_0","type":"sweepertje"}' in changed_id2 and all(val is None for val in n_clicks) == False:
+            selectedlistl0bar_list.clear()
+            print('sweepertje')
+            for d in Level0NameList:
+                selectedlistl0bar_list.append(d)
+        elif 'WalletSwitch' in changed_id and WalletSwitch =='True':
+            print('WalletSwitch')
+            selectedlistl0bar_list.clear()
+            for d in Level0NameList:
+                selectedlistl0bar_list.append(d)
+        elif not changed_id2 == "button_group" and selecteddatal0bar['points'] and button_group == 'LevelName_0':
+            print('selecteddatal0bar')
+            selectedlistl0bar_list.clear()
+            for p in selecteddatal0bar['points']:
+                    selectedlistl0bar_list.append(p['label'])
+        elif "filter-dropdown-ex3-reset" in list(json.loads(changed_id2).values()):
+            print('reset')
+            selectedlistl0bar_list.clear()
+            for j in Level0NameList:
+                selectedlistl0bar_list.append(j)
+    except:
+        print('nietgelukt')
+    if len(selectedlistl0bar_list)>0:
+        print('returntje')
+        return selectedlistl0bar_list
+    else:
+        print(PreventUpdate)
+        raise dash.exceptions.PreventUpdate
 
 Level1DD = html.Div([
     html.Div(dcc.Textarea(value='Level one filters',id='dropdown1',className='h6')),
     dcc.Dropdown(
         id="Level1NameSelect",
-        options=[{'label': html.Span([i],style={'background-color': Level1NameColor[i]}), 'value': i} for i in Level1NameList],#, 'style': {'backgroundColor': Level0NameColor[i]}
+       # options=[{'label': html.Span([i],style={'background-color': LevelNameColor[i]}), 'value': i} for i in Level1NameList],
         multi=True,
         optionHeight=1,
         placeholder="Select a value",
-        value=Level1NameList,
+        value=Level1NameListIS,
 ),
 ],id="Level1DD"
 )
 
 @app.callback(
     Output('graphoveralltime', 'selectedData'),
-    [Input('sweepl1', 'n_clicks'),
+    [Input({'type': 'sweepertje', 'index': ALL}, 'n_clicks'),
      #Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'),
     ], session_check=False, prevent_initial_call=True
 )
@@ -511,27 +554,29 @@ def reset_clickDatal1(n_clicks):#,n_clicks2
     print('removefilterl1')
     return None
 
-
 @app.callback([
               Output("Level1NameSelect", "value"),
              ],             
-              Input('graph-level1compare', 'selectedData'),
-              Input('sweepl1', 'n_clicks'),
+              Input('graph-level0compare', 'selectedData'),
+              Input({'type': 'sweepertje', 'index': ALL}, 'n_clicks'),
               Input("Level1NameSelect", "value"),
+              Input('WalletSwitch','label'),
+              Input('button_group','value'),
               Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'), prevent_initial_call=True
              )
-def Level1Update(selecteddatal1bar,n_clicks,Level1NameSelect,reset):#,selecteddatal0,n_clicks,KPINameSelect,clickdatal0bar,clickdatal0
+def Level1Update(selecteddatal1bar,n_clicks,Level1NameSelect,WalletSwitch,button_group,reset):#,selecteddatal0,n_clicks,KPINameSelect,clickdatal0bar,clickdatal0
     print('Level1Update')
     selectedlistl1bar_list =[]
     selectedlistl1bar_list.clear()
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
     changed_id2 = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
     try:
-        if 'sweepl1' in changed_id:
+        if '{"index":"LevelName_1","type":"sweepertje"}' in changed_id2 and all(val is None for val in n_clicks) == False:
             selectedlistl1bar_list.clear()
+            print('sweepertje')
             for d in Level1NameList:
                 selectedlistl1bar_list.append(d)
-        elif selecteddatal1bar['points']:
+        elif not changed_id2 == "button_group" and selecteddatal1bar['points'] and button_group == 'LevelName_1':
             selectedlistl1bar_list.clear()
             for p in selecteddatal1bar['points']:
                 selectedlistl1bar_list.append(p['y'])
@@ -546,22 +591,21 @@ def Level1Update(selecteddatal1bar,n_clicks,Level1NameSelect,reset):#,selectedda
     else:
         raise dash.exceptions.PreventUpdate
 
-
 Level2DD = html.Div([
     html.Div(dcc.Textarea(value='Level two filters',id='dropdown2',className='h6')),
     dcc.Dropdown(
         id="Level2NameSelect",
-        options=[{'label': html.Span([i],style={'background-color': Level2NameColor[i]}), 'value': i} for i in Level2NameList],
+      #  options=[{'label': html.Span([i],style={'background-color': LevelNameColor[i]}), 'value': i} for i in Level2NameList],
         multi=True,
         placeholder="Select a value",
-        value=Level2NameList,
+        value=Level2NameListIS,
 ),
 ],id="Level2DD"
 )
 
 @app.callback(
     Output('graph-with-slider', 'selectedData'),
-    [Input('sweepl2', 'n_clicks'),
+    [Input({'type': 'sweepertje', 'index': ALL}, 'n_clicks'),
      #Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'),
     ], session_check=False, prevent_initial_call=True
 )
@@ -574,25 +618,28 @@ def reset_clickDatal2(n_clicks):#,n_clicks2
 @app.callback([
               Output("Level2NameSelect", "value"),
              ],             
-              Input('graph-level2compare', 'selectedData'),
-              Input('sweepl2', 'n_clicks'),
+              Input('graph-level0compare', 'selectedData'),
+              Input({'type': 'sweepertje', 'index': ALL}, 'n_clicks'),
               Input("Level2NameSelect", "value"),
+              Input('WalletSwitch','label'),
+              Input('button_group','value'),
               Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'), prevent_initial_call=True
              )
-def Level2Update(selecteddatal2bar,n_clicks,Level2NameSelect,reset):#,selecteddatal0,n_clicks,KPINameSelect,clickdatal0bar,clickdatal0
+def Level2Update(selecteddatal2bar,n_clicks,Level2NameSelect,WalletSwitch,button_group,reset):#,selecteddatal0,n_clicks,KPINameSelect,clickdatal0bar,clickdatal0
     print('Level2Update')
     selectedlistl2bar_list =[]
     selectedlistl2bar_list.clear()
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
     changed_id2 = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
     try:
-        if 'sweepl2' in changed_id:
+        if '{"index":"LevelName_2","type":"sweepertje"}' in changed_id2 and all(val is None for val in n_clicks) == False:
             selectedlistl2bar_list.clear()
+            print('sweepertje')
             for d in Level2NameList:
                 selectedlistl2bar_list.append(d)
         elif selecteddatal2bar['points']:
             selectedlistl2bar_list.clear()
-            for p in selecteddatal2bar['points']:
+            for p in selecteddatal2bar['points'] and button_group == 'LevelName_2':
                 selectedlistl2bar_list.append(p['y'])
         elif "filter-dropdown-ex3-reset" in list(json.loads(changed_id2).values()):
             selectedlistl2bar_list.clear()
@@ -603,8 +650,72 @@ def Level2Update(selecteddatal2bar,n_clicks,Level2NameSelect,reset):#,selectedda
     if len(selectedlistl2bar_list)>0:
         return selectedlistl2bar_list
     else:
-        return Level2NameSelect
-    
+        raise dash.exceptions.PreventUpdate
+
+
+
+
+Category1 = html.Div([
+    html.Div(dcc.Textarea(value='Category',id='Category1txt',className='h6')),
+    dcc.Dropdown(
+    id="Category1Select",
+    options=[{'label': html.Span([i],style={'background-color': buttoncolor}), 'value': i}  for i in Catergory0List],#
+    multi=True,
+    optionHeight=1,
+    placeholder="Select a value",
+    value=Catergory0List,#'Derivatives',
+),
+],id="Category1"
+)
+
+
+
+@app.callback([
+              Output("Category1Select", "value"),
+             ],             
+              Input('graph-level0compare', 'selectedData'),
+              Input({'type': 'sweepertje', 'index': ALL}, 'n_clicks'),
+              Input("Category1Select", "value"),
+              Input('WalletSwitch','label'),
+              Input('button_group','value'),
+              Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'), prevent_initial_call=True,
+             )
+def Category1Update(selecteddatal0bar,n_clicks,Category1Select,WalletSwitch,button_group,reset):#,selecteddatal0,n_clicks,KPINameSelect,clickdatal0bar,clickdatal0
+    print('Category1Selectupdate')
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+    changed_id2 = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
+    selectedlistl0bar_list =[]
+    selectedlistl0bar_list.clear()        
+    try:
+        if '{"index":"SweepFilter1_0","type":"sweepertje"}' in changed_id2 and all(val is None for val in n_clicks) == False:
+            selectedlistl0bar_list.clear()
+            print('sweepertje')
+            for d in Catergory0List:
+                selectedlistl0bar_list.append(d)
+        elif 'WalletSwitch' in changed_id and WalletSwitch =='True':
+            print('WalletSwitch')
+            selectedlistl0bar_list.clear()
+            for d in Catergory0List:
+                selectedlistl0bar_list.append(d)
+        elif not changed_id2 == "button_group" and selecteddatal0bar['points'] and button_group == 'Filter1_0':
+            print('selecteddatal0bar')
+            selectedlistl0bar_list.clear()
+            for p in selecteddatal0bar['points']:
+                selectedlistl0bar_list.append(p['y'])
+        elif "filter-dropdown-ex3-reset" in list(json.loads(changed_id2).values()):
+            print('reset')
+            selectedlistl0bar_list.clear()
+            for j in Catergory0List:
+                selectedlistl0bar_list.append(j)
+    except:
+        print('nietgelukt')
+    if len(selectedlistl0bar_list)>0:
+        print('returntje')
+        return selectedlistl0bar_list
+    else:
+        print(PreventUpdate)
+        raise dash.exceptions.PreventUpdate
+
 
 kpigrouplistinput =[]
 kpigrouplistinput3 =[]
@@ -662,75 +773,6 @@ Perioddropdown = html.Div([
 ],
     className="pretty_container",
 )
-
-
-#navbarlist =[]
-#navbarlist.append(
-#        f"""html.Li(html.A([
-#                html.I('category',className='material-icons icon'),
-#                html.Span('All categories',className='text nav-text')],href='#',id='kpigroup0')
-#                ,className='nav-link')"""
-#)
-#
-#for i in range(kpigroupcountout[0]):
-#    numbertmp= i
-#    numberidtmp= i+1
-#    GroupImage2 = GroupImage[numbertmp]
-#    KPIGroupList2 = KPIGroupList[numbertmp]
-#    number=str(numbertmp)
-#    numberid=str(numberidtmp)
-#    navbarlist.append(
-#        f"""html.Li(html.A([
-#                html.I('{GroupImage2}',className='material-icons icon'),
-#                html.Span('{KPIGroupList2}',className='text nav-text')],href='#',id='kpigroup{numberidtmp}')
-#                ,className='nav-link')"""
-#    )
-#navbarlist2=','.join(navbarlist)
-#
-#navbar = html.Nav([html.Header([
-#                    html.Div([
-#                        html.Div(Radiograin,className="col-sm-12 col-md-12 col-lg-12 col-xl-12 text logo-text")
-#                    ],className="image-text"),
-#                    html.I("chevron_right",className='material-icons toggle',id='Opennavbar')
-#                    ]),
-#                    html.Div([
-#                        html.Div([
-#                          html.Div(html.Span("Performace category",className='text nav-text')),
-#                          html.Ul(eval(navbarlist2)
-#                            ,className='menu-links'
-#                            )
-#                        ],className='menu'
-#                    ),
-#                    html.Div([
-#                     html.Div([
-#                          html.Div(html.Span("Performace view",className='text nav-text')),
-#                          html.Ul([
-#                            html.Li(html.A(
-#                                [html.I("lan",className='material-icons icon'),
-#                                 html.Span("Drill down",className='text nav-text')
-#                                ],href='/drilldown',id='NavItem1'
-#                                ),className='nav-link')
-#                            ,
-#                            html.Li(html.A(
-#                                [html.I("balance",className='material-icons icon'),
-#                                 html.Span("Compare",className='text nav-text')
-#                                ],href='/compare',id='NavItem2'
-#                                ),className='nav-link'
-#                            ),
-#                            html.Li(html.A(
-#                                [html.I("bolt",className='material-icons icon'),
-#                                html.Span("Predict",className='text nav-text')
-#                                ],href='/predict',id='NavItem3'
-#                                ),className='nav-link'
-#                            ),
-#                    ],className='menu-links'
-#                            ),
-#                    ],className='menu'),
-#                    ])
-#                    ],className='menu-bar'),  
-#                    ],className="sidebar close",id='nav')
-
-
 Totaalaggregaatswitch = html.Div([
     html.Div('Compare with total ',className='h6'),
     daq.BooleanSwitch(
@@ -753,6 +795,23 @@ CumulativeSwitch = html.Div([
     )
 ])
 
+WalletSwitch = daq.BooleanSwitch(
+        id='WalletSwitch',
+        on=False,
+        color=ProjectOrange,
+        label="Dark",
+        labelPosition="left",
+    )
+
+CompetitorSwitch = daq.BooleanSwitch(
+        id='CompetitorSwitch',
+        on=False,
+        color=ProjectOrange,
+        label="Dark",
+        labelPosition="left",
+    )
+
+
 TargetSwitch = html.Div([
     html.Div('Target ',className='h6'),
     daq.BooleanSwitch(
@@ -760,7 +819,7 @@ TargetSwitch = html.Div([
         on=False,
         color=ProjectOrange,
         label="Dark",
-        labelPosition="left",
+        labelPosition="left",        
     )
 ])
 
@@ -768,6 +827,17 @@ PercentageTotalSwitch = html.Div([
     html.Div('Percentage of total ',className='h6'),
     daq.BooleanSwitch(
         id='PercentageTotalSwitch',
+        on=True,
+        color=ProjectOrange,
+        label="Dark",
+        labelPosition="left",
+    )
+])
+
+PercentageTotalSwitchNoTime = html.Div([
+    html.Div('Percentage of total no time',className='h6'),
+    daq.BooleanSwitch(
+        id='PercentageTotalSwitchNoTime',
         on=False,
         color=ProjectOrange,
         label="Dark",
@@ -812,7 +882,7 @@ fade = html.Div([
 @app.callback(
     Output("fade-transition", "is_open"),
     [Input("fade-transition-button", "n_clicks")],
-    [State("fade-transition", "is_open")],
+    [State("fade-transition", "is_open")],prevent_initial_callback=True
 )
 def toggle_collapse(n, is_open):
     if n:
@@ -1151,7 +1221,7 @@ def update_KPIDescription(KPISelect):
 
 @app.callback(
     dash.dependencies.Output('Totaalswitch', 'label'),
-    [dash.dependencies.Input('Totaalswitch', 'on')])
+    [dash.dependencies.Input('Totaalswitch', 'on')],prevent_initial_callback=True)
 
 def update_output(on):
     return format(on)
@@ -1159,58 +1229,53 @@ def update_output(on):
 
 @app.callback(
     dash.dependencies.Output('CumulativeSwitch', 'label'),
-    [dash.dependencies.Input('CumulativeSwitch', 'on')])
+    [dash.dependencies.Input('CumulativeSwitch', 'on')],prevent_initial_callback=True)
 
 def update_output(on):
     return format(on)
 
 @app.callback(
     dash.dependencies.Output('TargetSwitch', 'label'),
-    [dash.dependencies.Input('TargetSwitch', 'on')])
+    [dash.dependencies.Input('TargetSwitch', 'on')],prevent_initial_callback=True)
 
 def update_output(on):
     return format(on)
 
+@app.callback(
+    dash.dependencies.Output('CompetitorSwitch', 'label'),
+    [dash.dependencies.Input('CompetitorSwitch', 'on')],prevent_initial_callback=True)
+
+def update_output(on):
+    return format(on)
+
+@app.callback(
+    dash.dependencies.Output('WalletSwitch', 'label'),
+    [dash.dependencies.Input('WalletSwitch', 'on')],prevent_initial_call=True)
+
+def update_output(on):
+    return format(on)
 
 @app.callback(
     dash.dependencies.Output('PercentageTotalSwitch', 'label'),
-    [dash.dependencies.Input('PercentageTotalSwitch', 'on')])
+    [dash.dependencies.Input('PercentageTotalSwitch', 'on')],prevent_initial_callback=True)
 
 def update_output(on):
     return format(on)
 
 @app.callback(
-    dash.dependencies.Output('ShowValueSwitch', 'label'),
-    [dash.dependencies.Input('ShowValueSwitch', 'on')])
+    dash.dependencies.Output('PercentageTotalSwitchNoTime', 'label'),
+    [dash.dependencies.Input('PercentageTotalSwitchNoTime', 'on')],prevent_initial_callback=True)
 
 def update_output(on):
     return format(on)
 
 
-@app.callback([Output('Level1DD','style'),
-              Output('Level2DD','style')],
-             [Input('tabsdrilldown','active_tab'),
-              #Input('Tab1',component_property='disabled'),
-              #Input('Tab2',component_property='disabled')
-              ])
-def definefilterlevel(tabsdrilldown):
-    if tabsdrilldown == 'tab-0':
-        msg0 = {'display': 'block'}
-        msg1 = {'display': 'none'}
-        msg2 = {'display': 'none'}
-    elif tabsdrilldown == 'tab-1':
-        msg0 = {'display': 'block'}
-        msg1 = {'display': 'block'}
-        msg2 = {'display': 'none'}
-    elif tabsdrilldown == 'tab-2':
-        msg0 = {'display': 'block'}
-        msg1 = {'display': 'block'}
-        msg2 = {'display': 'block'}
-    else:
-        msg0 = {'display': 'block'}
-        msg1 = {'display': 'none'}
-        msg2 = {'display': 'none'}
-    return msg1,msg2
+@app.callback(
+    dash.dependencies.Output('ShowValueSwitch', 'label'),
+    [dash.dependencies.Input('ShowValueSwitch', 'on')],prevent_initial_callback=True)
+
+def update_output(on):
+    return format(on)
 
 
 ######################################################################################################################
@@ -1218,21 +1283,62 @@ def definefilterlevel(tabsdrilldown):
 ################################################----tabs aanmaken----###############################################
 ######################################################################################################################
 ######################################################################################################################
+button_group = html.Div(
+    [
+        dbc.RadioItems(
+            id="button_group",
+            className="btn-group",
+            inputClassName="btn-check",
+            labelClassName="btn-tab-top btn-outline-primary-tabs-top",
+            labelCheckedClassName="active",
+            options=[
+                {"label": "LevelName_0", "value": 'LevelName_0'},
+                {"label": "LevelName_1", "value": 'LevelName_1'},
+                {"label": "LevelName_2", "value": 'LevelName_2'},
+                {"label": "Filter1_0", "value": "Filter1_0"},
+            ],
+            value='LevelName_0'
+        ),
+        html.Div(id="output"),
+    ],
+    className="radio-group",
+)
+
+
+button_group1 = html.Div(
+    [
+        dbc.RadioItems(
+            id="button_group1",
+            className="btn-group",
+            inputClassName="btn-check",
+            labelClassName="btn-tab-bottom btn-outline-primary-tabs-top",
+            labelCheckedClassName="active",
+            #options=[
+            #    {"label": "LevelName_0", "value": 'LevelName_0'},
+            #    {"label": "LevelName_1", "value": 'LevelName_1'},
+            #    {"label": "LevelName_2", "value": 'LevelName_2'},
+            #    {"label": "Filter1_1", "value": "Filter1_1"},
+            #],
+            value='LevelName_0',
+            style={'right': '0px','margin-bottom':'2px'}
+
+        ),
+        html.Div(id="outputattributecolor"),
+    ],
+    className="radio-group",
+)
 
 tabs = html.Div([
-    dbc.Tabs(children=
-    [
-    dbc.Tab(children=[#html.I("delete_sweep",n_clicks=0,id='shiftbutton',className="material-icons md-48",style={'position':'absolute','top':'1px','right':'12px','z-index': '1'}),
-    dbc.CardBody(
+    html.Div(
         dbc.Row([
-        dbc.Col(dbc.Spinner(children=[#,spinner_class_name='loading'
+        dbc.Col(dls.Hash(#,spinner_class_name='loading'
             dcc.Graph(id='graphlevel0',
                       config=dict(
                         modeBarButtonsToAdd =  ['customButton'],
                         modeBarButtonsToRemove = ['pan', 'lasso2d', 'select', 'zoom2d', 'zoomIn', 'zoomOut','toImage','resetScale',
                                                       'hoverCompareCartesian', 'logo', 'autoScale'],
                         displaylogo = False,
-                        scrollZoom = True,
+                        #scrollZoom = True,
                         toImageButtonOptions = dict(
                             width =550,
                             height = 300,
@@ -1241,16 +1347,21 @@ tabs = html.Div([
                             filename = 'Plotlygraph'),
                       ),
                       className="row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12 pretty_graph"
-                      )],spinnerClassName="loader1"),className="col-12 col-sm-12 col-md-12 col-lg-8 col-xl-8 empty_tab"
+                      ),color=ProjectOrange,
+                        speed_multiplier=2,
+                        size=100,
+                        #debounce=1000
+                      ),className="col-12 col-sm-12 col-md-12 col-lg-7 col-xl-7 empty_tab"
         ),
         dbc.Col(html.Div([
-            dbc.Spinner(children=[dcc.Graph(id='graph-level0compare',
+            dls.Hash(html.Div([dcc.Graph(id='graph-level0compare',
+                      clear_on_unhover=True,
                       config=dict(
                           modeBarButtonsToAdd=['customButton'],
                           modeBarButtonsToRemove=['pan','zoom2d','select2d', 'lasso2d', 'zoomIn', 'zoomOut','toImage','resetScale',
                                                   'hoverCompareCartesian', 'logo', 'autoScale'],
                           displaylogo=False,
-                          scrollZoom=True,
+                          #scrollZoom=True,
                           toImageButtonOptions=dict(
                               width=500,
                               height=300,
@@ -1259,103 +1370,20 @@ tabs = html.Div([
                               filename='Plotlygraph'),
                       ),
                       style={'overflow': 'auto'}
-                      )])
+                      ),
+                    ]),
+                      color=ProjectOrange,
+                        speed_multiplier=2,
+                        size=100,
+                        #debounce=1000
+                        )
         ],className="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 pretty_graph2"
-        ),className="col-12 col-sm-12 col-md-12 col-lg-4 col-xl-4 empty_tab2"
+        ),className="col-12 col-sm-12 col-md-12 col-lg-5 col-xl-5 empty_tab2"
         )
         ],className="row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12"
-        ),className="row-cols-sm-12 row-cols-md-12 row-cols-lg-11 row-cols-xl-11 pretty_tab"
-    )]
-,id="Tab0drilldown"),
-    dbc.Tab(children=[dbc.CardBody(
-        dbc.Row(
-        [dbc.Col(dbc.Spinner(children=[
-            dcc.Graph(id='graphoveralltime',
-                      config=dict(
-                          modeBarButtonsToAdd=['customButton'],
-                          modeBarButtonsToRemove=['pan', 'lasso2d', 'select', 'zoom2d', 'zoomIn', 'zoomOut','toImage','resetScale',
-                                                  'hoverCompareCartesian', 'logo', 'autoScale'],
-                          displaylogo=False,
-                          scrollZoom=True,
-                          toImageButtonOptions=dict(
-                              width=550,
-                              height=300,
-                              format='png',
-                              scale=10,
-                              filename='Plotlygraph'),
-                      ),
-                      className="row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12 pretty_graph"
-                      )],spinnerClassName="loader1"),className="col-12 col-sm-12 col-md-12 col-lg-8 col-xl-8 empty_tab"
-        ),
-        dbc.Col(html.Div([
-            dbc.Spinner(children=[dcc.Graph(id='graph-level1compare',
-                      config=dict(
-                          modeBarButtonsToAdd=['customButton'],
-                          modeBarButtonsToRemove=['pan','select2d', 'lasso2d', 'select', 'zoom2d', 'zoomIn', 'zoomOut','toImage','resetScale',
-                                                  'hoverCompareCartesian', 'logo', 'autoScale'],
-                          displaylogo=False,
-                          scrollZoom=True,
-                          toImageButtonOptions=dict(
-                              width=500,
-                              height=300,
-                              format='png',
-                              scale=10,
-                              filename='Plotlygraph'),
-                      )
-                      )])
-        ],className="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 pretty_graph2"
-        ),className="col-12 col-sm-12 col-md-12 col-lg-4 col-xl-4 empty_tab2"
-        )
-        ],className="row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12"
-        ),className="row-cols-sm-12 row-cols-md-12 row-cols-lg-11 row-cols-xl-11 pretty_tab"
-    )
-    ]
-,id="Tab1drilldown"),
-    dbc.Tab(children=[dbc.CardBody(
-        dbc.Row([
-        dbc.Col(dbc.Spinner(children=[
-            dcc.Graph(id='graph-with-slider',
-                      config=dict(
-                          modeBarButtonsToAdd=['customButton'],
-                          modeBarButtonsToRemove=['pan', 'lasso2d', 'select', 'zoom2d', 'zoomIn', 'zoomOut','toImage','resetScale',
-                                                  'hoverCompareCartesian', 'logo', 'autoScale'],
-                          displaylogo=False,
-                          scrollZoom=True,
-                          toImageButtonOptions=dict(
-                              width=550,
-                              height=300,
-                              format='png',
-                              scale=10,
-                              filename='Plotlygraph'),
-                      ),
-                      className="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 pretty_graph",
-                      )]),className="col-12 col-sm-12 col-md-12 col-lg-8 col-xl-8 empty_tab",
-        ),
-        dbc.Col(dbc.Spinner(children=[dcc.Graph(id='graph-level2compare',
-                          config=dict(
-                              modeBarButtonsToAdd=['customButton'],
-                              modeBarButtonsToRemove=['pan','select2d', 'lasso2d', 'select', 'zoom2d', 'zoomIn', 'zoomOut','toImage','resetScale',
-                                                      'hoverCompareCartesian', 'logo', 'autoScale'],
-                              displaylogo=False,
-                              scrollZoom=True,
-                              toImageButtonOptions=dict(
-                                  width=500,
-                                  height=300,
-                                  format='png',
-                                  scale=10,
-                                  filename='Plotlygraph'),
-                          ),
-                     className="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12  pretty_graph2"
-                    )]),className="col-12 col-sm-12 col-md-12 col-lg-4 col-xl-4 empty_tab2"
-    ),
-    ],className="row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12"
-    ),className="row-cols-sm-12 row-cols-md-12 row-cols-lg-11 row-cols-xl-11 pretty_tab"
-)],id="Tab2drilldown"),
-            ],id="tabsdrilldown",active_tab="tab-0")
-])
-
-
-
+        ),className="row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12 pretty_tab"
+,id="Tab0drilldown")
+],id="tabsdrilldown")
 
 tabscompare = dbc.Tabs(
     [dbc.Tab(label="Compare two",children=[dbc.CardBody(
@@ -1368,7 +1396,7 @@ tabscompare = dbc.Tabs(
                           'modeBarButtonsToRemove': ['pan', 'lasso2d', 'select', 'zoom2d', 'zoomIn', 'zoomOut','toImage','resetScale',
                                                      'hoverCompareCartesian', 'logo', 'autoScale'],
                           'displaylogo': False,
-                          'scrollZoom': True,
+                         # 'scrollZoom': True,
                       }, className="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 pretty_graph",
                       )]), className="col-12 col-sm-11 col-md-11 col-lg-12 col-xl-12 empty_tab2",
         ),
@@ -1387,7 +1415,7 @@ tabscompare = dbc.Tabs(
                           'modeBarButtonsToRemove': ['pan', 'lasso2d', 'select', 'zoom2d', 'zoomIn', 'zoomOut','toImage','resetScale',
                                                      'hoverCompareCartesian', 'logo', 'autoScale'],
                           'displaylogo': False,
-                          'scrollZoom': True,
+                          #'scrollZoom': True,
                       }, className="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 pretty_graph",
                       )]), className="col-12 col-sm-11 col-md-11 col-lg-12 col-xl-12 empty_tab2",
         ),
@@ -1417,24 +1445,36 @@ tabscontainer = html.Div(
 ######################################################################################################################
 
 app.layout = html.Div([
+    html.Div([
+    dbc.Col([WalletSwitch], className="col-sm-12 col-md-12 col-lg-12 col-xl-12"),
+    dbc.Button("Connect wallet", id="toggle-buttonn", className="mb-3 form-check-label btn btn-outline-primary active"),
+    dbc.Modal(
+        [
+            dbc.ModalHeader("Modal Title"),
+            dbc.ModalBody(
+                html.Div([
+                dcc.Input(id="input-field", type="text", placeholder="Enter value..."),
+                dbc.Col([CompetitorSwitch], className="col-sm-12 col-md-12 col-lg-12 col-xl-12"),
+                ])
+            ),
+            dbc.ModalFooter(
+                dbc.Button("Close", id="close-buttonn", className="ml-auto")
+            ),
+        ],
+        id="modalwallet",
+        is_open=False,
+    )
+    ],style={'position':'fixed','top':'2%','right':'12px','z-index': '1','display': 'flex','flex-direction': 'column'}),
     html.I("chevron_right",className='material-icons toggle-right',id='Opennavbar-right'),#html.I("filter_alt", id='dropdowncontrol', className="material-icons filtericon", n_clicks=0),
     html.Div([
-        html.I("filter_alt_off",id='sweepl0filter',className="material-icons md-48"),
-       # html.I("filter_alt_off",id='sweepl1',className="material-icons md-48"),
-       # html.I("filter_alt_off",id='sweepl2',className="material-icons md-48")
+        html.I("filter_alt",id='sweepl0filter',className="material-icons md-48"),
     ],style={'position':'fixed','top':'44%','right':'12px','z-index': '1','display': 'flex','flex-direction': 'column'}),
-    html.Div([html.I("settings_suggest",id='open-settings',className="material-icons",n_clicks=0,style={'position':'fixed'}),
-              html.I("chevron_right",className='material-icons toggle-bottom',id='Opennavbar-bottom',style={'position':'fixed'})
-    ],style={'position':'fixed','top': '96.7%','right': '50%','z-index': '1'}),
     html.Div([
-        html.I("filter_list_off",id='sweepl0',className="material-icons md-48"),
-        html.I("filter_list_off",id='sweepl1',className="material-icons md-48"),
-        html.I("filter_list_off",id='sweepl2',className="material-icons md-48")
-    ],style={'position':'fixed','top':'52%','right':'12px','z-index': '1','display': 'flex','flex-direction': 'column'}),
+    ],id='sweepers',style={'position':'fixed','top':'52%','right':'12px','z-index': '1','display': 'flex','flex-direction': 'column'}),
     #dcc.Graph(id='animatedbar'),
     dbc.Row([
         html.Div(id='output-container-date-picker-range',
-                 style={'margin-top': '12px'},
+                 style={'margin-top': '12px','display':'none'},
                  className='h7'),
         dbc.Modal([
             dbc.ModalBody(children=[
@@ -1460,16 +1500,52 @@ app.layout = html.Div([
     dbc.Row([
             dbc.Col(
             [html.Div(Perioddropdown,className="col-sm-2 col-md-2 col-lg-2 col-xl-2",style={'display': 'none'}),
-            html.Div(className="col-sm-9 col-md-9 col-lg-9 col-xl-9",style={"margin": '0 auto'},id='cardsid'),
+            dls.Hash(html.Div(className="col-sm-9 col-md-9 col-lg-9 col-xl-9",style={"margin": '0 auto'},id='cardsid')
+                        ,color=ProjectOrange,
+                        speed_multiplier=2,
+                        size=100),
             html.Div(id='container-ex3', children=[])
             # html.Div(className="col-sm-9 col-md-9 col-lg-9 col-xl-9"
             #    ,style={"margin": '0 auto'},id='cardsid')
             ]),
         ]),
 
-    dbc.Row([
-            dbc.Col([
-            dbc.Modal(
+    dbc.Row(children=[
+            html.Div(children=[
+                     html.Div([html.I("settings_suggest",id='open-settings',className="material-icons",n_clicks=0),
+                                ],style={'position':'relative','z-index': '1'}),
+                     dbc.Row([html.Div([button_group],id='button_group00',style={'position':'relative'})],className="col-sm-12 col-md-12 col-lg-12 col-xl-12"),
+                     tabs,
+                     dbc.Row([html.Div([button_group1],id='button_group11',style={'right':'0px','position':'absolute'})],style={'margin-bottom':'20px'},className="col-sm-12 col-md-12 col-lg-12 col-xl-12"),
+                     ],
+                     id="tabscontainer"
+                     ,style={'min-height': 'auto'}
+                     ),
+            html.Div('test',id="graphcontainer"
+                     ,style={'display': 'none'}),
+            html.Div([    
+                dbc.Button(
+                    children=[
+                html.I("keyboard_double_arrow_down",className="material-icons md-48")
+                ],
+                id="collapse-button",
+                className="mb-3",
+                n_clicks=0,
+                style={'right': '50%','bottom': '2%','position':'fixed'}
+                ),   
+                dbc.Collapse(
+                dbc.Card(dbc.CardBody(html.Div(id="graphcontainerOutput"
+                         ,style={'min-height': 'auto'})
+                         ),style={"background-color":"transparent"}),
+                id="collapse",
+                is_open=False,
+                )
+            ]),
+            
+            ],className="col-sm-11 col-md-11 col-lg-10 col-xl-10 pretty_bigtab",style={"margin": '0 auto','margin-top':'20px','min-height': 'auto','display': 'block'} 
+    ),
+    
+    dbc.Modal(
                 [dbc.ModalHeader(dbc.ModalTitle("Graph settings", className='h5'),style={'border-bottom': '0px'}),
                 dbc.ModalBody(children=[
                         dbc.Col([Radiograin],className="col-sm-12 col-md-12 col-lg-12 col-xl-12",style={'margin-bottom': '46px'}),
@@ -1477,46 +1553,34 @@ app.layout = html.Div([
                         dbc.Col([CumulativeSwitch], className="col-sm-12 col-md-12 col-lg-12 col-xl-12"),
                         dbc.Col([TargetSwitch], className="col-sm-12 col-md-12 col-lg-12 col-xl-12"),
                         dbc.Col([PercentageTotalSwitch], className="col-sm-12 col-md-12 col-lg-12 col-xl-12"),
+                        dbc.Col([PercentageTotalSwitchNoTime], className="col-sm-12 col-md-12 col-lg-12 col-xl-12"),
                         dbc.Col([ShowValueSwitch], className="col-sm-12 col-md-12 col-lg-12 col-xl-12"),
                     ]),
                 dbc.ModalFooter(
                     dbc.Button(
-                        "Close", id="close-settings", className="ms-auto", n_clicks=0
+                        "Close", id="close-settings", className="form-check-label btn btn-outline-primary active", n_clicks=0
                     ),style={'border-top': '0px'}
                 ),
                 ],
                 id="modal",
                 is_open=False,
             ),
-            html.Div(tabs,
-                     id="tabscontainer"
-                     ,style={'min-height': 'auto'}),
-            html.Div(tabscompare,
-                     id="tabscompare"
-                     ),
-                    ],className="col-sm-11 col-md-11 col-lg-10 col-xl-10 pretty_bigtab",style={"margin": '0 auto','margin-top':'20px'}
-                    ),
-            
-          #  html.Div(KPI_Group,className="col-sm-11 col-md-11 col-lg-4 col-xl-3"),
-
-    ],style={'min-height': 'auto'}
-    ),
     html.Div(html.Nav(id='navbar')),
-    #html.Div(navbarfilters),
     html.Span(html.I(''),style={'margin-top': '5em','display': 'block'}),
-    #dcc.Store(id='dff0',data=dfl0json,storage_type='memory'),
-    #dcc.Store(id='dff1',data=dfl1json,storage_type='memory'),
-    #dcc.Store(id='dff2',data=dfl2json,storage_type='memory'),
+    dcc.Store(id='mastersetkpifiltered'),
+    dcc.Store(id='mastersetkpifilterednotime'),
     dcc.Store(id='dfl0'),
     dcc.Store(id='dfl1'),
     dcc.Store(id='dfl2'),
-    dcc.Store(id='dfl0notime'),
-    dcc.Store(id='dfl1notime'),
-    dcc.Store(id='dfl2notime'),
     dcc.Store(id='dffcomparefilter'),
     dcc.Store(id='dflcomparekpi'),
     dcc.Store(id='selectedkpigroup'),
     dcc.Store(id='dfgroups'),
+    dcc.Store(id='coinsinwallet'),
+    dcc.Store(id='coinsinwalletComp'),
+    dcc.Store(id='contract_addresses_internal_toproject'),
+    dcc.Store(id='daterange'),
+    dcc.Store(id='pieorbar'),
     WindowBreakpoints(
             id="breakpoints",
             # Define the breakpoint thresholds
@@ -1538,67 +1602,121 @@ app.layout = html.Div([
 ],
 )
 
-#app.clientside_callback(
-#    """
-#    function() {
-#        // Create a new KeyboardEvent object
-#        var event = new KeyboardEvent('keydown', {
-#            key: 'Shift',
-#            code: 'ShiftLeft',
-#            which: 16,
-#            shiftKey: true,
-#            bubbles: true
-#        });
-#
-#        // Dispatch the KeyboardEvent on the window
-#        window.dispatchEvent(event);
-#    }
-#    """,
-#    Output('output', 'children'),
-#    [Input('shiftbutton', 'n_clicks')]
-#)
 
+@app.callback(
+    Output("collapse", "is_open"),
+    [Input("collapse-button", "n_clicks")],
+    [State("collapse", "is_open")],
+)
+def toggle_collapse(n, is_open):
+    if n:
+        return not is_open
+    return is_open
+
+
+@app.callback([Output('daterange','data') 
+                ],
+                Input('GrainSelect', 'value'),
+                Input('graphlevel0', 'relayoutData'),
+                [State('daterange','data')]
+              #  prevent_initial_callback=True
+            )
+def updatestartdt(GrainSelect,relayoutdata1,daterangestate):
+    print('execute updatestartdt')
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+    #datefromtmp.clear()
+    #datetotmp.clear()
+    daterange=[]
+    daterange.append('2023-01-01')
+    daterange.append('2023-09-01')
+    if not daterangestate:
+        print('notdaterange')
+        return daterange
+    else:   
+        if changed_id == 'GrainSelect.value':
+            daterange.clear()
+            if GrainSelect=='D':
+                daterange.append('2023-06-01')
+                daterange.append('2023-09-01')
+                return daterange
+            elif GrainSelect=='M':
+                daterange.append('2023-01-01')
+                daterange.append('2023-09-01')
+                return daterange
+            elif GrainSelect=='Q':
+                daterange.append('2022-01-01')
+                daterange.append('2023-09-01')
+                return daterange
+            elif GrainSelect=='Y':
+                daterange.append('2020-01-01')
+                daterange.append('2023-12-31')
+                return daterange
+        elif changed_id == 'graphlevel0.relayoutData':
+            if relayoutdata1 == {'autosize': True} or relayoutdata1 is None:
+                print('prventer')
+                raise PreventUpdate
+            elif 'yaxis.range' in relayoutdata1:
+                raise PreventUpdate
+            else:
+                print('xaxisss')
+                daterange.clear()
+                if 'xaxis.range[0]' in relayoutdata1:
+                    daterange.append(relayoutdata1['xaxis.range[0]'][0:10])
+                    daterange.append(relayoutdata1['xaxis.range[1]'][0:10])
+                    return daterange
+                elif 'xaxis.range' in relayoutdata1:
+                    daterange.append(relayoutdata1['xaxis.range'][0])
+                    daterange.append(relayoutdata1['xaxis.range'][1])
+                    return daterange
+                else:
+                    return daterange
+        else:
+            return daterange
+
+
+@app.callback(
+    Output("modalwallet", "is_open"),
+    [Input("toggle-buttonn", "n_clicks"), Input("close-buttonn", "n_clicks")],
+    [State("modalwallet", "is_open")],prevent_initial_callback=True
+)
+def toggle_modal(toggle_clicks, close_clicks, is_open):
+    if toggle_clicks or close_clicks:
+        return not is_open
+    return is_open
 
 KPIGroup =[]
 
 @app.callback([
              Output("KPIGroupSelect", 'value'),
              ],
-            Input({'type': 'kpigroup-ex3', 'index': ALL}, 'n_clicks'), prevent_initial_call=True
+            [Input({'type': 'kpigroup-ex3', 'index': ALL}, 'n_clicks')],
+            #prevent_initial_call=True
            # eval(kpigrouplistinput3[0])
-            )
+            prevent_initial_call=True)
 def KPIgrouplighter(n_clicks):#*args
     print('execute KPIgrouplighter')
-    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
-    valuelist =[]
-    try:
-        valuelisttmp = list(json.loads(changed_id).values()) 
-        valuelist.clear()
-        valuelist.append(valuelisttmp[0])
-    except json.decoder.JSONDecodeError as e:
-        print("Unable to decode JSON: ", e)
+    if all(val is None for val in n_clicks) == True:
+        PreventUpdate
     KPIGroupList = d_kpi['KPIGroup'].unique().tolist()
-    #try:
-    #    if len(dash.callback_context.triggered)!= 1:
-    #        print('nothingtoseehere')
-    #    elif "filter-dropdown-ex3-reset" in valuelist: 
-    #        kpigroup.append(valuelist[0])
-    #        print('bloei')
-    #    elif "filter-dropdown-ex3" in valuelist: 
-    #        kpigroup.append(valuelist[0])
-    #    elif 'kpigroup' in changed_id[0:8]:
-    #        kpigroup.append(KPINameListi[0])
-    #except:
-    #    print('bs!')
-    if changed_id =='{"index":"kpigroup0","type":"kpigroup-ex3"}':
-        KPIGrouptmp1 = []
-        for i in range(len(KPIGroupList)):
-            KPIGrouptmp1.append(KPIGroupList[i])
-        KPIGroup.append(KPIGrouptmp1)
-        kpicountout.clear() 
-        kpicountout.append(len(KPINameList))
-    elif valuelist:
-        KPIGroup.append([valuelist[0]])
+    if 1 in n_clicks:
+        changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
+        valuelist =[]
+        try:
+            valuelisttmp = list(json.loads(changed_id).values()) 
+            valuelist.clear()
+            valuelist.append(valuelisttmp[0])
+        except json.decoder.JSONDecodeError as e:
+            print("Unable to decode JSON: ", e)
+        
+        if changed_id =='{"index":"kpigroup0","type":"kpigroup-ex3"}':
+            KPIGrouptmp1 = []
+            for i in range(len(KPIGroupList)):
+                KPIGrouptmp1.append(KPIGroupList[i])
+            KPIGroup.append(KPIGrouptmp1)
+            kpicountout.clear() 
+            kpicountout.append(len(KPINameList))
+        elif valuelist:
+            KPIGroup.append([valuelist[0]])
     if not KPIGroup:
         KPIGrouptmp3 = []
         for i in range(len(KPIGroupList)):
@@ -1607,8 +1725,6 @@ def KPIgrouplighter(n_clicks):#*args
         kpicountout.clear() 
         kpicountout.append(len(KPINameList))
     KPIGroup2 = KPIGroup[-1]
-    print('KPIGroup2')
-    print(KPIGroup2)
     return KPIGroup2
 
 
@@ -1623,36 +1739,43 @@ kpi =[]
     Input({'type': 'filter-dropdown-ex3', 'index': ALL}, 'n_clicks'),
     Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'),
     Input('KPIGroupSelect', 'value'),
-    Input({'type': 'kpigroup-ex3', 'index': ALL}, 'n_clicks'),
+   # Input({'type': 'kpigroup-ex3', 'index': ALL}, 'n_clicks'),
     #eval(kpigrouplistinput3[0])
     ], prevent_initial_call=True
  )
 
-def update_df_KPIGroup(n_clicks,n_clicks2,KPIGroupSelect,n_clicks3):#,*args
-    print('execute update_df_KPIGroup')   
-    dffKPISelect = d_kpi[
-        (d_kpi["KPIGroup"].isin(KPIGroupSelect))
-    ]
-    dffKPISelect.sort_values(by=['Sorting'])
-    KPINameListi = dffKPISelect['KPIName'].unique()
-    try:
-        changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
-        valuelist = list(json.loads(changed_id).values()) 
-    except json.decoder.JSONDecodeError as e:
-        print("Unable to decode JSON: ", e)
-    try:
-        changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
-        if len(dash.callback_context.triggered)!= 1:
-            print('nothingtoseehere')
-        elif "filter-dropdown-ex3-reset" in valuelist: 
-            kpi.append(valuelist[0])
-        elif "filter-dropdown-ex3" in valuelist: 
-            kpi.append(valuelist[0])
-        elif 'kpigroup' in changed_id[0:8]:
-            kpi.append(KPINameListi[0])
-    except:
-        print('bs!')
-    return KPINameListi[0] if not kpi else kpi[-1]
+def update_df_KPIGroup(n_clicks,n_clicks2,KPIGroupSelect):#,*args,KPIGroupSelect
+
+    print('execute update_df_KPISelect')  
+    ctx = dash.callback_context
+    merged_clicks = n_clicks + n_clicks2
+    if all(val is None for val in n_clicks) == True:
+        print('weird')
+        raise PreventUpdate
+    else:
+        dffKPISelect = d_kpi[
+            (d_kpi["KPIGroup"].isin(KPIGroupSelect))
+        ]
+        dffKPISelect.sort_values(by=['Sorting'])
+        KPINameListi = dffKPISelect['KPIName'].unique()
+        try:
+            changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
+            valuelist = list(json.loads(changed_id).values()) 
+        except json.decoder.JSONDecodeError as e:
+            print("Unable to decode JSON: ", e)
+        try:
+            changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
+            if len(dash.callback_context.triggered)!= 1:
+                print('nothingtoseehere')
+            elif "filter-dropdown-ex3-reset" in valuelist: 
+                kpi.append(valuelist[0])
+            elif "filter-dropdown-ex3" in valuelist: 
+                kpi.append(valuelist[0])
+            elif 'kpigroup' in changed_id[0:8]:
+                kpi.append(KPINameListi[0])
+        except:
+            print('bs!')
+        return KPINameListi[0] if not kpi else kpi[-1]
 
 
 ######################################################################################################################
@@ -1664,117 +1787,22 @@ def update_df_KPIGroup(n_clicks,n_clicks2,KPIGroupSelect,n_clicks3):#,*args
 
 @app.callback(
     Output('graph-level0compare', 'selectedData'),
-    [Input('sweepl0', 'n_clicks'),
-     #Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'),
+    [
+     Input({'type': 'sweepertje', 'index': ALL}, 'n_clicks'),
     ], session_check=False, prevent_initial_call=True
 )
 
 def reset_clickDatal0(n_clicks):#,n_clicks2
     print('removefilterl0')
+    print(n_clicks)
     return None
 
-
-@app.callback([
-              Output("Level0NameSelect", "value"),
-             ],             
-              Input('graph-level0compare', 'selectedData'),
-              Input('sweepl0', 'n_clicks'),
-              Input("Level0NameSelect", "value"),
-              Input({'type': 'filter-dropdown-ex3-reset', 'index': ALL}, 'n_clicks'), prevent_initial_call=True
-             )
-def Level0Update(selecteddatal0bar,n_clicks,Level0NameSelect,reset):#,selecteddatal0,n_clicks,KPINameSelect,clickdatal0bar,clickdatal0
-    print('Level0Update')
-    selectedlistl0bar_list =[]
-    selectedlistl0bar_list.clear()
-    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
-    changed_id2 = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
-    try:
-        if 'sweepl0' in changed_id:
-            selectedlistl0bar_list.clear()
-            for d in Level0NameList:
-                selectedlistl0bar_list.append(d)
-        elif selecteddatal0bar['points']:
-            selectedlistl0bar_list.clear()
-            for p in selecteddatal0bar['points']:
-                selectedlistl0bar_list.append(p['y'])
-        elif "filter-dropdown-ex3-reset" in list(json.loads(changed_id2).values()):
-            selectedlistl0bar_list.clear()
-            for j in Level0NameList:
-                selectedlistl0bar_list.append(j)
-    except:
-        print()
-    if len(selectedlistl0bar_list)>0:
-        return selectedlistl0bar_list
-    else:
-        raise dash.exceptions.PreventUpdate
-
-"""
-@app.callback(
-    eval(carddivstyle3[0]),
-      #  Output('kpigroup0', 'style'),
-      #  Output('kpigroup1', 'style'),
-      #  Output('kpigroup2', 'style'),
-      #  Output('kpigroup3', 'style'),
-      #  Output('kpigroup4', 'style'),
-    [   
-    Input("KPISelect", "value"),
-    Input("KPIGroupSelect", "value"),
-    eval(kpigrouplistinput3[0]),
-    eval(carddivnclicks3[0])
-    ]
-)
-
-def update_df_KPI(KPISelect,KPIGroupSelect,*args):#,
-    print('execute update_df_KPI')
-    #dff1 = dfl1[
-    #(dfl1["KPIName"] == KPISelect)
-    #]
-    dff = dfl1[
-        (dfl1["KPIGroup"].isin(KPIGroupSelect))
-    ]
-    KPIListFiltered = d_kpi[
-            (d_kpi["KPIGroup"].isin(KPIGroupSelect))
-        ]
-    KPIListFiltered.sort_values(by=['Sorting'])
-    KPINameListo = KPIListFiltered['KPIName'].unique()
-   # listtop =[{'label': i, 'value': i} for i in dff1["Level1Name"].unique()]
-    cardstyle = []
-    cardstyle.clear()
-    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
-    for i in KPINameListo:
-        if i == KPISelect:
-            cardstyle.append({'box-shadow': f'0px -0px 9px 0px {BeautifulSignalColor}'})
-        else:
-            cardstyle.append({'box-shadow':'0px 0px 9px 0px transparent'})
-    if IsCum(KPISelect) == 1:
-        IsCumStyle= {'display': 'block'}
-    else:
-        IsCumStyle= {'display': 'none'}
-    xstyles = []
-    xstyles2 =[]
-    xstyles.clear()
-    xstyles2.clear()       
-
-    KPIGroupList = d_kpi['KPIGroup'].unique().tolist()
-    for i,kpigroup in enumerate(KPIGroupList):
-        xstyles2.append(f'xstyles[{i}]')
-        if  KPIGroupSelect == KPIGroupList:
-            if i == 0:
-                xstyles.append({'color':buttonlogocolor,'background-color':buttoncolor})
-            else:
-                xstyles.append({})
-        elif kpigroup == KPIGroupSelect:
-            xstyles.append({'color':buttonlogocolor,'background-color':buttoncolor})
-        else:
-            xstyles.append({})
-    return eval(carddivstylereturn3[0])#,eval(xstyles2[0])
-"""
 
 @app.callback([
     Output("Category1Select", "options"),
     Output("Level0NameSelect", "options"),
     Output("Level1NameSelect", "options"),
-    Output("Level2NameSelect", "options")
+    Output("Level2NameSelect", "options"),
 ],
    # Output('animatedbar', 'figure'),
      Input("Category1Select", "value"),
@@ -1782,26 +1810,28 @@ def update_df_KPI(KPISelect,KPIGroupSelect,*args):#,
      Input("Level1NameSelect", "value"),
      Input("Level2NameSelect", "value"),
      Input("KPISelect", "value"),
-     Input('tabsdrilldown','active_tab'), prevent_initial_call=True
+ prevent_initial_call=True
 )
 
-def DropdownOptions(Category1Select,Level0NameSelect,Level1NameSelect,Level2NameSelect,KPISelect,tabsdrilldown):  #,*args ,Level2NameSelect,toggle, relayoutData
+def DropdownOptions(Category1Select,Level0NameSelect,Level1NameSelect,Level2NameSelect,KPISelect):  #,*args ,Level2NameSelect,toggle, relayoutData
    print('execute DropdownOptions')
-   Category1filtered = dfl0polars.filter((pl.col("KPIName") == KPISelect)
-                            )
-   dff0onlykpifiltered = dfl0polars.filter((pl.col("KPIName") == KPISelect)
-                            & (pl.col("Filter1_0").is_in(Category1Select)))
-   dff1onlykpifiltered = dfl1polars.filter((pl.col("KPIName") == KPISelect)
-                            & (pl.col("LevelName_0").is_in(Level0NameSelect))
-                            & (pl.col("Filter1_0").is_in(Category1Select)))
-   dff2onlykpifiltered = dfl2polars.filter((pl.col("KPIName") == KPISelect)
-                            & (pl.col("LevelName_0").is_in(Level0NameSelect))
-                            & (pl.col("LevelName_1").is_in(Level1NameSelect))
-                            & (pl.col("Filter1_0").is_in(Category1Select)))
-   Category1Select =  [{'label': html.Span([i],style={'background-color': ProjectOrange}), 'value': i}  for i in Category1filtered["Filter1_0"].unique()]
-   Level0NameSelect = [{'label': html.Span([i],style={'background-color': Level0NameColor[i]}), 'value': i} for i in dff0onlykpifiltered["LevelName_0"].unique()]
-   Level1NameSelect = [{'label': html.Span([i],style={'background-color': Level1NameColor[i]}), 'value': i} for i in dff1onlykpifiltered["LevelName_1"].unique()]
-   Level2NameSelect = [{'label': html.Span([i],style={'background-color': Level2NameColor[i]}), 'value': i} for i in dff2onlykpifiltered["LevelName_2"].unique()]
+   if KPISelect in KPIName_listlevel0:
+       dffonlykpifiltered = dflmasterfrontpolars.filter((pl.col("KPIName") == KPISelect)
+                                & (pl.col("Filter1_0").is_in(Category1Select)))
+   elif KPISelect in KPIName_listlevel1:
+       dffonlykpifiltered = dflmasterfrontpolars.filter((pl.col("KPIName") == KPISelect)
+                                & (pl.col("LevelName_0").is_in(Level0NameSelect))
+                                & (pl.col("Filter1_0").is_in(Category1Select)))
+   elif KPISelect in KPIName_listlevel2:
+       dffonlykpifiltered = dflmasterfrontpolars.filter((pl.col("KPIName") == KPISelect)
+                                & (pl.col("LevelName_0").is_in(Level0NameSelect))
+                                & (pl.col("LevelName_1").is_in(Level1NameSelect))
+                                & (pl.col("Filter1_0").is_in(Category1Select)))
+   Category1Select =  [{'label': html.Span([i],style={'background-color': FilterColor[i]}), 'value': i}  for i in dffonlykpifiltered["Filter1_0"].unique()]
+   Level0NameSelect = [{'label': html.Span([i],style={'background-color': LevelNameColor[i]}), 'value': i} for i in dffonlykpifiltered["LevelName_0"].unique()]
+   Level1NameSelect = [{'label': html.Span([i],style={'background-color': LevelNameColor[i]}), 'value': i} for i in dffonlykpifiltered["LevelName_1"].unique()]
+   Level2NameSelect = [{'label': html.Span([i],style={'background-color': LevelNameColor[i]}), 'value': i} for i in dffonlykpifiltered["LevelName_2"].unique()]
+  # button_group = [{'label': html.Span([i],style={'background-color': buttoncolor}), 'value': i}  for i in Category1filtered["Filter1_0"].unique()]
    #print(Category1Select)
    #print(Level0NameSelect)
    #print(Level1NameSelect)
@@ -1827,364 +1857,311 @@ def DropdownOptions(Category1Select,Level0NameSelect,Level1NameSelect,Level2Name
 #   return [Category1Select]
 
 
-datefromtmp = []
-datetotmp = []
+#datefromtmp = []
+#datetotmp = []
 #datefromtmp.append(str(dfl0['Period_int'].min())[0:10])
 #datetotmp.append(str(dfl0['Period_int'].max())[0:10])
-datefromtmp.append('2021-01-01')
-datetotmp.append('2023-09-01')
 
-@app.callback([
+
+@app.callback([Output('coinsinwallet', 'data'), # dit is een random gekozen output
+                ],
+                Input("input-field", "value"),prevent_initial_callback=True
+            )
+def wegschrijvendiehap(inputfield):
+    print('wegschrijvendiehap')
+    if inputfield:
+        with open('assets/Attributes/dashboard_data/contract_addresses_internal_toproject.json', 'r') as f:
+        # Load JSON data from file
+            data = json.load(f)
+            data_str = json.dumps(data)
+        result = subprocess.run(["node", "BatchRequestSimple.js", inputfield, data_str], 
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        answer = result.stdout
+        tmpaswer = [{'id': '12.0', 'value': '2.891323835569685308'}, {'id': '55.0', 'value': '28.091493'}, {'id': '8.0', 'value': '1.918714491283379120'}, {'id': '6.0', 'value': '158.502814222575437952'}, {'id': '9.0', 'value': '38362.771085839216539171'}]
+        idlist = [int(float(item['id'])) for item in json.loads(answer)]
+        return idlist
+
+
+#@app.callback([Output('coinsinwallet', 'data'), # dit is een random gekozen output
+#                ],
+#                Input("contract_addresses_internal_toproject", "data")
+#            )
+#def coinsinwallet(contract_addresses_internal_toproject):
+#    print('coinsinwallet')
+#    if contract_addresses_internal_toproject:
+#        idlist = [int(item['id']) for item in contract_addresses_internal_toproject]
+#        print(idlist)
+#        return idlist
+
+
+
+@app.callback([Output('coinsinwalletComp', 'data'), # dit is een random gekozen output
+                ],
+                
+                Input("coinsinwallet", "data"),
+                Input("CompetitorSwitch", "value"),prevent_initial_callback=True
+             #   Input("contract_addresses_internal_toproject", "data"),
+            )
+def coinsinwallet(coinsinwallet,CompetitorSwitch):
+    print('jodeliee') 
+    if not coinsinwallet:
+        return ''
+    else:
+        print('startcoinsinwallet')
+        if CompetitorSwitch=='False':
+            return ''
+        else:
+            comp_values = Projects.loc[Projects['Project_ID'].isin(coinsinwallet), 'MainCompetitors_NoJoin'].values
+            result_list = []
+            for item in comp_values:
+                if isinstance(item, str):
+                    values = item.split('&')
+                    result_list.extend(values)
+                elif not np.isnan(item):
+                    result_list.append(item)
+
+            result_list = [int(value) for value in result_list]
+            endresult = list(coinsinwallet) + list(result_list)
+            return endresult if endresult else ''
+        
+
+@app.callback([ServersideOutput('mastersetkpifiltered', 'data'),
+              ServersideOutput('mastersetkpifilterednotime', 'data'),
               ServersideOutput('dfgroups', 'data'),
-              ServersideOutput('dfl0', 'data'),
-              ServersideOutput('dfl1', 'data'),
-              ServersideOutput('dfl2', 'data'),
-              ServersideOutput('dfl0notime', 'data'),
-              ServersideOutput('dfl1notime', 'data'),
-              ServersideOutput('dfl2notime', 'data'),
-            #  Output('dffcomparefilter', 'data'),
               ServersideOutput('dflcomparekpi', 'data'),#,backend=my_backend
               Output('output-container-date-picker-range', 'children'),
               Output('dropdown0', 'value'),
               Output('dropdown1', 'value'),
               Output('dropdown2', 'value'),
-              Output('sweepl0', 'style'),
-              Output('sweepl1', 'style'),
-              Output('sweepl2', 'style'),
-            #  Output('ProjectDropdown1', 'style'),
+              Output("button_group", "options"),
+              Output("button_group1", "options"),
+              Output("pieorbar", "data"),
+            #  Output('sweepers', 'children'),
              ],            
               Input('GrainSelect', 'value'),
               Input('KPISelect', 'value'),
               Input('KPIGroupSelect', 'value'),
-              Input('graphlevel0', 'relayoutData'),
-              Input('graphoveralltime', 'relayoutData'),
-              Input('graph-with-slider', 'relayoutData'),
-              #Input('graphlevel0', 'clickData'),
-              #Input('graphoveralltime', 'clickData'),
-              #Input('graph-with-slider', 'clickData'),
-              Input('tabsdrilldown','active_tab'),
+            #  Input('graphlevel0', 'relayoutData'),
+              Input('button_group','value'),
               Input("Level0NameSelect", "value"),
               Input("Level1NameSelect", "value"),
               Input("Level2NameSelect", "value"),
-              Input("Category1Select", "value")
-              ,memoize=True)
-def clean_data(GrainSelect,KPISelect,KPIGroupSelect,relayoutDatal0,relayoutDatal1,relayoutDatal2,tabsdrilldown,Level0NameSelect,Level1NameSelect,Level2NameSelect,Category1):#,*args,sweepl1 relayoutl1barclickdatal2bar,clickdatal0,clickdatal1,clickdatal2
-    print('execute clean_data')
-    dfll2 = []
-    dfll0pol = []
-    dfll1pol = []
-    dfll2pol =[]
-    dfll0notime = []
-    dfll1notime = []
-    dfll2notime = []
-    dfllCompare = []
-    dffcompare = []
-    dfftstst0 = dfl0polars.filter((pl.col("Grain") == GrainSelect) 
-                            & (pl.col("KPIName") == KPISelect)
-                            & (pl.col("LevelName_0").is_in(Level0NameSelect))
-                            & (pl.col("Filter1_0").is_in(Category1)))
-    dfftstst1 = dfl1polars.filter((pl.col("Grain") == GrainSelect) 
-                            & (pl.col("KPIName") == KPISelect)
-                            & (pl.col("LevelName_0").is_in(Level0NameSelect))
-                            & (pl.col("LevelName_1").is_in(Level1NameSelect))
-                            & (pl.col("Filter1_0").is_in(Category1)))
-    dfftstst2 = dfl2polars.filter((pl.col("Grain") == GrainSelect) 
-                            & (pl.col("KPIName") == KPISelect)
-                            & (pl.col("LevelName_0").is_in(Level0NameSelect))
-                            & (pl.col("LevelName_1").is_in(Level1NameSelect))
-                            & (pl.col("LevelName_2").is_in(Level2NameSelect))
-                            & (pl.col("Filter1_0").is_in(Category1)))
-    
-    #dff2 = pd.DataFrame(update_filter_l2(dfl2, GrainSelect, KPISelect,Level0NameSelect, Level1NameSelect, Level2NameSelect,Category1))
-    dfl0polarsfilter = dfl0polars.filter((pl.col("Grain") == GrainSelect) 
-                                         & (pl.col("LevelName_0").is_in(Level0NameSelect))
-                                         & (pl.col("KPIGroup").is_in(KPIGroupSelect))
-                                         & (pl.col("Filter1_0").is_in(Category1)))
-    dfl1polarsfilter = dfl1polars.filter((pl.col("Grain") == GrainSelect) 
-                                         & (pl.col("LevelName_0").is_in(Level0NameSelect))
-                                         & (pl.col("LevelName_1").is_in(Level1NameSelect))
-                                         & (pl.col("KPIGroup").is_in(KPIGroupSelect))
-                                         & (pl.col("Filter1_0").is_in(Category1)))
-    dfl2polarsfilter = dfl2polars.filter((pl.col("Grain") == GrainSelect) 
-                                         & (pl.col("LevelName_0").is_in(Level0NameSelect))
-                                         & (pl.col("LevelName_1").is_in(Level1NameSelect))
-                                         & (pl.col("LevelName_2").is_in(Level2NameSelect))
-                                         & (pl.col("KPIGroup").is_in(KPIGroupSelect))
-                                         & (pl.col("Filter1_0").is_in(Category1)))
-    
-    dfl0polarsgroup = dfl2polars.filter((pl.col("Grain") == GrainSelect) 
-                                         & (pl.col("LevelName_0").is_in(Level0NameSelect))
-                                         & (pl.col("Filter1_0").is_in(Category1)))
-    dfl1polarsgroup = dfl2polars.filter((pl.col("Grain") == GrainSelect) 
-                                         & (pl.col("LevelName_0").is_in(Level0NameSelect))
-                                         & (pl.col("LevelName_1").is_in(Level1NameSelect))
-                                         & (pl.col("Filter1_0").is_in(Category1)))
-    dfl2polarsgroup = dfl2polars.filter((pl.col("Grain") == GrainSelect) 
-                                         & (pl.col("LevelName_0").is_in(Level0NameSelect))
-                                         & (pl.col("LevelName_1").is_in(Level1NameSelect))
-                                         & (pl.col("LevelName_2").is_in(Level2NameSelect))
-                                         & (pl.col("Filter1_0").is_in(Category1)))
-    dfl0polarsgroup = dfl0polarsgroup.select("KPIGroup").unique()
-    dfl1polarsgroup = dfl1polarsgroup.select("KPIGroup").unique()
-    dfl2polarsgroup = dfl2polarsgroup.select("KPIGroup").unique()
-    dffpolars = []
-    dfllComparepolar =[]
-    if tabsdrilldown == 'tab-0':
-        relayoutdata1 = relayoutDatal0
-        dflpolarsgroup = dfl0polarsgroup
-     #   clickdata1 = clickdatal0
-        changeid = 'graphlevel0.relayoutData'
-        dffpolars.append(dfl0polarsfilter)
-        levelindicator = 'level0'
-    elif tabsdrilldown == 'tab-1':
-        relayoutdata1 = relayoutDatal1
-        dflpolarsgroup = dfl1polarsgroup
-     #   clickdata1 = clickdatal1
-        changeid = 'graphoveralltime.relayoutData'
-        dffpolars.append(dfl1polarsfilter)
-        levelindicator = 'level1'
-    elif tabsdrilldown == 'tab-2':
-        relayoutdata1 = relayoutDatal2
-        dflpolarsgroup = dfl2polarsgroup
-    #    clickdata1 = clickdatal2
-        changeid = 'graph-with-slider.relayoutData'
-        dflpolarsgroup = dfl2polarsgroup
-        dffpolars.append(dfl2polarsfilter)
-        levelindicator = 'level2'
+              Input("Category1Select", "value"),
+              Input("WalletSwitch", "label"),
+              Input("CompetitorSwitch", "label"),
+              Input('coinsinwallet','data'),
+              Input('coinsinwalletComp','data'),
+              Input('daterange','data')
+              ,            
+              State('dropdown0', 'value')
+              ,memoize=True)#,prevent_initial_callback=True
+def clean_data(GrainSelect,KPISelect,KPIGroupSelect,button_group,Level0NameSelect,Level1NameSelect,Level2NameSelect,Category1Select,WalletSwitch,CompetitorSwitch,coinsinwallet,coinsinwalletComp,daterange
+               ,dropdown0State):#,*args,sweepl1 relayoutl1barclickdatal2bar,clickdatal0,clickdatal1,clickdatal2,relayoutDatal0
+    print('bigboi')
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+    datefromtmp = []
+    datetotmp = []
+    datefromtmp.append(daterange[0])
+    datetotmp.append(daterange[1])
+    KPILevelCountSelected = KPILevelCountList[KPISelect]
+    if coinsinwallet and WalletSwitch == 'True' and CompetitorSwitch =='True':
+        dflmasterfrontpolarswallet = dflmasterfrontpolars.filter(pl.col("d_level0_id").is_in(coinsinwalletComp))
+    elif coinsinwallet and WalletSwitch == 'True':
+        dflmasterfrontpolarswallet = dflmasterfrontpolars.filter(pl.col("d_level0_id").is_in(coinsinwallet))
     else:
-        relayoutdata1 = relayoutDatal0
-        changeid = 'graphlevel0.relayoutData'
-        dflpolarsgroup = dfl0polarsgroup
-      #  clickdata1 = clickdatal0
-        dffpolars.append(dfl0polarsfilter)
-        levelindicator = 'level0'
+        dflmasterfrontpolarswallet = dflmasterfrontpolars
+    #if not str(dropdown0State)=='None' and len([item for item in ctx.triggered if 'prop_id' in item]) >1:
+    #    print('dash.exceptions.PreventUpdate')
+    #    raise dash.exceptions.PreventUpdate
+    #else:
+    #dfllpol = []
+    dfftststtotallist = []
+    dffnotimelist = []
+    # Get the max Period_int value
+    print('type(GrainSelect)')
+    dflpolarsgroup = dflmasterfrontpolarswallet.filter((pl.col("Grain") == GrainSelect) 
+                                         & (pl.col("LevelName_0").is_in(Level0NameSelect))
+                                        # & (pl.col("LevelName_1").is_in(Level1NameSelect))
+                                        # & (pl.col("LevelName_2").is_in(Level2NameSelect))
+                                         & (pl.col("Filter1_0").is_in(Category1Select)))
+    dflpolarsgroup = dflpolarsgroup.select("KPIGroup").unique()
+    dflpolarsfilterlist = []
+    for i in KPIName_listlevel2:
+        tmppolars2 = dflmasterfrontpolarswallet.filter((pl.col("Grain") == GrainSelect) 
+                        & (pl.col("LevelName_0").is_in(Level0NameSelect))
+                        & (pl.col("LevelName_1").is_in(Level1NameSelect))
+                        & (pl.col("LevelName_2").is_in(Level2NameSelect))
+                        & (pl.col("KPIGroup").is_in(KPIGroupSelect))
+                        & (pl.col("KPIName") ==i)
+                        & (pl.col("Filter1_0").is_in(Category1Select)))
+        dflpolarsfilterlist.append(tmppolars2)
+    for d in KPIName_listlevel1:
+        tmppolars1 = dflmasterfrontpolarswallet.filter((pl.col("Grain") == GrainSelect) 
+                     & (pl.col("LevelName_0").is_in(Level0NameSelect))
+                     & (pl.col("LevelName_1").is_in(Level1NameSelect))
+                     & (pl.col("KPIGroup").is_in(KPIGroupSelect))
+                     & (pl.col("KPIName")==d)
+                     & (pl.col("Filter1_0").is_in(Category1Select)))
+        dflpolarsfilterlist.append(tmppolars1)
+    for v in KPIName_listlevel0:
+        tmppolars0 = dflmasterfrontpolarswallet.filter((pl.col("Grain") == GrainSelect) 
+                        & (pl.col("LevelName_0").is_in(Level0NameSelect))
+                        & (pl.col("KPIGroup").is_in(KPIGroupSelect))
+                        & (pl.col("KPIName")==v)
+                        & (pl.col("Filter1_0").is_in(Category1Select)))
+        dflpolarsfilterlist.append(tmppolars0)
+    if KPISelect in KPIName_listlevel2:
+        print('KPIName_listlevel2')
+        dffnotime = dflmasterfrontpolarswallet.filter((pl.col("Grain") == GrainSelect) 
+                                & (pl.col("Period_int") >= datefromtmp[-1]) 
+                                & (pl.col("Period_int") <= datetotmp[-1]) 
+                                & (pl.col("KPIName") == KPISelect)
+                                & (pl.col("LevelName_0").is_in(Level0NameSelect))
+                                & (pl.col("LevelName_1").is_in(Level1NameSelect))
+                                & (pl.col("LevelName_2").is_in(Level2NameSelect))
+                                & (pl.col("Filter1_0").is_in(Category1Select))
+                                #& (pl.col("Filter1_1").is_in(Category1))
+                                #& (pl.col("Filter1_2").is_in(Category1))
+                                )
+
+    elif KPISelect in KPIName_listlevel1:
+        print('KPIName_listlevel1')
+        dffnotime = dflmasterfrontpolarswallet.filter((pl.col("Grain") == GrainSelect) 
+                                & (pl.col("Period_int") >= datefromtmp[-1]) 
+                                & (pl.col("Period_int") <= datetotmp[-1]) 
+                                & (pl.col("KPIName") == KPISelect)
+                                & (pl.col("LevelName_0").is_in(Level0NameSelect))
+                                & (pl.col("LevelName_1").is_in(Level1NameSelect))
+                                & (pl.col("Filter1_0").is_in(Category1Select))
+            	                #& (pl.col("Filter1_1").is_in(Category1))
+                                )
+
+    elif KPISelect in KPIName_listlevel0:
+        print('KPIName_listlevel0')
+        dffnotime = dflmasterfrontpolarswallet.filter((pl.col("Grain") == GrainSelect) 
+                                & (pl.col("Period_int") >= datefromtmp[-1]) 
+                                & (pl.col("Period_int") <= datetotmp[-1]) 
+                                & (pl.col("KPIName") == KPISelect)
+                                & (pl.col("LevelName_0").is_in(Level0NameSelect))
+                                & (pl.col("Filter1_0").is_in(Category1Select))
+                                )
+        
+    dflpolarsfilter = pl.concat(dflpolarsfilterlist, how ="diagonal")
+    #dflpolarsfilter = pl.concat([tmppolars2,tmppolars1,tmppolars0], how="horizontal")
+    #dff2 = pd.DataFrame(update_filter_l2(dfl2, GrainSelect, KPISelect,Level0NameSelect, Level1NameSelect, Level2NameSelect,Category1))
+
+    #prepare filtered on KPI group and attributes
+    #prepare filtered on attributes only
+    dfllComparepolar =[]
     cookpi_attributes = cookpi_attributestmp[(cookpi_attributestmp.d_kpi_id == KPINameToID[KPISelect])]
     result = {}
     level0 =[]
     level1 =[]
     level2 =[]
+    button_sweeps_count = []
+    button_sweeps = []
+    button_sweeps_3 = []
+    button_names = []
     for index,row in cookpi_attributes.iterrows():
         if row['Level_ID_present'] == 'd_level0_id':
             result[row['Level_ID_present']] = row['dds_name']
             level0.append(result['d_level0_id'])
+            button_sweeps_count.append(f"LevelName_{row['Level_ID_present'][7]}")
+            button_names.append(result['d_level0_id'])
         elif row['Level_ID_present'] == 'd_level1_id':
             result[row['Level_ID_present']] = row['dds_name']
             level1.append(result['d_level1_id'])
+            button_sweeps_count.append(f"LevelName_{row['Level_ID_present'][7]}")
+            button_names.append(result['d_level1_id'])
         elif row['Level_ID_present'] == 'd_level2_id':
             result[row['Level_ID_present']] = row['dds_name']
             level2.append(result['d_level2_id']) #used to fill the name of the dropdownlist
-    
-        
-    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
-    if relayoutdata1 == {'autosize': True} or relayoutdata1 is None:
-        pass
-    elif changed_id == changeid:
-        if 'xaxis.range[0]' in relayoutdata1:
-            datefromtmp.append(relayoutdata1['xaxis.range[0]'][0:10])
-            datetotmp.append(relayoutdata1['xaxis.range[1]'][0:10])
-        elif 'xaxis.range' in relayoutdata1:
-            datefromtmp.append(relayoutdata1['xaxis.range'][0])
-            datetotmp.append(relayoutdata1['xaxis.range'][1])
-    elif changed_id in ['tabselect.active_tab', 'tabsdrilldown.active_tab', 'GrainSelect.value', 'Level1NameSelect.value', 'Level2NameSelect.value', 'KPISelect.value']:
-        pass
-        
+            button_sweeps_count.append(f"LevelName_{row['Level_ID_present'][7]}")
+            button_names.append(result['d_level2_id'])
+    button_grouptmp = [
+    #{"label": row['dss_tab'], "value": f"LevelName_{row['Level_ID_present'][7]}"}
+    #for _, row in cookpi_attributes.iterrows()
+    ]
+    button_grouptmp.clear()
+    cnt = 0
+    for f,b in zip(button_sweeps_count,button_names):
+        print(f)
+        Level = eval(f[-1])
+        if eval(f'Level{Level}NameSelect') == eval(f'list(Level{Level}NameList)'):
+            sweepstyle = {'display': 'none','font-size':'14px'}
+        else:
+            sweepstyle = {'opacity':'1','font-size':'14px'}#,'color':ProjectOrange
+        testlogo = {"label": html.Div([f'{b}  ',eval(f"""html.Div(html.I('filter_list_off',id='sweepl{Level}',className='material-icons',style={sweepstyle}),style={{'display': 'inline-block','padding':'0px','text-size':'14px'}},id=dict(type='sweepertje',index='{f}'))""")]),"value": f'{f}'}
+        button_grouptmp.append(testlogo)
+        cnt += 1
+    tmp = dffnotime.unique(subset=["FilterName_0"],maintain_order=True)
+    FilterName_0_list = [row["FilterName_0"] for row in tmp.iter_rows(named=True)]
+    for d in FilterName_0_list:
+        if eval(f'Category1Select') == eval(f'list(Catergory0List)'):
+            filter1 = {"label": d,"value": "Filter1_0"}
+        else:
+            filter1 = {"label": html.Div([f'{d}  ',eval(f"""html.Div(html.I('filter_list_off',id='SweepFiltertje1_0',className='material-icons',style={sweepstyle}),style={{'display': 'inline-block','padding':'0px','text-size':'14px'}},id=dict(type='sweepertje',index='SweepFilter1_0'))""")]),"value": 'Filter1_0'}
+        button_grouptmp.append(filter1)
+    button_groups = sorted(button_grouptmp, key=lambda x: x['value'])
+    pieorbarcountlist = dffnotime.select(button_group).unique()
+    pieorbarcount = pieorbarcountlist.select(pl.count()).item()
+    #eval(button_group)
+    pieorbar = 'pie' if pieorbarcount==1 else 'bar'
+    #for g,c in zip(button_sweeps_count,button_names):
+    #    button_group = sorted(button_grouptmp, key=lambda x: x['value'])
+    #    print(button_group)
+    #    button_sweeps_count.sort()
+    #    button_names.sort()
+    #    print('buttongroupappended')
+    #    button_sweeps.append(
+    #            f"""html.Div(html.I('filter_list_off',id='sweepl{g}',className='material-icons md-48'),id=dict(type='sweepertje',index='{g}'))"""
+    #        ) 
+    #    button_sweeps.append(f"""dbc.Popover('unfilter {c}',target=dict(type='sweepertje',index='{g}'),body=True,trigger="hover")"""
+    #                         )
+    #    cnt += 1
+    #button_sweeps_2=','.join(button_sweeps)
+    #button_sweeps_3.append(button_sweeps_2)
     if not datefromtmp:
-        #dfll2.append(dff2)
-        dfll0pol.append(dfftstst0)
-        dfll1pol.append(dfftstst1)
-        dfll2pol.append(dfftstst2)
-     #   dfllCompare.append(dffcompare[0])
-        dfllComparepolar.append(dffpolars[0])
+        dffnotimelist.append(dffnotime)
+        dfllComparepolar.append(dflpolarsfilter)
     elif changed_id == 'GrainSelect.value':
-       # dfll2.append(dff2)
-        dfll0pol.append(dfftstst0)
-        dfll1pol.append(dfftstst1)
-        dfll2pol.append(dfftstst2)
-     #   dfllCompare.append(dffcompare[0])
-        dfllComparepolar.append(dffpolars[0])
+        dffnotimelist.append(dffnotime)
+        dfllComparepolar.append(dflpolarsfilter)
     else:
-       # dfff = dff2[dff2['Period_int'].between(datefromtmp[-1], datetotmp[-1])].reset_index(drop=True)
-       # dfll2.append(dfff)
-        dfll0pol.append(dfftstst0.filter((pl.col('Period_int')>= datefromtmp[-1]) 
+        dffnotimelist.append(dffnotime.filter((pl.col('Period_int')>= datefromtmp[-1]) 
                                                     &(pl.col('Period_int')<= datetotmp[-1])))
-        dfll1pol.append(dfftstst1.filter((pl.col('Period_int')>= datefromtmp[-1]) 
+        dfllComparepolar.append(dflpolarsfilter.filter((pl.col('Period_int')>= datefromtmp[-1]) 
                                                     &(pl.col('Period_int')<= datetotmp[-1])))
-        dfll2pol.append(dfftstst2.filter((pl.col('Period_int')>= datefromtmp[-1]) 
-                                                    &(pl.col('Period_int')<= datetotmp[-1])))
-       # dfllCompare.append(dffcompare[0][dffcompare[0]['Period_int'].between(datefromtmp[-1], datetotmp[-1])].reset_index(drop=True))
-        dfllComparepolar.append(dffpolars[0].filter((pl.col('Period_int')>= datefromtmp[-1]) 
-                                                    &(pl.col('Period_int')<= datetotmp[-1])))
-    
+
     #testtmp0 = dfll2[0].filter(regex='^(?!.*(_1|_2)$)')
     #testtmp1 = dfll2[0].filter(regex='^(?!.*(_0|_2)$)')
     #testtmp2 = dfll2[0].filter(regex='^(?!.*(_0|_1)$)')
 
-    testtmp0pol = (
-    dfll0pol[0]
+    mastersetkpifiltered = (
+    dffnotimelist[0]
     .lazy()
-    #.select(pl.exclude("^.*(_1|_2)$")) #'^prefix_.*$'
     .sort(["Period_int", "LevelName_0"])
     .collect()
-    
     )
-    testtmp1pol = (
-    dfll1pol[0]
-    .lazy()
-    .select(pl.exclude("^.*(_0)$")) #'^prefix_.*$'|_2
-    .sort(["Period_int", "LevelName_1"])
-    .collect()
-    )
-    testtmp2pol = (
-    dfll2pol[0]
-    .lazy()
-    .select(pl.exclude("^.*(_0|_1)$")) #'^prefix_.*$'
-    .sort(["Period_int", "LevelName_2"])
-    .collect()
-    )
-    #testtmp0pol = dfll2pol[0].filter(regex='^(?!.*(_1|_2)$)')
-    #testtmp1pol = dfll2pol[0].filter(regex='^(?!.*(_0|_2)$)')
-    #testtmp2pol = dfll2pol[0].filter(regex='^(?!.*(_0|_1)$)')
+
+    mastersetkpifiltered.fill_null(0)
+
+    columnsmastersetkpifiltered = mastersetkpifiltered.columns
+    columnsmastersetkpifiltered.remove('Numerator')
+    columnsmastersetkpifiltered.remove('Denominator')
     
-
-    #testtmp0 = testtmp0.drop('d_level1_id',axis=1)
-    #testtmp0 = testtmp0.drop('d_level2_id',axis=1)
-    #testtmp0pol.select(pl.exclude(["d_level1_id","d_level2_id"]))
-    
-    #testtmp1 = testtmp1.drop('d_level0_id',axis=1)
-    #testtmp1 = testtmp1.drop('d_level2_id',axis=1)
-    testtmp1pol.select(pl.exclude(["d_level0_id"]))#,"d_level2_id"
-
-    #testtmp2 = testtmp2.drop('d_level0_id',axis=1)
-    #testtmp2 = testtmp2.drop('d_level1_id',axis=1)
-    testtmp2pol.select(pl.exclude(["d_level0_id","d_level1_id"]))
-
-    #testtmp0.fillna(value=0, inplace=True)
-    #testtmp1.fillna(value=0, inplace=True)
-    #testtmp2.fillna(value=0, inplace=True)
-    testtmp0pol.fill_null(0)
-    testtmp1pol.fill_null(0)
-    testtmp2pol.fill_null(0)
-
-    columnsdff0pol = testtmp0pol.columns
-    #columnsdff0 = testtmp0.columns.tolist()
-    #columnsdff0.remove('Numerator')
-    #columnsdff0.remove('Denominator')
-    #columnsdff0.remove('Numerator_LP')
-    #columnsdff0.remove('Denominator_LP')
-    #columnsdff0pol.remove('d_level1_id')
-    #columnsdff0pol.remove('d_level2_id')
-    columnsdff0pol.remove('Numerator')
-    columnsdff0pol.remove('Denominator')
-    #columnsdff0pol.remove('Numerator_LP')
-    #columnsdff0pol.remove('Denominator_LP')
-
-    #columnsdff1 = testtmp1.columns.tolist()
-    columnsdff1pol = testtmp1pol.columns
-    #columnsdff1.remove('Numerator')
-    #columnsdff1.remove('Denominator')
-    #columnsdff1.remove('Numerator_LP')
-    #columnsdff1.remove('Denominator_LP')
-    columnsdff1pol.remove('d_level0_id')
-    #columnsdff1pol.remove('d_level2_id')
-    columnsdff1pol.remove('Numerator')
-    columnsdff1pol.remove('Denominator')
-    #columnsdff1pol.remove('Numerator_LP')
-    #columnsdff1pol.remove('Denominator_LP')
-
-
-    #columnsdff2 = testtmp2.columns.tolist()
-    columnsdff2pol = testtmp2pol.columns
-    #columnsdff2.remove('Numerator')
-    #columnsdff2.remove('Denominator')
-    #columnsdff2.remove('Numerator_LP')
-    #columnsdff2.remove('Denominator_LP')
-    columnsdff2pol.remove('d_level0_id')
-    columnsdff2pol.remove('d_level1_id')
-    columnsdff2pol.remove('Numerator')
-    columnsdff2pol.remove('Denominator')
-    #columnsdff2pol.remove('Numerator_LP')
-    #columnsdff2pol.remove('Denominator_LP')
-    
+    mastersetkpifiltered2 = mastersetkpifiltered
     noemer = f'pl.col("Denominator").{eval(AggregateNumDenom(KPIDenomAgg[KPISelect]))}()'
     teller = f'pl.col("Numerator").{eval(AggregateNumDenom(KPINumAgg[KPISelect]))}()'
-    dff0pol = (
-    testtmp0pol.lazy()
-    .groupby(columnsdff0pol)
-    .agg(
-        [
-            eval(noemer),
-            eval(teller),
-        ]
-    )
-     .sort(["Period_int", "LevelName_0"])
-   # .limit(5)
-    )
 
-    dff1pol = (
-    testtmp1pol.lazy()
-    .groupby(columnsdff1pol)
-    .agg(
-        [
-            eval(noemer),
-            eval(teller),
-        ]
-    )
-     .sort(["Period_int", "LevelName_1"])
-    #.limit(5)
-    )
-    dff2pol = (
-    testtmp2pol.lazy()
-    .groupby(columnsdff2pol)
-    .agg(
-        [
-            eval(noemer),
-            eval(teller),
-        ]
-    )
-    .sort(["Period_int", "LevelName_2"])
-    #.limit(5)
-    )
-    #dff0 = testtmp0.head(5).groupby(columnsdff0, as_index=False, sort=False).agg(
-    #       {'Denominator': eval(AggregateNumDenom(KPIDenomAgg[KPISelect])),'Numerator': eval(AggregateNumDenom(KPINumAgg[KPISelect]))})
-    #
-    #dff1 = testtmp1.groupby(columnsdff1, as_index=False, sort=False).agg(
-    #       {'Denominator': eval(AggregateNumDenom(KPIDenomAgg[KPISelect])),'Numerator': eval(AggregateNumDenom(KPINumAgg[KPISelect]))})
-    #
-    #dff2 = testtmp2.groupby(columnsdff2, as_index=False, sort=False).agg(
-    #       {'Denominator': eval(AggregateNumDenom(KPIDenomAgg[KPISelect])),'Numerator': eval(AggregateNumDenom(KPINumAgg[KPISelect]))})
-    #testtmp00 = testtmp0.drop('Period_int',axis=1)
-    #testtmp00 = testtmp0.drop('PeriodName',axis=1)
-    testtmp0pol.select(pl.exclude(["Period_int","PeriodName"]))
+    mastersetkpifiltered2.select(pl.exclude(["Period_int","PeriodName"]))    
+    columnsmastersetkpifiltered.remove('Period_int')
+    columnsmastersetkpifiltered.remove('PeriodName')
 
 
-    #testtmp11 = testtmp1.drop('Period_int',axis=1)
-    #testtmp11 = testtmp1.drop('PeriodName',axis=1)
-    testtmp1pol.select(pl.exclude(["Period_int","PeriodName"]))
-
-    #testtmp22 = testtmp2.drop('Period_int',axis=1)
-    #testtmp22 = testtmp2.drop('PeriodName',axis=1)
-    testtmp2pol.select(pl.exclude(["Period_int","PeriodName"]))
-
-    #testtmp00.fillna(value=0, inplace=True)
-    #testtmp11.fillna(value=0, inplace=True)
-    #testtmp22.fillna(value=0, inplace=True)
-
-    #columnsdff0.remove('Period_int')
-    #columnsdff0.remove('PeriodName')
-    #columnsdff1.remove('Period_int')
-    #columnsdff1.remove('PeriodName')
-    #columnsdff2.remove('Period_int')
-    #columnsdff2.remove('PeriodName')
-    columnsdff0pol.remove('Period_int')
-    columnsdff1pol.remove('Period_int')
-    columnsdff2pol.remove('Period_int')
-    columnsdff0pol.remove('PeriodName')
-    columnsdff1pol.remove('PeriodName')
-    columnsdff2pol.remove('PeriodName')
-
-    dfll0notime = (
-    testtmp0pol.lazy()
-    .groupby(columnsdff0pol)
+    mastersetkpifilterednotime = (
+    mastersetkpifiltered2.lazy()
+    .groupby(columnsmastersetkpifiltered)
     .agg(
         [
             eval(noemer),
@@ -2194,130 +2171,54 @@ def clean_data(GrainSelect,KPISelect,KPIGroupSelect,relayoutDatal0,relayoutDatal
     .sort(["LevelName_0"])
    # .limit(5)
     )
-
-    dfll1notime = (
-    testtmp1pol.lazy()
-    .groupby(columnsdff1pol)
-    .agg(
-        [
-            eval(noemer),
-            eval(teller),
-        ]
-    )
-    .sort(["LevelName_1"])
-   # .sort("Period_int")
-    #.limit(5)
-    )
-    dfll2notime = (
-    testtmp2pol.lazy()
-    .groupby(columnsdff2pol)
-    .agg(
-        [
-            eval(noemer),
-            eval(teller),
-        ]
-    )
-    .sort(["LevelName_2"])
-    )   
-    
-    #dfll0notime.append(testtmp00.groupby(columnsdff0,as_index=False, sort=False).agg(
-    #        {'Denominator': eval(AggregateNumDenom(KPIDenomAgg[KPISelect])),'Numerator': eval(AggregateNumDenom(KPINumAgg[KPISelect]))})
-    #)
-#
-    #dfll1notime.append(testtmp11.groupby(columnsdff1,as_index=False, sort=False).agg(
-    #       {'Denominator': eval(AggregateNumDenom(KPIDenomAgg[KPISelect])),'Numerator': eval(AggregateNumDenom(KPINumAgg[KPISelect]))})
-    #)
-#
-    #dfll2notime.append(testtmp22.groupby(columnsdff2,as_index=False, sort=False).agg(
-    #       {'Denominator': eval(AggregateNumDenom(KPIDenomAgg[KPISelect])),'Numerator': eval(AggregateNumDenom(KPINumAgg[KPISelect]))})
-    #)
-
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
-    #dffcomparejson = dfllCompare[0].to_json(date_format='iso', orient='split')
     dffcomparejson = dfllComparepolar[0]
-    ##dffcomparejsontmp = dfllComparepolar[0].write_json()
-    ##dffcomparejson = {i['name']: i['values'] for i in json.loads(dffcomparejsontmp)['columns']} 
-    #timefiltered
-   # print(dff01.to_json(date_format='iso', orient='split'))
-    dffl0json = dff0pol.collect()
-    ##dffl0jsontmp = dff0pol.collect().write_json()
-    ##dffl0json = {i['name']: i['values'] for i in json.loads(dffl0jsontmp)['columns']} 
-
-    #timefiltered & kpi filtered
-    dffl1json = dff1pol.collect()
-    ##dffl1jsontmp = dff1pol.collect().write_json()
-    ##dffl1json = {i['name']: i['values'] for i in json.loads(dffl1jsontmp)['columns']} 
-    #timefiltered & kpi filtered
-    dffl2json = dff2pol.collect()
-    ##dffl2jsontmp = dff2pol.collect().write_json()
-    ##dffl2json = {i['name']: i['values'] for i in json.loads(dffl2jsontmp)['columns']} 
-    #timefiltered & kpi filtered
-    dffl0jsonnotime = dfll0notime.collect()
-    ##dffl0jsonnotimetmp = dfll0notime.collect().write_json()
-    ##dffl0jsonnotime = {i['name']: i['values'] for i in json.loads(dffl0jsonnotimetmp)['columns']} 
-    #timefiltered & kpi filtered without time
-    dffl1jsonnotime = dfll1notime.collect()
-    ##dffl1jsonnotimetmp = dfll1notime.collect().write_json()
-    ##dffl1jsonnotime = {i['name']: i['values'] for i in json.loads(dffl1jsonnotimetmp)['columns']} 
-   #timefiltered & kpi filtered without time
-    dffl2jsonnotime = dfll2notime.collect()
-    ##dffl2jsonnotimetmp = dfll2notime.collect().write_json()
-    ##dffl2jsonnotime = {i['name']: i['values'] for i in json.loads(dffl2jsonnotimetmp)['columns']} 
-
-    dffgroups = dflpolarsgroup
-    #dffgroups = {i['name']: i['values'] for i in json.loads(dffgroupstmp)['columns']} 
-    #clickdatasend = dfll2[0]['PeriodName'].unique()
-    #Periodchosencount = []
-    #Periodchosencount.clear()
-    #Periodchosencount.append(len(clickdatasend.tolist()))
-    #Displaypreviouscount = []
-    #if Periodchosencount[0]>1:
-    #    Displaypreviouscount.append("block")
-    #else:
-    #    Displaypreviouscount.append("none") 
-   # style={eval(Displaypreviouscount[0])}
-   # style = {'display': Displaypreviouscount}
+    mastersetkpifilteredjsonnotime = mastersetkpifilterednotime.collect()
+    print('mastersetkpifilteredjsonnotime')
+    print('mastersetkpifilteredjsonnotime')
+    print(mastersetkpifilteredjsonnotime)
+    print('mastersetkpifilteredjsonnotime')
+    dffgroups = dflpolarsgroup.sort("KPIGroup")
     string_prefix = 'You have selected: '
-    #print(dff0pol.select(pl.col('Period_int')).max().collect())
     if datefromtmp is not None:
-        start_date_string = str(dff0pol.select(pl.col('Period_int')).min().collect())[0:10]
+        start_date_string = str(mastersetkpifiltered.lazy().select(pl.col('Period_int')).min().collect())[0:10]
         string_prefix = string_prefix + 'Start Date: ' + start_date_string + ' | '
     if datetotmp is not None:
-        end_date_string = str(dff0pol.select(pl.col('Period_int')).max().collect())[0:10]
+        end_date_string = str(mastersetkpifiltered.lazy().select(pl.col('Period_int')).max().collect())[0:10]
         string_prefix = string_prefix + 'End Date: ' + end_date_string
     if len(string_prefix) == len('You have selected: '):
         string_prefix = 'Select a date to see it displayed here'
-    if Level0NameSelect == list(Level0NameList):
-        sweep0style = {'opacity':'0.2'}
-    else:
-        sweep0style = {}
-    if Level1NameSelect == list(Level1NameList):
-        sweep1style = {'opacity':'0.2'}
-    else:
-        sweep1style = {}
-    if Level2NameSelect == list(Level2NameList):
-        sweep2style = {'opacity':'0.2'}
-    else:
-        sweep2style = {}
-    return dffgroups,dffl0json,dffl1json,dffl2json,dffl0jsonnotime,dffl1jsonnotime,dffl2jsonnotime,dffcomparejson,string_prefix,'bs' if not level0 else level0[0],'bs' if not level1 else level1[0],'bs' if not level2 else level2[0],sweep0style,sweep1style,sweep2style#,style,style,style,style,style#,clickdatasend,dffcomparejson
+    return mastersetkpifiltered,mastersetkpifilteredjsonnotime,dffgroups,dffcomparejson,string_prefix,'bs' if not level0 else level0[0],'bs' if not level1 else level1[0],'bs' if not level2 else level2[0],button_groups,button_groups,pieorbar#,eval(button_sweeps_3[0]) #sweep0style,sweep1style,sweep2style,
 
-datefromtmp.clear()
-datetotmp.clear()  
+
+#datefromtmp.clear()
+#datetotmp.clear()  
 
 @app.callback([
     Output('cardsid', 'children'),
     Output('navbar', 'children'),
+    Output('graphcontainer', 'children',allow_duplicate=True),
     ]
     ,
     Input('dfgroups', 'data'),
     Input('dflcomparekpi', 'data'),
     Input("KPISelect", "value"),
     Input("KPIGroupSelect", "value"),
-    Input("breakpoints", "widthBreakpoint"), session_check=False, prevent_initial_call=True
+    Input("breakpoints", "widthBreakpoint")
+    ,
+    #Input("WalletSwitch", "label"),
+    #Input("CompetitorSwitch", "label")
+    #,
+    State('cardsid', 'children')
+    , session_check=False, prevent_initial_call=True
 )
 
-def updatekpiindicator(dfgroups,dffcompare,KPISelect,KPIGroupSelect,widthBreakpoint):#
+def updatekpiindicator(dfgroups,dffcompare,KPISelect,KPIGroupSelect,widthBreakpoint,cardsidState):
     print('execute updatekpiindicator')
+    #if not str(cardsidState)=='None' and len([item for item in ctx.triggered if 'prop_id' in item]) >1:
+    #    print('dash.exceptions.PreventUpdate')
+    #    raise dash.exceptions.PreventUpdate
+    #else:
     sidemenulist=[]
     sidemenulist3=[]
     sidemenulist.clear()
@@ -2330,22 +2231,18 @@ def updatekpiindicator(dfgroups,dffcompare,KPISelect,KPIGroupSelect,widthBreakpo
     carousellist3new =[]
     carousellist3new.clear()
     carousellistnew.clear()
-   # dfl0 = pd.read_json(dfl0, orient='split')
-    #dffcompare = pd.read_json(dffcompare, orient='split')
+    graphscontainer = []
+    graphscontainer3 = []
     dftouse = dffcompare.to_pandas()#pd.DataFrame(dffcompare)
-    dfgroups = dfgroups #pd.DataFrame(dfgroups)
-   # dfl2 = pd.read_json(dfl2click, orient='split')
-    #dataCompare = pd.read_json(compareset, orient='split')
-    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
+    dfgroups = dfgroups.sort("KPIGroup") #pd.DataFrame(dfgroups)
     if kpicountout[0]<slides_to_show_ifenough:
         slides_to_show = kpicountout[0]
     else:
         slides_to_show = slides_to_show_ifenough
-    
+
     dftouse.sort_values(by=['Sorting'])
-    print('test2')
     #create list with all kpi group names that exist for the selected level 1, 2 or 3
-    KPIGroupListmodelfilter = dfgroups['KPIGroup'].unique()
+    KPIGroupListmodelfilter = dfgroups['KPIGroup']
     #create list with all kpi group names that exist in the selected group without select
     KPIGroupListFiltered = d_kpi["KPIGroup"].unique()
     #create list with all kpi names that exist for the selected level 1, 2 or 3
@@ -2355,16 +2252,18 @@ def updatekpiindicator(dfgroups,dffcompare,KPISelect,KPIGroupSelect,widthBreakpo
             (d_kpi["KPIGroup"].isin(KPIGroupSelect))
         ]
     KPIListFiltered.sort_values(by=['Sorting'])
-    KPINameListGroupFilter = KPIListFiltered['KPIName'].unique()
-    
+    KPINameListFilter = KPIListFiltered['KPIName'].unique()
+
     KPINameListIterate = []
     #enter all values that exist for the selected level 1 2 and 3
     for i in KPINameListmodelfilter:
         KPINameListIterate.append(i)
     #enter all values that exist in the whole project but not for the selected level 1 2 and 3
-    for p in KPINameListGroupFilter:
+    for p in KPINameListFilter:
         if p not in KPINameListmodelfilter:
             KPINameListIterate.append(p)       
+
+
     KPIGroupListIterate = []
     #enter all values that exist for the selected level 1 2 and 3
     for j in KPIGroupListmodelfilter:
@@ -2373,8 +2272,6 @@ def updatekpiindicator(dfgroups,dffcompare,KPISelect,KPIGroupSelect,widthBreakpo
     for l in KPIGroupListFiltered:
         if l not in KPIGroupListmodelfilter:
             KPIGroupListIterate.append(l)
-    #KPINameListIterate.remove(KPISelect)
-    #KPINameListIterate.insert(0,KPISelect)
     outputactual =[]
     outputactualtxt =[]
    # outputlasttxt =[]
@@ -2404,29 +2301,26 @@ def updatekpiindicator(dfgroups,dffcompare,KPISelect,KPIGroupSelect,widthBreakpo
     for i,kpigroup in enumerate(KPIGroupListIterate):
         numbertmp= i
         numberidtmp= i+1
-        number=str(numbertmp)
+        number=str(numberidtmp)
         numberid=str(numberidtmp)
-        GroupImage2 = GroupImage[numbertmp]
-        print(KPIGroupSelect)
-        print(kpigroup)
+        GroupImage2 = KPIGroupImage[kpigroup] 
         if KPIGroupSelect[0] == kpigroup:
             stylegroup1 = {'color':buttonlogocolor,'background-color':buttoncolor}
         else:
             stylegroup1 = {}
         KPIGroupList2 = KPIGroupList[numbertmp]
         if kpigroup in KPIGroupListmodelfilter:
-            if kpigroup in KPIGroupListmodelfilter: 
-                sidemenulist.append(
-                    f"""html.Li(html.A([
-                            html.I('{GroupImage2}',className='material-icons icon'),
-                            html.Span('{KPIGroupList2}',className='text nav-text')],href='#',id=dict(type='kpigroup-ex3',index ='{kpigroup}'),style={stylegroup1 if len(KPIGroupSelect)==1 else {}})
-                            ,className='nav-link')"""
-                ) 
+            sidemenulist.append(
+                f"""html.Li(html.A([
+                        html.I('{GroupImage2}',className='material-icons icon'),
+                        html.Span('{kpigroup}',className='text nav-text')],href='#',id=dict(type='kpigroup-ex3',index ='{kpigroup}'),style={stylegroup1 if len(KPIGroupSelect)==1 else {}})
+                        ,className='nav-link')"""
+            ) 
         else:
             sidemenulist.append(
                 f"""html.Li(html.A([
                             html.I('{GroupImage2}',className='material-icons icon'),
-                            html.Span('{KPIGroupList2}',className='text nav-text')],href='#',id=dict(type='kpigroup-ex3-reset',index ='{kpigroup}'))
+                            html.Span('{kpigroup}',className='text nav-text')],href='#',id=dict(type='kpigroup-ex3-reset',index ='{kpigroup}'))
                             ,style = {{'opacity':'25%'}},className='nav-link')"""
             ) 
     sidemenulist2=','.join(sidemenulist)
@@ -2518,8 +2412,10 @@ def updatekpiindicator(dfgroups,dffcompare,KPISelect,KPIGroupSelect,widthBreakpo
             meandenom.clear()
             notation.append(Notationlist)
             if kpi == KPISelect:
-                style111 = {'box-shadow': f'0px -0px 5px 2px {Highlightcardcolor}'}
+                colorcardtext = graphcolor
+                style111 = {'box-shadow': f'0px -0px 5px 2px {Highlightcardcolor}'}#'background': f'{tabhover}'}#
             else:
+                colorcardtext = Highlightcardcolor
                 style111 = {}
             outputactualtxt =str(eval(Notationlist).format(value[0])) 
            # outputlasttxt = str(eval(Notationlist).format(value_lp[0]))
@@ -2532,10 +2428,29 @@ def updatekpiindicator(dfgroups,dffcompare,KPISelect,KPIGroupSelect,widthBreakpo
             numbertmp= i+1
             number=str(numbertmp)
             numberi=str(numbertmp)
+            #html.Div([dcc.Graph(id='graph-level0compare',
+            #          clear_on_unhover=True,
+            #          config=dict(
+            #              modeBarButtonsToAdd=['customButton'],
+            #              modeBarButtonsToRemove=['pan','zoom2d','select2d', 'lasso2d', 'zoomIn', 'zoomOut','toImage','resetScale',
+            #                                      'hoverCompareCartesian', 'logo', 'autoScale'],
+            #              displaylogo=False,
+            #              #scrollZoom=True,
+            #              toImageButtonOptions=dict(
+            #                  width=500,
+            #                  height=300,
+            #                  format='png',
+            #                  scale=10,
+            #                  filename='Plotlygraph'),
+            #          ),
+            #          style={'overflow': 'auto'}
+            #          ),
+            #        ]),
+            graphscontainer.append(f"""dcc.Textarea(value='{kpi}',id=dict(type='graphsloop',index ='{kpi}'))""")
             carousellistnew.append(
             f"""html.Div(
                     html.Div([
-                        html.I('info', className='material-icons', 
+                        html.I('info', className='material-icons md-18',style={{'text-align':'right','right':'4%','top':'4%','position':'absolute'}}, 
                                    id='open-box{number}', n_clicks=0),
                         dbc.Popover(
                             [
@@ -2552,7 +2467,9 @@ def updatekpiindicator(dfgroups,dffcompare,KPISelect,KPIGroupSelect,widthBreakpo
                                      draggable=False,
                                      contentEditable=False,
                                      id='Card{number}',
-                                     className='col-12 h6'),
+                                     className='col-12 h6',
+                                     style={{'margin-top':'25px'}}),
+
                         html.Div(children=[
                             dcc.Textarea(value=f'{outputactualtxt}',
                                 id='indicator-graph{number}TXT',
@@ -2580,7 +2497,7 @@ def updatekpiindicator(dfgroups,dffcompare,KPISelect,KPIGroupSelect,widthBreakpo
             accordionlist.append(
                 f"""html.Div('{kpi}',id=dict(type='filter-dropdown-ex3-reset',index='{kpi}'),className ='KPIRemainingbox h7')"""
             ) 
-            if i == len(KPINameListGroupFilter) - 1:
+            if i == len(KPINameListmodelfilter) - 1:
                 accordionliststring = str(accordionlist)
                 accordionliststring2 = accordionliststring.replace('"', '')
                 accordionlist2=','.join(accordionlist)
@@ -2592,20 +2509,27 @@ def updatekpiindicator(dfgroups,dffcompare,KPISelect,KPIGroupSelect,widthBreakpo
             #f"""html.Div(
             #   ,id=dict(type='filter-dropdown-ex3',index = '{kpi}'),style={style111},className='carddiv')"""
             #) 
+    if accordionlist:
+        slides_to_show_if_little = len(KPINameListmodelfilter)+1
+    else:
+        slides_to_show_if_little = len(KPINameListmodelfilter)
     accordionlist.clear()
     accordionlist3.clear()
     carousellist2new=','.join(carousellistnew)
     carousellist3new.append(carousellist2new)
+    graphscontainer2=','.join(graphscontainer)
+    graphscontainer3.append(graphscontainer2)
     #print(carousellist3new)
     #print(carousellist3new[0])
     if widthBreakpoint =='sm':
         slides_to_showfinal = 1
         slides_to_scrollfinal = 1
     else:
-        slides_to_showfinal = slides_to_show
+        slides_to_showfinal = slides_to_show if slides_to_show_if_little >= slides_to_show else slides_to_show_if_little
         slides_to_scrollfinal = slides_to_scroll
     divlist=[[html.Div([dbc.Spinner(size='md',delay_hide=1500,children=[dtc.Carousel(eval(carousellist3new[0])
         ,
+        infinite=False,
         slides_to_scroll=slides_to_scrollfinal,
         slides_to_show=slides_to_showfinal,
         center_padding='10px',
@@ -2662,143 +2586,337 @@ def updatekpiindicator(dfgroups,dffcompare,KPISelect,KPIGroupSelect,widthBreakpo
                     ],className='menu-bar'),  
                     ],className="sidebar close",id='nav')]
                     ]
-    return divlist[0],divlist[1]
+    return divlist[0],divlist[1],html.Div(eval(graphscontainer3[0]))
 
-
-@app.callback([Output('tabscontainer', 'style'),
-             Output('graph-level1compare', 'style'),
-             Output('graphoveralltime', 'style'),
-             Output('tabscompare', 'style'),
-             Output('graph-compare-kpi', 'style'),
-             Output('Tab0drilldown', 'label'),
-             Output('Tab1drilldown', 'label'),
-             Output('Tab2drilldown', 'label'),
-             Output('Tab0drilldown', 'tab_class_name'),
-             Output('Tab1drilldown', 'tab_class_name'),
-             Output('Tab2drilldown', 'tab_class_name')             
-             ],
-             [#Input({'type': 'kpigroup-ex3', 'index': ALL}, 'n_clicks'),
-              Input('KPISelect','value')
-              ])
-def hide_graph(KPISelect):
-    print('execute hide_graph')
-    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
-    tab_class_name=[]
-    Levelattrr = []
-    for i in range(3):
-        if KPILevelCountList[KPISelect]>i:
-            tab_class_name.append('showntab')
-        else:
-            tab_class_name.append('hiddentab') 
-        if  tab_class_name[i]=='showntab':
-            Levelattrr.append(eval(f'Level{i}attr[KPISelect]'))
-        else:
-            Levelattrr.append('')
-    #Level0attrr ='' if not Level0attr[KPISelect] else Level0attr[KPISelect]
-    #Level1attrr ='' if not Level1attr[KPISelect] else Level1attr[KPISelect]
-    #Level2attrr ='' if not Level2attr[KPISelect] else Level2attr[KPISelect]
-
-    if 'NavItem1' in changed_id:
-        kpicolor = kpicolorDEF(KPISelect)
-        msg = {'display': 'block'}
-        msg2 = {'display':'none'}
-        msg3 = {'display': 'none'}
-        color1 = {'color':buttonlogocolor,'background-color':buttoncolor}
-        color2 = {}
-        color3 = {}
-    elif 'NavItem2' in changed_id:
-        msg = {'display':'none'}
-        msg2 = {'display': 'block'}
-        msg3 = {'display': 'none'}
-        color1 = {}
-        color2 = {'color':buttonlogocolor,'background-color':buttoncolor}
-        color3 = {}
-    elif 'NavItem3' in changed_id:
-        msg = {'display': 'none'}
-        msg2 = {'display': 'none'}
-        msg3 = {'display': 'block'}
-        color1 = {}
-        color2 = {}
-        color3 = {'color':buttonlogocolor,'background-color': buttoncolor}
-    else:
-        kpicolor = kpicolorDEF(KPISelect)
-        msg = {'display': 'block'}
-        msg2 = {'display': 'none'}
-        msg3 = {'display': 'none'}
-        color1 = {'color':buttonlogocolor, 'background-color': buttoncolor}
-        color2 = {}
-        color3 = {}
-    return msg,msg,msg,msg2,msg2,Levelattrr[0],Levelattrr[1],Levelattrr[2],tab_class_name[0],tab_class_name[1],tab_class_name[2]
-
-
-@app.callback([
-             Output('NavItem1', 'style'),
-             Output('NavItem2', 'style'),
-             Output('NavItem3', 'style'),      
-             ],
-             [#Input({'type': 'kpigroup-ex3', 'index': ALL}, 'n_clicks'),
-              Input('NavItem1','n_clicks'),
-              Input('NavItem2','n_clicks'),
-              Input('NavItem3','n_clicks'),
-              ])
-def hide_graph(NavItem1,NavItem2,NavItem3):
-    print('execute hide_graph')
-    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
-    if 'NavItem1' in changed_id:
-        color1 = {'color':buttonlogocolor,'background-color':buttoncolor}
-        color2 = {}
-        color3 = {}
-    elif 'NavItem2' in changed_id:
-        color1 = {}
-        color2 = {'color':buttonlogocolor,'background-color':buttoncolor}
-        color3 = {}
-    elif 'NavItem3' in changed_id:
-        color1 = {}
-        color2 = {}
-        color3 = {'color':buttonlogocolor,'background-color': buttoncolor}
-    else:
-        color1 = {'color':buttonlogocolor, 'background-color': buttoncolor}
-        color2 = {}
-        color3 = {}
-    return color1,color2,color3
-
-#graphlevel0
+##graphlevel0
 @app.callback(
-    Output('graphlevel0', 'figure'),
+    Output('graphcontainerOutput', 'children',allow_duplicate=True),
+     [
+     Input({"type": "graphsloop", "index": ALL}, 'value'),
+     ]
+     ,prevent_initial_call=True
+)
+
+def allgraphsindiv(values):
+    print('execute allgraphsindiv')
+    allreturns =  html.Div(
+        [html.Div(value) for (i, value) in enumerate(values)]
+    )
+    return allreturns
+
+
+@app.callback(
+    Output('graphcontainerOutput', 'children',allow_duplicate=True),
    # Output("Category1Select", "value"),
   #  Output("Level0NameSelect", "options"),
    # Output('animatedbar', 'figure'),
     
-     Input('dfl0', 'data'),
+     [Input({"type": "graphsloop", "index": ALL}, 'value'),
      Input('GrainSelect', 'value'),
-     Input("KPISelect", "value"),
+     Input('dflcomparekpi', 'data'),
      Input("CumulativeSwitch", "label"),
      Input("PercentageTotalSwitch", "label"),
      Input("ShowValueSwitch", "label"),
-     State("breakpoints", "widthBreakpoint"),
+     Input("breakpoints", "widthBreakpoint"),
+     Input('button_group','value'),
+     Input('button_group1','value'),
+     Input("Totaalswitch", "label"),
+     Input("collapse", "is_open")
+     ,
+
+     #State('graphlevel0', 'figure'),
+     ]
+     ,prevent_initial_call=True
 )
 
-def update_kpiagg(data00,GrainSelect,KPISelect,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch,widthBreakpoint):  #,*args ,Level2NameSelect,toggle, relayoutData
+def update_kpiaggcontainer(graphsloop,GrainSelect,dflcomparekpi,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch,widthBreakpoint,button_group,button_group1,Totaalswitch,collapse):  #,*args ,Level2NameSelect,toggle, relayoutData
+    print('execute update_kpiaggcontainer')
+    print(collapse)
+    print('collapse')
+    #mastersetkpifiltered=dflcomparekpi
+    graphs = []
+    if collapse == False:
+        raise PreventUpdate
+    else:
+        for (i, value) in enumerate(graphsloop): 
+            KPISelect = value 
+            mastersetkpifiltered = dflcomparekpi.filter((pl.col("KPIName") == KPISelect))   
+            changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+            changed_id2 = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
+            #if not str(graphlevel0State)=='None' and len([item for item in ctx.triggered if 'prop_id' in item]) >1:
+            #    print('dash.exceptions.PreventUpdate')
+            #    raise dash.exceptions.PreventUpdate
+            #else:
+            #update_filter_l0(data0, GrainSelect, KPISelect)  # ,Level2NameSelect
+            columns_to_removemasterset = mastersetkpifiltered.columns
+            noemer = f'pl.col("Denominator").{eval(AggregateNumDenom(KPIDenomAgg[KPISelect]))}()'
+            teller = f'pl.col("Numerator").{eval(AggregateNumDenom(KPINumAgg[KPISelect]))}()'
+            dataframe = Cumloop0(CumulativeSwitch)
+            dataframe1 = Cumloop1(CumulativeSwitch)
+            dataframe2 = Cumloop2(CumulativeSwitch)
+            Notation = KPISelectedStyle(KPISelect)
+            Calculation = CalculationDEF(KPISelect)
+            Notation = KPISelectedStyle(KPISelect)
+            Calculation = CalculationDEF(KPISelect)
+            if widthBreakpoint=='sm':
+                    title = ''
+            else:
+                title = dict(text=str(KPISelect),# + ' per ' + Level2Entitytype,
+                               # +' -     selected: '+str(Level2NameSelect),
+                               font=dict(#family='Montserrat',
+                                         size=22,
+                                         color=fontcolor,
+                                ),
+                ) 
+            if widthBreakpoint=='sm':
+                legend=dict(
+                            font=dict(
+                                size=15,
+                                color=fontcolor,
+                            ),
+                            orientation="h"
+                        )
+            else:
+                legend=dict(
+                            font=dict(
+                                size=15,
+                                color=fontcolor,
+                            ),
+                            yanchor="top",
+                            y=1,
+                            x=1.01,
+                            xanchor="left",
+                        )
+            if button_group == 'LevelName_0':
+                data0 = mastersetkpifiltered.to_pandas() # pd.DataFrame(data00)
+                traces3 = []
+                mastersetkpifilterednewcol = [column for column in columns_to_removemasterset if '_1' not in column and '_2' not in column and column not in ['d_level1_id', 'd_level2_id']]
+                # Select only the filtered columns
+                mastersetkpifilterednew = mastersetkpifiltered.select(mastersetkpifilterednewcol)
+                mastersetkpifilterednewcol.remove('Numerator')
+                mastersetkpifilterednewcol.remove('Denominator')
+                mastersetkpifilterednotime = (
+                mastersetkpifilterednew.lazy()
+                .groupby(mastersetkpifilterednewcol)
+                .agg(
+                    [
+                        eval(noemer),
+                        eval(teller),
+                    ]
+                )
+                #.sort(["LevelName_0"])
+                )
+                polarsdata = mastersetkpifilterednotime.collect()
+                #polarsdata.with_columns(
+                #    pl.col("Period_int").str.to_datetime("%d %B %Y", strict=False)
+                #    )
+                data000 = polarsdata.to_pandas()
+                data000['Period_int'] = pd.to_datetime(data000['Period_int'])
+                data000 = data000.sort_values(by='Period_int')
+                for i in data000['LevelName_0'].unique():
+                    df_by_Level0Name = data000[data000['LevelName_0'] == i]
+                    ##df_by_Level0NameCum = dff[dff['Level0Name'] == i]
+                    ##df_by_Level0NameCum['Numerator'] = df_by_Level0NameCum['Numerator'].cumsum()
+                    ##df_by_Level0NameCum['Denominator'] = df_by_Level0NameCum['Denominator'].cumsum()
+                    df_by_Level0Name = df_by_Level0Name.assign(NumeratorCum=lambda df_by_Level0Name: df_by_Level0Name.Numerator.cumsum())
+                    df_by_Level0Name = df_by_Level0Name.assign(DenominatorCum=lambda df_by_Level0Name: df_by_Level0Name.Denominator.cumsum())
+                    y = eval(eval(dataframe[1]))
+                    default_color = "red"
+                    colors = {"2021-05-31T00:00:00.000Z": "red"}
+                    color_discrete_map = {
+                        c: colors.get(c, default_color)
+                        for c in eval(dataframe[0]).Period_int.unique()}
+                    traces3.append(dict(
+                        eval(dataframe[0]),
+                        x=eval(dataframe[0]).Period_int,  # df_by_Level1Name['Period_int'],
+                        cumulative_enabled=True,
+                        color=eval(dataframe[0]).Period_int,
+                        y=y,
+                        text=y if ShowValueSwitch == 'True' else '',
+                        mode=linesormarkers(GrainSelect),
+                        opacity=1,
+                        customdata=eval(dataframe[0]).LevelName_0,
+                        line=dict(
+                            width=3,
+                            shape="spline",
+                        ),
+                        marker=dict(
+                            size=5,
+                            opacity=1,
+                            line=dict(width=0.1
+                                      ),
+                            color=LevelNameColor[i] #
+                        ),
+                        type=visualDEF(KPISelect),
+                        name=i,
+                        transforms=dict(
+                            type='aggregate',
+                            groups="Period_int",
+                            aggregations=[
+                                dict(target='Numerator', func=AggregateNumDenom(Calculation)),  # , enabled=True
+                                dict(target='Denominator', func=AggregateNumDenom(Calculation))  # , enabled=True
+                            ]
+                        ),
+                    )
+                    )
+                if not traces3:
+                    return {"layout": dict(
+                    xaxis = dict(visible=False),
+                    yaxis = dict(visible=False),
+                    style={'background-color': 'red', 'color': 'white'},
+                    annotations=[
+                                    dict(
+                                        xref="paper",
+                                        yref="paper",
+                                        x=0.5,
+                                        y=0.5,
+                                        text="No data available",
+                                        showarrow=False,
+                                        font=dict(size=26,color=fontcolor),
+                        )
+                    ],
+                    plot_bgcolor='transparent',
+                    paper_bgcolor='transparent' 
+                    )
+                    }
+                else:
+                    figure = {
+                        'data': traces3,
+                        'layout': dict(
+                            clickmode='event+select',
+                            barmode='stack',
+                            showlegend=False if button_group1 == 'LevelName_0' else True,
+                            barnorm=eval(PercentageTotalSwitchDEF(PercentageTotalSwitch)),
+                            xaxis=dict(type='string',
+                                       title='',
+                                       showgrid=False,
+                                       gridwidth=0,
+                                      # showspikes=True,
+                                       showline=False,
+                                       color=fontcolor,
+                                       rangeselector=dict(
+                                           buttons=rangeselector(GrainSelect),
+                                           bgcolor=tabhover,  # Background color of the range selector
+                                           activecolor=rangeselected,
+                                           activebordercolor='white',
+                                           font=dict(
+                                                color=fontcolor,
+                                                size=16
+                                           )
+                                       ),
+                                       rangeslider=dict(
+                                           visible=False
+                                       ),
+                                       linewidth=2,
+                                       font=dict(
+                                           size=14,
+                                       )
+                                       ),
+                            yaxis=dict(title='',
+                                       linewidth=2,
+                                       tickformat=eval(Notation[0]),
+                                       showgrid=False,
+                                       showline=False,
+                                       autorange=True,
+                                       fixedrange=True,
+                                      # showspikes=True,
+                                       color=fontcolor,
+                                       gridwidth=0.5,
+                                       font=dict(
+                                           size=14,
+                                       )
+                                       ),
+                            margin={'l': 60, 'b': 45, 't': 37, 'r': 40}, 
+                            modebar = dict(
+                                        bgcolor='transparent',
+                                        color=BeautifulSignalColor,
+                            ),
+                            autosize=True,
+                            plot_bgcolor=graphcolor,
+                            paper_bgcolor=graphcolor,
+                            legend=legend,
+                            title=title,
+                            font=dict(
+                            ),
+                            images=dict(
+                                x = 0,
+                                y = 1,
+                                sizex=0.2,
+                                sizey=0.2,
+                            ),
+                            hovermode='x-unified',
+                            transition={'duration': 50},
+                        )
+                    }
+                    graphs.append(dcc.Graph(figure=figure,
+                              config=dict(
+                                modeBarButtonsToAdd =  ['customButton'],
+                                modeBarButtonsToRemove = ['pan', 'lasso2d', 'select', 'zoom2d', 'zoomIn', 'zoomOut','toImage','resetScale',
+                                                              'hoverCompareCartesian', 'logo', 'autoScale'],
+                                displaylogo = False,
+                                #scrollZoom = True,
+                                toImageButtonOptions = dict(
+                                    width =550,
+                                    height = 300,
+                                    format = 'png',
+                                    scale = 10,
+                                    filename = 'Plotlygraph'),
+                              ),
+                              className="row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12 pretty_graph"
+                              )
+                    )
+        #print(traces3)
+    return graphs
+    
+
+@app.callback(
+    Output('graphlevel0', 'figure',allow_duplicate=True),
+   # Output("Category1Select", "value"),
+  #  Output("Level0NameSelect", "options"),
+   # Output('animatedbar', 'figure'),
+    
+     [
+     Input('GrainSelect', 'value'),
+     Input("KPISelect", "value"),
+     Input('mastersetkpifiltered', 'data'),
+     Input("CumulativeSwitch", "label"),
+     Input("PercentageTotalSwitch", "label"),
+     Input("ShowValueSwitch", "label"),
+     Input("breakpoints", "widthBreakpoint"),
+     Input('button_group','value'),
+     Input('button_group1','value'),
+     Input("Totaalswitch", "label")
+     ,
+
+     #State('graphlevel0', 'figure'),
+     ]
+     ,prevent_initial_call=True
+)
+
+def update_kpiagg(GrainSelect,KPISelect,mastersetkpifiltered,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch,widthBreakpoint,button_group,button_group1,Totaalswitch):  #,*args ,Level2NameSelect,toggle, relayoutData
     print('execute update_kpiagg')
+    print(mastersetkpifiltered)
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+    changed_id2 = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
+    #if not str(graphlevel0State)=='None' and len([item for item in ctx.triggered if 'prop_id' in item]) >1:
+    #    print('dash.exceptions.PreventUpdate')
+    #    raise dash.exceptions.PreventUpdate
+    #else:
     #update_filter_l0(data0, GrainSelect, KPISelect)  # ,Level2NameSelect
-    data0 = data00.to_pandas() # pd.DataFrame(data00)
-    dff = data0
-    #level0options=[{'label': html.Span([i],style={'background-color': Level0NameColor[i]}), 'value': i} for i in dff["LevelName_0"].unique()]#dff["LevelName_0"].unique()
-    #level1options=dfll2[0]["LevelName_1"].unique()
-    #level2options=dfll2[0]["LevelName_1"].unique()
-    #level0filteroptions=[{'label': html.Span([i],style={'background-color': ProjectOrange}), 'value': i}  for i in dff["Filter1_0"].unique()] #dff["Filter1_0"].unique()
-    #level1filteroptions=dff["Filter1_1"].unique()
-    #level2filteroptions=dff["Filter1_2"].unique()
-    traces3 = []
+    columns_to_removemasterset = mastersetkpifiltered.columns
+    noemer = f'pl.col("Denominator").{eval(AggregateNumDenom(KPIDenomAgg[KPISelect]))}()'
+    teller = f'pl.col("Numerator").{eval(AggregateNumDenom(KPINumAgg[KPISelect]))}()'
     dataframe = Cumloop0(CumulativeSwitch)
+    dataframe1 = Cumloop1(CumulativeSwitch)
+    dataframe2 = Cumloop2(CumulativeSwitch)
     Notation = KPISelectedStyle(KPISelect)
     Calculation = CalculationDEF(KPISelect)
     Notation = KPISelectedStyle(KPISelect)
     Calculation = CalculationDEF(KPISelect)
     if widthBreakpoint=='sm':
-        title = ''
+            title = ''
     else:
-        title = dict(text=str(KPISelect) + ' per ',# + Level2Entitytype,
+        title = dict(text=str(KPISelect),# + ' per ' + Level2Entitytype,
                        # +' -     selected: '+str(Level2NameSelect),
                        font=dict(#family='Montserrat',
                                  size=22,
@@ -2824,8 +2942,95 @@ def update_kpiagg(data00,GrainSelect,KPISelect,CumulativeSwitch,PercentageTotalS
                     x=1.01,
                     xanchor="left",
                 )
-    for i in data0['LevelName_0'].unique():
-        df_by_Level0Name = dff[dff['LevelName_0'] == i]
+
+    data0 = mastersetkpifiltered.to_pandas()
+    LevelOrFilter = button_group.split('_')[0]
+    LevelOrFilterNumber = button_group.split('_')[1]
+    columns_to_remove_dict = {
+        'LevelName_0': [column for column in columns_to_removemasterset if '_1' not in column and '_2' not in column and column not in ['d_level1_id', 'd_level2_id']],
+        'LevelName_1': [column for column in columns_to_removemasterset if '_0' not in column and '_2' not in column and column not in ['d_level0_id', 'd_level2_id']],
+        'LevelName_2': [column for column in columns_to_removemasterset if '_0' not in column and '_1' not in column and column not in ['d_level0_id', 'd_level1_id']],
+        'Filter1_0': [column for column in columns_to_removemasterset if '_0' not in column and '_1' not in column and '_2' not in column and column not in ['d_level0_id', 'd_level1_id', 'd_level2_id']]
+    }
+    # Check the value of LevelOrFilterNumber and select the appropriate list
+    if button_group in columns_to_remove_dict:
+        columns_to_remove = columns_to_remove_dict[button_group]
+        if LevelOrFilter=='Filter1':
+            columns_to_remove.append('Filter1_0')
+    else:
+        print(f"LevelOrFilterNumber '{LevelOrFilterNumber}' not found in the dictionary.")
+    traces3 = []
+    mastersetkpifilterednewcol = columns_to_remove#[column for column in columns_to_removemasterset if '_1' not in column and '_2' not in column and column not in ['d_level1_id', 'd_level2_id']]
+    # Select only the filtered columns
+    mastersetkpifilterednew = mastersetkpifiltered.select(columns_to_remove)
+    mastersetkpifilterednewcol.remove('Numerator')
+    mastersetkpifilterednewcol.remove('Denominator')
+    mastersetkpifilterednotime = (
+    mastersetkpifilterednew.lazy()
+    .groupby(mastersetkpifilterednewcol)
+    .agg(
+        [
+            eval(noemer),
+            eval(teller),
+        ]
+    )
+    #.sort(["LevelName_0"])
+    )
+    polarsdata = mastersetkpifilterednotime.collect()
+    data000 = polarsdata.to_pandas()
+    data000['Period_int'] = pd.to_datetime(data000['Period_int'])
+    data000 = data000.sort_values(by='Period_int')
+    """
+    columns_to_remove = data0.columns[data0.columns.str.contains('_1|_2|d_level1_id|d_level2_id')]
+    data00 = data0.drop(columns=columns_to_remove)
+    columnsdffpol = data00.columns.tolist()
+    columnsdffpol.remove('Numerator')
+    columnsdffpol.remove('Denominator')
+    data000 = data00.groupby(columnsdffpol, as_index=False, sort=False).agg(
+        {'Denominator': [eval(AggregateNumDenom(KPIDenomAgg[KPISelect]))], 'Numerator': [eval(AggregateNumDenom(KPINumAgg[KPISelect]))]},dtype=object)
+    data000.reset_index() 
+    data000.columns = data000.columns.droplevel(1)
+    for v in polarsdata.select(['LevelName_0']).unique().to_series().to_list():
+        print(polarsdata.select(['LevelName_0']).unique().to_series().to_list())
+        print(v)
+        print(LevelNameColor[v])
+        df_by_Level0Name = polarsdata.filter(pl.col("LevelName_0") == v)
+        y = df_by_Level0Name.select(['Numerator']).to_series()
+        traces3.append(dict(
+            x=df_by_Level0Name.select(['Period_int']).to_series(),
+            cumulative_enabled=True,
+            color=df_by_Level0Name.select(['Period_int']).to_series(),
+            y=y,
+            text=y if ShowValueSwitch == 'True' else '',
+            mode=linesormarkers(GrainSelect),
+            opacity=1,
+            customdata=df_by_Level0Name.select(['LevelName_0']).to_series(),
+            line=dict(
+                width=3,
+                shape="spline",
+            ),
+            marker=dict(
+                size=5,
+                opacity=1,
+                line=dict(width=0.1
+                          ),
+                color=LevelNameColor[v] #
+            ),
+            type=visualDEF(KPISelect),
+            name=v,
+            transforms=dict(
+                type='aggregate',
+                groups="Period_int",
+                aggregations=[
+                    dict(target='Numerator', func=AggregateNumDenom(Calculation)),  # , enabled=True
+                    dict(target='Denominator', func=AggregateNumDenom(Calculation))  # , enabled=True
+                ]
+            ),
+            )
+        )
+    """
+    for i in data000[button_group].unique():
+        df_by_Level0Name = data000[data000[button_group] == i]
         ##df_by_Level0NameCum = dff[dff['Level0Name'] == i]
         ##df_by_Level0NameCum['Numerator'] = df_by_Level0NameCum['Numerator'].cumsum()
         ##df_by_Level0NameCum['Denominator'] = df_by_Level0NameCum['Denominator'].cumsum()
@@ -2834,9 +3039,6 @@ def update_kpiagg(data00,GrainSelect,KPISelect,CumulativeSwitch,PercentageTotalS
         y = eval(eval(dataframe[1]))
         default_color = "red"
         colors = {"2021-05-31T00:00:00.000Z": "red"}
-        color_discrete_map = {
-            c: colors.get(c, default_color)
-            for c in eval(dataframe[0]).Period_int.unique()}
         traces3.append(dict(
             eval(dataframe[0]),
             x=eval(dataframe[0]).Period_int,  # df_by_Level1Name['Period_int'],
@@ -2846,16 +3048,17 @@ def update_kpiagg(data00,GrainSelect,KPISelect,CumulativeSwitch,PercentageTotalS
             text=y if ShowValueSwitch == 'True' else '',
             mode=linesormarkers(GrainSelect),
             opacity=1,
-            customdata=eval(dataframe[0]).LevelName_0,
+            customdata=eval(dataframe[0]).eval(button_group),
             line=dict(
                 width=3,
                 shape="spline",
             ),
             marker=dict(
                 size=5,
+                opacity=1,
                 line=dict(width=0.1
-                          ),
-                color=Level0NameColor[i] #
+                          ), 
+                color=LevelNameColor[i] if LevelOrFilter=='LevelName' else FilterColor[i]  #
             ),
             type=visualDEF(KPISelect),
             name=i,
@@ -2869,13 +3072,58 @@ def update_kpiagg(data00,GrainSelect,KPISelect,CumulativeSwitch,PercentageTotalS
             ),
         )
         )
-    #print(traces3)
-    #animatedreturn = {
-    #   px.bar(traces3, x='LevelName_0', y=y, color='LevelName_0', 
-    #       animation_frame='Period_int', animation_group='LevelName_0', 
-    #       range_y=[0,4000000000]
-    #       )
-    #}
+    if Totaalswitch=='True':
+        for d in appendList2:
+            columns_to_remove0 = data0.columns[data0.columns.str.contains('_1|_2|d_level1_id|d_level2_id')]
+            data00 = data0.drop(columns=columns_to_remove0)
+            columnsdffpol0 = data00.columns.tolist()
+            columnsdffpol0.remove('Numerator')
+            columnsdffpol0.remove('Denominator')
+            data000 = data00.groupby(columnsdffpol0, as_index=False, sort=False).agg(
+                {'Denominator': [eval(AggregateNumDenom(KPIDenomAgg[KPISelect]))], 'Numerator': [eval(AggregateNumDenom(KPINumAgg[KPISelect]))]},dtype=object)
+            data000.reset_index() 
+            data000.columns = data000.columns.droplevel(1)
+            for v in data000.LevelName_0.unique():
+                df_by_Level0Name = data000[data000['LevelName_0'] == v]
+                df_by_Level0Name = df_by_Level0Name.assign(NumeratorCum=lambda df_by_Level0Name: df_by_Level0Name.Numerator.cumsum())
+                df_by_Level0Name = df_by_Level0Name.assign(DenominatorCum=lambda df_by_Level0Name: df_by_Level0Name.Denominator.cumsum())
+                y2 = eval(eval(dataframe0[1]))
+                d.append(dict(
+                    eval(dataframe0[0]),
+                    x=eval(dataframe0[0]).Period_int, 
+                    cumulative_enabled=True,
+                    y=y2, 
+                    text=y2,
+                    text_auto=True,
+                    customdata=eval(dataframe0[0]).LevelName_0,
+                    mode=linesormarkers(GrainSelect),
+                    opacity=1,
+                    marker=dict(
+                        size = 5,
+                        color=LevelNameColor[v],
+                        color_discrete_map='identity', 
+                        line=dict(width=0.1,
+                                 color = 'white'
+                                   )
+                    ),
+                    type="line",
+                    name=v,
+                    line= dict(
+                        width=5,
+                        shape="spline",
+                        color=LevelNameColor[i] if LevelOrFilter=='LevelName' else FilterColor[i],
+                    ),
+                  #  fill='tozeroy',
+                    transforms=[dict(
+                        type='aggregate',
+                        groups=eval(dataframe0[0]).Period_int,
+                        aggregations=[
+                            dict(target='Numerator', func=AggregateNumDenom(Calculation)),  # , enabled=True
+                            dict(target='Denominator', func=AggregateNumDenom(Calculation))  # , enabled=True
+                        ]
+                    ),
+                    ]
+                ))
     if not traces3:
         return {"layout": dict(
         xaxis = dict(visible=False),
@@ -2900,8 +3148,9 @@ def update_kpiagg(data00,GrainSelect,KPISelect,CumulativeSwitch,PercentageTotalS
         return {
             'data': traces3,
             'layout': dict(
+                clickmode='event+select',
                 barmode='stack',
-                showlegend=False,
+                showlegend=False if button_group1 == button_group else True,
                 barnorm=eval(PercentageTotalSwitchDEF(PercentageTotalSwitch)),
                 xaxis=dict(type='string',
                            title='',
@@ -2911,7 +3160,13 @@ def update_kpiagg(data00,GrainSelect,KPISelect,CumulativeSwitch,PercentageTotalS
                            showline=False,
                            color=fontcolor,
                            rangeselector=dict(
-                               buttons=rangeselector(GrainSelect)
+                               buttons=rangeselector(GrainSelect),
+                               bgcolor='transparent',  # Background color of the range selector
+                               activecolor=ProjectOrange,#tabhover
+                               font=dict(
+                                    color=fontcolor,
+                                    size=16
+                               )
                            ),
                            rangeslider=dict(
                                visible=False
@@ -2957,75 +3212,144 @@ def update_kpiagg(data00,GrainSelect,KPISelect,CumulativeSwitch,PercentageTotalS
                 transition={'duration': 50},
             )
         }#,level0filteroptions,level0options#,animatedreturn
-
-
-@app.callback(
-    Output('graph-level0compare', 'figure'),
-    [Input('dfl0notime', 'data'),
-    # Input('dfl1', 'data'),
-     State("KPISelect", "value"),
-
-    # Input('graphlevel0', 'selectedData'),
-     Input("Totaalswitch", "label"),
-     State("breakpoints", "widthBreakpoint"),
-    # eval(kpigrouplistinput3[0]),  
-     ]
-)
-def update_level0Graph(data00,KPISelect,Totaalswitch,widthBreakpoint): #,hoverData,*args
-    print('update_level0Graph')
-    dff0 = data00.to_pandas() #pd.DataFrame(data00)
-    #dff0 = pd.read_json(data00, orient='split')
-    traces = []
-    if widthBreakpoint=='sm':
-        title = ''
-    else:
-        title = dict(text=str(KPISelect),
-                       font=dict(size=22,
-                                 color=fontcolor,
-                        ),
-        ) 
-    Notation = KPISelectedStyle(KPISelect)
-    Calculation = CalculationDEF(KPISelect)
-    AggregateNum = NumaggregateDEF(KPISelect)
-    AggregateDenom = DenomaggregateDEF(KPISelect)
-    for j in dff0.LevelName_0.unique():
-        df_by_Level0Name = dff0[dff0['LevelName_0'] == j]
-        x2 = eval(CalculationLogic0(Calculation))
-        traces.append(dict(
-            #df_by_Level0Name,
-            y=df_by_Level0Name.LevelName_0,
-            x=x2,
-            text=x2,
-            text_auto=True,
-            texttemplate="%{value:" + eval(Notation[0]) + "}",  # "%{value:.01%}",
-            textformat=eval(Notation[0]),
-            type='bar',
-            marker=dict(
-                opacity=1,
-                color=Level0NameColor[j],
-                color_discrete_map='identity',
-                line=dict(width=0.1,
-                          color=Level0NameColor[j],
-                          color_discrete_map='identity',
-                          opacity=1,
-                          ),
-            ),
-            orientation="h",
-            name=j,
-            transforms=[dict(
-                type='aggregate',
-                groups=df_by_Level0Name.LevelName_0,
-                aggregations=[
-                    dict(target='Numerator', func=AggregateNumDenom(AggregateNum)),  
-                    dict(target='Denominator', func=AggregateNumDenom(AggregateDenom))  
-                ]
-            ),
+    """
+    elif button_group=='LevelName_1':# tabsdrilldown = 'tab-1': 
+        #data2 =data22.to_pandas()# pd.DataFrame(data22) #pd.read_json(data22, orient='split')
+        #Level2NameList = mastersetkpifiltered1['LevelName_2'].unique().tolist()
+        #options = [{'label': str(i), 'value': str(i)} for i in Level2NameList]
+        traces3 = []
+        tracestotal = []
+        traces = []
+        traces2 = []
+        totaaljanee = Totaalloop(Totaalswitch)
+        appendList1 = [tracestotal, traces]
+        appendList2 = eval(totaaljanee)
+        mastersetkpifilterednewcol = [column for column in columns_to_removemasterset if '_0' not in column and '_2' not in column and column not in ['d_level0_id', 'd_level2_id']]
+        # Select only the filtered columns
+        mastersetkpifilterednew = mastersetkpifiltered.select(mastersetkpifilterednewcol)
+        mastersetkpifilterednewcol.remove('Numerator')
+        mastersetkpifilterednewcol.remove('Denominator')
+        mastersetkpifilterednotime = (
+        mastersetkpifilterednew.lazy()
+        .groupby(mastersetkpifilterednewcol)
+        .agg(
+            [
+                eval(noemer),
+                eval(teller),
             ]
-        ))
-    if dff0.empty:
-        return {"layout": dict(
+        )
+        #.sort(["LevelName_1"])
+        )
+        polarsdata = mastersetkpifilterednotime.collect()
+        data111 = polarsdata.to_pandas()
+        data111['Period_int'] = pd.to_datetime(data111['Period_int'])
+        data111 = data111.sort_values(by='Period_int')
+        #columns_to_remove = mastersetkpifiltered1.columns[mastersetkpifiltered1.columns.str.contains('_0|_2|d_level0_id|d_level2_id')]
+        #data11 = mastersetkpifiltered1.drop(columns=columns_to_remove)
+        #columnsdffpol = data11.columns.tolist()
+        #columnsdffpol.remove('Numerator')
+        #columnsdffpol.remove('Denominator')
+        #data111 = data11.groupby(columnsdffpol, as_index=False, sort=False).agg(
+        #    {'Denominator': [eval(AggregateNumDenom(KPIDenomAgg[KPISelect]))], 'Numerator': [eval(AggregateNumDenom(KPINumAgg[KPISelect]))]},dtype=object)
+        #data111.reset_index() 
+        #data111.columns = data111.columns.droplevel(1)
+        for z in appendList1:
+            for i in data111['LevelName_1'].unique():
+               df_by_Level1Name = data111[data111['LevelName_1'] == i]
+               df_by_Level1Name = df_by_Level1Name.assign(NumeratorCum=lambda df_by_Level1Name: df_by_Level1Name.Numerator.cumsum())
+               df_by_Level1Name = df_by_Level1Name.assign(DenominatorCum=lambda df_by_Level1Name: df_by_Level1Name.Denominator.cumsum())
+               y = eval(eval(dataframe1[1]))
+               z.append(dict( 
+                   eval(dataframe1[0]),
+                   x=eval(dataframe1[0]).Period_int, 
+                   cumulative_enabled=True,
+                   y=y,
+                   color=eval(dataframe1[0]).Period_int,
+                   text=y if ShowValueSwitch == 'True' else '',
+                   text_auto=True,
+                   mode=linesormarkers(GrainSelect),
+                   opacity=1,
+                   customdata=eval(dataframe1[0]).LevelName_1,
+                   line=dict(
+                     width=3,
+                     shape="spline",
+                     color=LevelNameColor[i],
+                   ),
+                   marker=dict(
+                       size = 5,
+                       line = dict(width=0.1
+                                   ),
+                       color=LevelNameColor[i],
+                   ),
+                   type=visualDEF(KPISelect),
+                   name=i,
+                   transforms=dict(
+                       type='aggregate',
+                       groups="Period_int",
+                       aggregations=[
+                           dict(target='Numerator', func=AggregateNumDenom(Calculation)),  # , enabled=True
+                           dict(target='Denominator', func=AggregateNumDenom(Calculation))  # , enabled=True
+                       ]
+                   ),
+               )
+               )
+        if Totaalswitch=='True':
+            for d in appendList2:
+                columns_to_remove0 = data0.columns[data0.columns.str.contains('_1|_2|d_level1_id|d_level2_id')]
+                data00 = data0.drop(columns=columns_to_remove0)
+                columnsdffpol0 = data00.columns.tolist()
+                columnsdffpol0.remove('Numerator')
+                columnsdffpol0.remove('Denominator')
+                data000 = data00.groupby(columnsdffpol0, as_index=False, sort=False).agg(
+                    {'Denominator': [eval(AggregateNumDenom(KPIDenomAgg[KPISelect]))], 'Numerator': [eval(AggregateNumDenom(KPINumAgg[KPISelect]))]},dtype=object)
+                data000.reset_index() 
+                data000.columns = data000.columns.droplevel(1)
+                for v in data000.LevelName_0.unique():
+                    df_by_Level0Name = data000[data000['LevelName_0'] == v]
+                    df_by_Level0Name = df_by_Level0Name.assign(NumeratorCum=lambda df_by_Level0Name: df_by_Level0Name.Numerator.cumsum())
+                    df_by_Level0Name = df_by_Level0Name.assign(DenominatorCum=lambda df_by_Level0Name: df_by_Level0Name.Denominator.cumsum())
+                    y2 = eval(eval(dataframe0[1]))
+                    d.append(dict(
+                        eval(dataframe0[0]),
+                        x=eval(dataframe0[0]).Period_int, 
+                        cumulative_enabled=True,
+                        y=y2, 
+                        text=y2,
+                        text_auto=True,
+                        customdata=eval(dataframe0[0]).LevelName_0,
+                        mode=linesormarkers(GrainSelect),
+                        opacity=1,
+                        marker=dict(
+                            size = 5,
+                            color=LevelNameColor[v],
+                            color_discrete_map='identity', 
+                            line=dict(width=0.1,
+                                     color = 'white'
+                                       )
+                        ),
+                        type="line",
+                        name=v,
+                        line= dict(
+                            width=5,
+                            shape="spline",
+                            color=LevelNameColor[v],
+                        ),
+                      #  fill='tozeroy',
+                        transforms=[dict(
+                            type='aggregate',
+                            groups=eval(dataframe0[0]).Period_int,
+                            aggregations=[
+                                dict(target='Numerator', func=AggregateNumDenom(Calculation)),  # , enabled=True
+                                dict(target='Denominator', func=AggregateNumDenom(Calculation))  # , enabled=True
+                            ]
+                        ),
+                        ]
+                    ))
+        if not tracestotal:
+            return {"layout": dict(
             xaxis = dict(visible=False),
             yaxis = dict(visible=False),
+            style={'background-color': 'red', 'color': 'white'},
             annotations=[
                             dict(
                                 xref="paper",
@@ -3037,278 +3361,236 @@ def update_level0Graph(data00,KPISelect,Totaalswitch,widthBreakpoint): #,hoverDa
                                 font=dict(size=26,color=fontcolor),
                 )
             ],
-            plot_bgcolor=graphcolor,
-            paper_bgcolor=graphcolor
-        )
-        }
-    else:
-        return {
-            'data': traces,
-            'layout': dict(
-                dragmode='select',
-                clickmode='event+select',
-                type='bar',
-                xaxis=dict(type='string',
-                           title='',
-                           showgrid=False,
-                           gridwidth=0,
-                           fixedrange=True,
-                           showline=False,
-                           tickformat=eval(Notation[0]),
-                           visible=False,
-                           color=fontcolor,
-                           font=dict(
-                               size=14,
-                           )
-                           ),
-                yaxis=dict(title='',
-                           showline=False,
-                           showgrid=False,
-                           categoryorder="total ascending",
-                           gridwidth=0,
-                           color=fontcolor,
-                           ),
-                margin={'l': 140, 'b': 25, 't': 37, 'r': 40},
-                showlegend=False,
-                autosize=True,
-                plot_bgcolor=graphcolor,
-                paper_bgcolor=graphcolor,
-                modebar=dict(
-                    bgcolor='transparent',
-                    color=BeautifulSignalColor,
-                ),
-                font=dict(
-                    size=15,
-                ),
-                title=title,
-                hovermode='x-unified',
-                transition={'duration': 500},
-                style={'overflow': 'auto'}
+            plot_bgcolor='transparent',
+            paper_bgcolor='transparent' 
             )
-        }
-
-######################################################################################################################
-######################################################################################################################
-################################################----tab 1 aanmaken----###############################################
-######################################################################################################################
-######################################################################################################################
-
-#graphoveralltime
-@app.callback(
-    Output('graphoveralltime', 'figure'),
- #   Output('Level2NameSelect', 'options'),
-    [Input('dfl0', 'data'),
-     Input('dfl1', 'data'),
-     Input('dfl2', 'data'),
-     State('GrainSelect', 'value'),
-     State("KPISelect", "value"),
-     Input("Totaalswitch", "label"),
-     Input("CumulativeSwitch", "label"),
-     Input("PercentageTotalSwitch", "label"),
-     Input("ShowValueSwitch", "label"),
-     State("breakpoints", "widthBreakpoint"),
-     #eval(kpigrouplistinput3[0]),  
-   #  Input("DBColorVar", "value"),
-     ]
-)
-def update_mainfigure(data00,data11,data22,GrainSelect,KPISelect,Totaalswitch,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch,widthBreakpoint):#,*args
-    print('execute update_mainfigure')
-    data0 =data00.to_pandas()# pd.DataFrame(data00)#(data00, orient='split')
-    data1 =data11.to_pandas()# pd.DataFrame(data11) #pd.read_json(data11, orient='split')
-    data2 =data22.to_pandas()# pd.DataFrame(data22) #pd.read_json(data22, orient='split')
-    dff0 = data0 
-    dff1 = data1  
-    dff2 = data2 
-    Level2NameList = dff2['LevelName_2'].unique().tolist()
-    options = [{'label': str(i), 'value': str(i)} for i in Level2NameList]
-    traces3 = []
-    tracestotal = []
-    traces = []
-    traces2 = []
-    totaaljanee = Totaalloop(Totaalswitch)
-    appendList1 = [tracestotal, traces]
-    appendList2 = eval(totaaljanee)
-    dataframe0 = Cumloop0(CumulativeSwitch)
-    dataframe1 = Cumloop1(CumulativeSwitch)
-    Notation = KPISelectedStyle(KPISelect)
-    Calculation = CalculationDEF(KPISelect)
-    if widthBreakpoint=='sm':
-        title = ''
-    else:
-        title = dict(text=str(KPISelect) + ' per ',# + Level2Entitytype,
-                       # +' -     selected: '+str(Level2NameSelect),
-                       font=dict(#family='Montserrat',
-                                 size=22,
-                                 color=fontcolor,
-                        ),
-        ) 
-    if widthBreakpoint=='sm':
-        legend=dict(
-                    font=dict(
-                        size=15,
-                        color=fontcolor,
-                    ),
-                    orientation="h"
-                )
-    else:
-        legend=dict(
-                    font=dict(
-                        size=15,
-                        color=fontcolor,
-                    ),
-                    yanchor="top",
-                    y=1,
-                    x=1.01,
-                    xanchor="left",
-                )
-    for z in appendList1:
-        for i in dff1.LevelName_1.unique():
-           df_by_Level1Name = dff1[dff1['LevelName_1'] == i]
-          ## df_by_Level1NameCum = dff[dff['Level1Name'] == i]
-          ## df_by_Level1NameCum['Numerator'] = df_by_Level1NameCum['Numerator'].cumsum()
-          ## df_by_Level1NameCum['Denominator'] = df_by_Level1NameCum['Denominator'].cumsum()
-           df_by_Level1Name = df_by_Level1Name.assign(NumeratorCum=lambda df_by_Level1Name: df_by_Level1Name.Numerator.cumsum())
-           df_by_Level1Name = df_by_Level1Name.assign(DenominatorCum=lambda df_by_Level1Name: df_by_Level1Name.Denominator.cumsum())
-           y = eval(eval(dataframe1[1]))
-           z.append(dict(
-               eval(dataframe1[0]),
-               x=eval(dataframe1[0]).Period_int, 
-               cumulative_enabled=True,
-               y=y,
-               text=y if ShowValueSwitch == 'True' else '',
-               text_auto=True,
-               mode=linesormarkers(GrainSelect),
-               opacity=1,
-               customdata=eval(dataframe1[0]).LevelName_1,
-               line=dict(
-                 width=3,
-                 shape="spline",
-                 color=Level1NameColor[i],
-               ),
-               marker=dict(
-                   size = 5,
-                   line = dict(width=0.1
+            }
+        else:
+            return {
+                'data': tracestotal,
+                'layout': dict(
+                    showlegend=False if button_group1 == 'LevelName_1' else True,
+                    barmode='stack',
+                    clear_on_unhover=True,
+                    barnorm=eval(PercentageTotalSwitchDEF(PercentageTotalSwitch)),
+                    xaxis=dict(type='string',
+                               title='',
+                               autorange=True,
+                               showgrid=False,
+                               rangeselector=dict(
+                                   buttons=rangeselector(GrainSelect),
+                                   bgcolor=tabhover,  # Background color of the range selector
+                                   activecolor=rangeselected,
+                                   font=dict(
+                                        color=fontcolor,
+                                        size=16
+                                   )
                                ),
-                   color=Level1NameColor[i],
-               ),
-               type=visualDEF(KPISelect),
-               name=i,
-               transforms=dict(
-                   type='aggregate',
-                   groups="Period_int",
-                   aggregations=[
-                       dict(target='Numerator', func=AggregateNumDenom(Calculation)),  # , enabled=True
-                       dict(target='Denominator', func=AggregateNumDenom(Calculation))  # , enabled=True
-                   ]
-               ),
-           )
-           )
-    for d in appendList2:
-        for v in dff0.LevelName_0.unique():
-            df_by_Level0Name = dff0[dff0['LevelName_0'] == v]
-            ##df_by_Level0NameCum = dff0[dff0['Level0Name'] == v]
-            ##df_by_Level0NameCum['Numerator'] = df_by_Level0NameCum['Numerator'].cumsum()
-            ##df_by_Level0NameCum['Denominator'] = df_by_Level0NameCum['Denominator'].cumsum()
-            df_by_Level0Name = df_by_Level0Name.assign(NumeratorCum=lambda df_by_Level0Name: df_by_Level0Name.Numerator.cumsum())
-            df_by_Level0Name = df_by_Level0Name.assign(DenominatorCum=lambda df_by_Level0Name: df_by_Level0Name.Denominator.cumsum())
-            y2 = eval(eval(dataframe0[1]))
-            d.append(dict(
-                eval(dataframe0[0]),
-                x=eval(dataframe0[0]).Period_int, 
-                cumulative_enabled=True,
-                y=y2, 
-                text=y2,
-                text_auto=True,
-                customdata=eval(dataframe0[0]).LevelName_0,
-                mode=linesormarkers(GrainSelect),
-                opacity=1,
-                marker=dict(
-                    size = 5,
-                    color=Level0NameColor[v],
-                    color_discrete_map='identity', 
-                    line=dict(width=0.1,
-                             color = 'white'
+                               rangeslider=dict(
+                                   visible=False
+                               ),
+                               gridwidth=0,
+                               showline=False,
+                               linewidth=0,
+                               color=fontcolor,
+                               font=dict(
+                                   size=14,
                                )
-                ),
-                type="line",
-                name=v,
-                line= dict(
-                    width=5,
-                    shape="spline",
-                    color=Level0NameColor[v],
-                ),
-              #  fill='tozeroy',
-                transforms=[dict(
-                    type='aggregate',
-                    groups=eval(dataframe0[0]).Period_int,
-                    aggregations=[
-                        dict(target='Numerator', func=AggregateNumDenom(Calculation)),  # , enabled=True
-                        dict(target='Denominator', func=AggregateNumDenom(Calculation))  # , enabled=True
+                               ),
+                    yaxis=dict(title='',
+                               showline=False,
+                               linewidth=0,
+                               autorange=True,
+                               tickformat=eval(Notation[0]),
+                               fixedrange=True,
+                               showgrid=False,
+                               gridwidth=0.5,
+                               color=fontcolor,
+                               font=dict(
+                                   size=14,
+                               )
+                               ),
+                    margin={'l': 60, 'b': 45, 't': 33, 'r': 40},
+                    legend=legend,
+                    autosize=True,
+                    plot_bgcolor=graphcolor,
+                    paper_bgcolor=graphcolor,
+                    modebar=dict(
+                        bgcolor='transparent',
+                        color=BeautifulSignalColor,
+                    ),
+                    font=dict(
+                        size=15,
+                    ),
+                    images=dict(
+                        source="https://raw.githubusercontent.com/cldougl/plot_images/add_r_img/vox.png",
+                        xref="paper", yref="paper",
+                        x=1, y=1.05,
+                        sizex=0.2, sizey=0.2,
+                        xanchor="right", yanchor="bottom"
+                    ),
+                    title=title,
+                    hovermode='x-unified',
+                    transition={'duration': 500},
+                )
+            }
+    elif button_group == 'LevelName_2':
+        print('LevelName_2')
+        print('LevelName_2')
+        print('LevelName_2')
+        data2 =mastersetkpifiltered.to_pandas()# pd.DataFrame(data22)
+        tracestotal = []
+        traces = []
+        traces2 = []
+        totaaljanee = Totaalloop(Totaalswitch)
+        appendList1 = [tracestotal,traces]
+        appendList2 = eval(totaaljanee)
+        columns_to_remove2 = data2.columns[data2.columns.str.contains('_0|_1|d_level0_id|d_level1_id')]
+        data22 = data2.drop(columns=columns_to_remove2)
+        columnsdffpol2 = data22.columns.tolist()
+        columnsdffpol2.remove('Numerator')
+        columnsdffpol2.remove('Denominator')
+        data222 = data22.groupby(columnsdffpol2, as_index=False, sort=False).agg(
+            {'Denominator': [eval(AggregateNumDenom(KPIDenomAgg[KPISelect]))], 'Numerator': [eval(AggregateNumDenom(KPINumAgg[KPISelect]))]},dtype=object)
+        data222.reset_index() 
+        data222.columns = data222.columns.droplevel(1)
+        for z in appendList1:
+            for i in data222.LevelName_2.unique():
+                df_by_Level2Name = data222[data222['LevelName_2'] == i]
+                df_by_Level2Name = df_by_Level2Name.assign(NumeratorCum=lambda df_by_Level2Name: df_by_Level2Name.Numerator.cumsum())
+                df_by_Level2Name = df_by_Level2Name.assign(DenominatorCum=lambda df_by_Level2Name: df_by_Level2Name.Denominator.cumsum())
+                y = eval(eval(dataframe2[1]))
+
+                z.append(dict(
+                    eval(dataframe2[0]),
+                    x=eval(dataframe2[0]).Period_int, 
+                    y=y,  
+                    text=y if ShowValueSwitch == 'True' else '',
+                    text_auto=True,
+                    customdata=eval(dataframe2[0]).LevelName_2,
+                    line=dict(
+                        width=3,
+                        shape="spline",
+                        color=LevelNameColor[i],
+                    ),
+                    mode=linesormarkers(GrainSelect),
+                    marker=dict(
+                        size = 5,
+                        color=LevelNameColor[i],  
+                        line=dict(width=0.1
+                        ),
+                    ),
+                    type=visualDEF(KPISelect),
+                    name=i,
+                    transforms=[dict(
+                        type='aggregate',
+                        groups=eval(dataframe2[0]).Period_int,
+                        aggregations=[
+                            dict(target='Numerator', func=AggregateNumDenom(Calculation)),   
+                            dict(target='Denominator', func=AggregateNumDenom(Calculation))
+                        ]
+                    ),
                     ]
-                ),
-                ]
-            ))
-    if not tracestotal:
-        return {"layout": dict(
-        xaxis = dict(visible=False),
-        yaxis = dict(visible=False),
-        style={'background-color': 'red', 'color': 'white'},
-        annotations=[
-                        dict(
-                            xref="paper",
-                            yref="paper",
-                            x=0.5,
-                            y=0.5,
-                            text="No data available",
-                            showarrow=False,
-                            font=dict(size=26,color=fontcolor),
-            )
-        ],
-        plot_bgcolor='transparent',
-        paper_bgcolor='transparent' 
-        )
-        }
-    else:
+                ))
+        if Totaalswitch=='True':
+            data1 =mastersetkpifiltered.to_pandas()# pd.DataFrame(data11) #pd.read_json(data11, orient='split')
+            columns_to_remove1 = data1.columns[data1.columns.str.contains('_0|_2|d_level0_id|d_level2_id')]
+            data11 = data1.drop(columns=columns_to_remove1)
+            columnsdffpol1 = data11.columns.tolist()
+            columnsdffpol1.remove('Numerator')
+            columnsdffpol1.remove('Denominator')
+            data111 = data11.groupby(columnsdffpol1, as_index=False, sort=False).agg(
+            {'Denominator': [eval(AggregateNumDenom(KPIDenomAgg[KPISelect]))], 'Numerator': [eval(AggregateNumDenom(KPINumAgg[KPISelect]))]},dtype=object)
+            data111.reset_index() 
+            data111.columns = data111.columns.droplevel(1)
+            for d in appendList2:
+                for v in data111.LevelName_1.unique():
+                    df_by_Level1Name = data111[data111['LevelName_1'] == v]
+                    df_by_Level1Name = df_by_Level1Name.assign(NumeratorCum=lambda df_by_Level1Name: df_by_Level1Name.Numerator.cumsum())
+                    df_by_Level1Name = df_by_Level1Name.assign(DenominatorCum=lambda df_by_Level1Name: df_by_Level1Name.Denominator.cumsum())
+                    y2 = eval(eval(dataframe1[1]))
+                    d.append(dict(
+                        eval(dataframe1[0]),
+                        x=eval(dataframe1[0]).Period_int,  
+                        cumulative_enabled=True,
+                        y=y2, 
+                        text=y2,
+                        text_auto=True,
+                        customdata=eval(dataframe1[0]).LevelName_1,
+                        mode=linesormarkers(GrainSelect),
+                        marker=dict(
+                            size = 5,
+                            color=LevelNameColor[v],
+                            line=dict(width=0.1,
+                                      color = 'white'
+                                       )
+                        ),
+                        type='line',
+                        name=v,
+                        line= dict(
+                            width=5,
+                            shape="spline",
+                            color=LevelNameColor[v],
+                        ),
+                        transforms=[dict(
+                            type='aggregate',
+                            groups=eval(dataframe1[0]).Period_int,
+                            aggregations=[
+                                dict(target='Numerator', func=AggregateNumDenom(Calculation)),    
+                                dict(target='Denominator', func=AggregateNumDenom(Calculation)) 
+                            ]
+                        ),
+                        ]
+                    ))
         return {
             'data': tracestotal,
             'layout': dict(
-                showlegend=False,
+                showlegend=False if button_group1 == 'LevelName_2' else True,
+                clickmode='event+select',
+                clear_on_unhover=True,
                 barmode='stack',
                 barnorm=eval(PercentageTotalSwitchDEF(PercentageTotalSwitch)),
+                activeselection = dict(color='red'
+                                       ,opacity=0.2),
                 xaxis=dict(type='string',
                            title='',
-                           autorange=True,
-                           showgrid=False,
                            rangeselector=dict(
-                               buttons=rangeselector(GrainSelect)
-                           ),
+                                   buttons=rangeselector(GrainSelect),
+                                   bgcolor=tabhover,  # Background color of the range selector
+                                   activecolor=rangeselected,
+                                   font=dict(
+                                        color=fontcolor,
+                                        size=16
+                                   )
+                               ),
                            rangeslider=dict(
-                               visible=False
+                               visible=False,
+                               style=dict(
+                                    opacity=0.4,
+                               )
                            ),
+                           showgrid=False,
                            gridwidth=0,
+                           gridcolor='transparent',
                            showline=False,
                            linewidth=0,
                            color=fontcolor,
                            font=dict(
-                               size=14,
+                               size=12,
                            )
                            ),
                 yaxis=dict(title='',
                            showline=False,
                            linewidth=0,
-                           autorange=True,
                            tickformat=eval(Notation[0]),
-                           fixedrange=True,
                            showgrid=False,
-                           gridwidth=0.5,
+                           fixedrange=True,
+                           gridwidth=0,
                            color=fontcolor,
-                           font=dict(
-                               size=14,
-                           )
                            ),
-                margin={'l': 60, 'b': 45, 't': 33, 'r': 40},
-                legend=legend,
+                margin={'l': 60, 'b': 55, 't': 33, 'r': 40},
                 autosize=True,
+                legend=legend,
                 plot_bgcolor=graphcolor,
                 paper_bgcolor=graphcolor,
                 modebar=dict(
@@ -3317,6 +3599,7 @@ def update_mainfigure(data00,data11,data22,GrainSelect,KPISelect,Totaalswitch,Cu
                 ),
                 font=dict(
                     size=15,
+                  #  color=eval(DBColor[1])
                 ),
                 images=dict(
                     source="https://raw.githubusercontent.com/cldougl/plot_images/add_r_img/vox.png",
@@ -3328,123 +3611,360 @@ def update_mainfigure(data00,data11,data22,GrainSelect,KPISelect,Totaalswitch,Cu
                 title=title,
                 hovermode='x-unified',
                 transition={'duration': 500},
+                fixedrange=False,
             )
-        }#,options
+        }
+    elif button_group == 'Filter1_0':#joejoe
+        print('its Filter1_0')
+        print('its Filter1_0')
+        print('its Filter1_0')
+        print('its Filter1_0')
+        data =mastersetkpifiltered.to_pandas()# pd.DataFrame(data22)
+        print(data)
+        print(data.columns)
+        print('its Filter1_0')
+        tracestotal = []
+        traces = []
+        traces2 = []
+        totaaljanee = Totaalloop(Totaalswitch)
+        appendList1 = [tracestotal,traces]
+        appendList2 = eval(totaaljanee)
+        columns_to_remove3 = data.columns[data.columns.str.contains('_1|_2|d_level0_id|d_level1_id|d_level2_id')] #joejoe
+        data33 = data.drop(columns=columns_to_remove3)
+        print(data33.columns)
+        columnsdffpol3 = data33.columns.tolist()
+        print(columnsdffpol3)
+        columnsdffpol3.remove('Numerator')
+        columnsdffpol3.remove('Denominator')
+        data333 = data33.groupby(columnsdffpol3, as_index=False, sort=False).agg(
+            {'Denominator': [eval(AggregateNumDenom(KPIDenomAgg[KPISelect]))], 'Numerator': [eval(AggregateNumDenom(KPINumAgg[KPISelect]))]},dtype=object)
+        print(data333.columns)
+        data333.reset_index() 
+        data333.columns = data333.columns.droplevel(1)
+        for z in appendList1:
+            for i in data333.Filter1_0.unique():#joejoe
+                df_by_Level2Name = data333[data333['Filter1_0'] == i] #joejoe
+                df_by_Level2Name = df_by_Level2Name.assign(NumeratorCum=lambda df_by_Level2Name: df_by_Level2Name.Numerator.cumsum())
+                df_by_Level2Name = df_by_Level2Name.assign(DenominatorCum=lambda df_by_Level2Name: df_by_Level2Name.Denominator.cumsum())
+                y = eval(eval(dataframe2[1]))
+
+                z.append(dict(
+                    eval(dataframe2[0]),
+                    x=eval(dataframe2[0]).Period_int, 
+                    y=y,  
+                    text=y if ShowValueSwitch == 'True' else '',
+                    text_auto=True,
+                    customdata=eval(dataframe2[0]).Filter1_0,#joejoe
+                    line=dict(
+                        width=3,
+                        shape="spline",
+                        color=Filter1Color[i],#joejoe
+                    ),
+                    mode=linesormarkers(GrainSelect),
+                    marker=dict(
+                        size = 5,
+                        color=Filter1Color[i],  #joejoe
+                        line=dict(width=0.1
+                        ),
+                    ),
+                    type=visualDEF(KPISelect),
+                    name=i,
+                    transforms=[dict(
+                        type='aggregate',
+                        groups=eval(dataframe2[0]).Period_int,
+                        aggregations=[
+                            dict(target='Numerator', func=AggregateNumDenom(Calculation)),   
+                            dict(target='Denominator', func=AggregateNumDenom(Calculation))
+                        ]
+                    ),
+                    ]
+                ))
+        if Totaalswitch=='True':
+            data1 =mastersetkpifiltered.to_pandas()# pd.DataFrame(data11) #pd.read_json(data11, orient='split')
+            columns_to_remove1 = data1.columns[data1.columns.str.contains('_1|_2|d_level0_id|d_level1_id|d_level2_id')]#joejoe
+            data11 = data1.drop(columns=columns_to_remove1)
+            columnsdffpol1 = data11.columns.tolist()
+            columnsdffpol1.remove('Numerator')
+            columnsdffpol1.remove('Denominator')
+            data111 = data11.groupby(columnsdffpol1, as_index=False, sort=False).agg(
+            {'Denominator': [eval(AggregateNumDenom(KPIDenomAgg[KPISelect]))], 'Numerator': [eval(AggregateNumDenom(KPINumAgg[KPISelect]))]},dtype=object)
+            data111.reset_index() 
+            data111.columns = data111.columns.droplevel(1)
+            for d in appendList2:
+                for v in data111.Filter1_0.unique():#joejoe
+                    df_by_Level1Name = data111[data111['Filter1_0'] == v]#joejoe
+                    df_by_Level1Name = df_by_Level1Name.assign(NumeratorCum=lambda df_by_Level1Name: df_by_Level1Name.Numerator.cumsum())
+                    df_by_Level1Name = df_by_Level1Name.assign(DenominatorCum=lambda df_by_Level1Name: df_by_Level1Name.Denominator.cumsum())
+                    y2 = eval(eval(dataframe1[1]))
+                    d.append(dict(
+                        eval(dataframe1[0]),
+                        x=eval(dataframe1[0]).Period_int,  
+                        cumulative_enabled=True,
+                        y=y2, 
+                        text=y2,
+                        text_auto=True,
+                        customdata=eval(dataframe1[0]).LevelName_1,
+                        mode=linesormarkers(GrainSelect),
+                        marker=dict(
+                            size = 5,
+                            color=Filter1Color[i],#joejoe
+                            line=dict(width=0.1,
+                                      color = 'white'
+                                       )
+                        ),
+                        type='line',
+                        name=v,
+                        line= dict(
+                            width=5,
+                            shape="spline",
+                            color=Filter1Color[i],#joejoe,
+                        ),
+                        transforms=[dict(
+                            type='aggregate',
+                            groups=eval(dataframe1[0]).Period_int,
+                            aggregations=[
+                                dict(target='Numerator', func=AggregateNumDenom(Calculation)),    
+                                dict(target='Denominator', func=AggregateNumDenom(Calculation)) 
+                            ]
+                        ),
+                        ]
+                    ))
+        return {
+            'data': tracestotal,
+            'layout': dict(
+                showlegend=False if button_group1 == 'Filter1_0' else True, #joejoe
+                clickmode='event+select',
+                clear_on_unhover=True,
+                barmode='stack',
+                barnorm=eval(PercentageTotalSwitchDEF(PercentageTotalSwitch)),
+                activeselection = dict(color='red'
+                                       ,opacity=0.2),
+                xaxis=dict(type='string',
+                           title='',
+                           rangeselector=dict(
+                                   buttons=rangeselector(GrainSelect),
+                                   bgcolor=tabhover,  # Background color of the range selector
+                                   activecolor=rangeselected,
+                                   font=dict(
+                                        color=fontcolor,
+                                        size=16
+                                   )
+                               ),
+                           rangeslider=dict(
+                               visible=False,
+                               style=dict(
+                                    opacity=0.4,
+                               )
+                           ),
+                           showgrid=False,
+                           gridwidth=0,
+                           gridcolor='transparent',
+                           showline=False,
+                           linewidth=0,
+                           color=fontcolor,
+                           font=dict(
+                               size=12,
+                           )
+                           ),
+                yaxis=dict(title='',
+                           showline=False,
+                           linewidth=0,
+                           tickformat=eval(Notation[0]),
+                           showgrid=False,
+                           fixedrange=True,
+                           gridwidth=0,
+                           color=fontcolor,
+                           ),
+                margin={'l': 60, 'b': 55, 't': 33, 'r': 40},
+                autosize=True,
+                legend=legend,
+                plot_bgcolor=graphcolor,
+                paper_bgcolor=graphcolor,
+                modebar=dict(
+                    bgcolor='transparent',
+                    color=BeautifulSignalColor,
+                ),
+                font=dict(
+                    size=15,
+                  #  color=eval(DBColor[1])
+                ),
+                images=dict(
+                    source="https://raw.githubusercontent.com/cldougl/plot_images/add_r_img/vox.png",
+                    xref="paper", yref="paper",
+                    x=1, y=1.05,
+                    sizex=0.2, sizey=0.2,
+                    xanchor="right", yanchor="bottom"
+                ),
+                title=title,
+                hovermode='x-unified',
+                transition={'duration': 500},
+                fixedrange=False,
+            )
+        }
+
+"""
 
 
 @app.callback(
-    Output('graph-level1compare', 'figure'),
-    [Input('dfl0notime', 'data'),
-     Input('dfl1notime', 'data'),
+    Output('graph-level0compare', 'figure', allow_duplicate=True),
+    [Input('mastersetkpifilterednotime', 'data'),
+     Input('button_group','value'),
+     Input('button_group1','value'),
+     Input("PercentageTotalSwitchNoTime", "label"),
+     Input({'type': 'sweepertje', 'index': ALL}, 'n_clicks'),
+     #Input('graph-level0compare', 'hoverData'),
+    # Input('dfl1', 'data'),
      State("KPISelect", "value"),
-  #   Input("KPIGroupSelect", "value"),
-  #   Input("Level1NameSelect", "value"),
-  #   Input("Level2NameSelect", "value"),
-   #  Input('graphoveralltime', 'clickData'),
+
+    # Input('graphlevel0', 'selectedData'),
      Input("Totaalswitch", "label"),
      State("breakpoints", "widthBreakpoint"),
     # eval(kpigrouplistinput3[0]),  
-     ]
+     ],prevent_initial_call=True
 )
-def update_level1Graph(data00,data11,KPISelect,Totaalswitch,widthBreakpoint): #,KPIGroupSelect,Level1NameSelect,Level2NameSelect,hoverData,*args
-    print('execute update_level1Graph')
-    data0 =data00.to_pandas()#pd.DataFrame(data00)
-    data1 =data11.to_pandas()#pd.DataFrame(data11)
-    #data0 = pd.read_json(data00, orient='split')
-    #data1 = pd.read_json(data11, orient='split')
-    dff1tmp = data1 
-    dff0tmp = data0 
-   # dff0tmp['Period_int'] = pd.to_datetime(dff0tmp['Period_int']).dt.tz_localize(None)
-   # dff1tmp['Period_int'] = pd.to_datetime(dff1tmp['Period_int']).dt.tz_localize(None)
-    dff0 = []
-    dff1 = []
-    dff0 = dff0tmp
-    dff1 = dff1tmp
-    tracestotal = []
-    traces = []
-    traces2 = []
+def update_level0Graph(mastersetkpifilterednotime,button_group,button_group1,PercentageTotalSwitchNoTime,sweepertje,KPISelect,Totaalswitch,widthBreakpoint): #,hoverData,*args
+    print('update_level0Graph cfpandacompare')
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+    changed_id2 = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
+    LevelOrFilterAttribuut = button_group.split('_')[0]
+    LevelOrFilterLegend = button_group1.split('_')[0]
+    noemer = f'pl.col("Denominator").{eval(AggregateNumDenom(KPIDenomAgg[KPISelect]))}()'
+    teller = f'pl.col("Numerator").{eval(AggregateNumDenom(KPINumAgg[KPISelect]))}()'
+    Notation = KPISelectedStyle(KPISelect)
+    Calculation = CalculationDEF(KPISelect)
+    AggregateNum = NumaggregateDEF(KPISelect)
+    AggregateDenom = DenomaggregateDEF(KPISelect)
+    totaaljanee = Totaalloop(Totaalswitch)
     if widthBreakpoint=='sm':
-        title = ''
+            title = ''
     else:
-        title = dict(text=str(KPISelect) + ' per ',# + Level2Entitytype,
+        title = dict(text=str(KPISelect),# + Level2Entitytype,
                        # +' -     selected: '+str(Level2NameSelect),
                        font=dict(#family='Montserrat',
                                  size=22,
                                  color=fontcolor,
                         ),
-        ) 
-    totaaljanee = Totaalloop(Totaalswitch)
-    appendList1 = [tracestotal, traces]
-    appendList2 = eval(totaaljanee)
-    Notation = KPISelectedStyle(KPISelect)
-    Calculation = CalculationDEF(KPISelect)
-    AggregateNum = NumaggregateDEF(KPISelect)
-    AggregateDenom = DenomaggregateDEF(KPISelect)
-    for j in data1['LevelName_1'].unique():
-        df_by_Level1Name = dff1[dff1['LevelName_1'] == j]
-        x = eval(CalculationLogic1(Calculation))
-        for g in appendList1:
-            g.append(dict(
-                df_by_Level1Name,
-                y=df_by_Level1Name.LevelName_1,
-                x=x,
-                text=x,
-                ticktext=df_by_Level1Name.LevelName_1,
-                texttemplate="%{value:" + eval(Notation[0]) + "}",
-                text_auto=True,
-                type='bar',
-                marker=dict(
-                    color=Level1NameColor[j],
-                    color_discrete_map='identity',
-                ),
-                orientation="h",
-                name=i,
-                transforms=[dict(
-                    type='aggregate',
-                    groups=df_by_Level1Name.LevelName_1,
-                    aggregations=[
-                        dict(target='Numerator', func=AggregateNumDenom(Calculation)),  # , enabled=True
-                        dict(target='Denominator', func=AggregateNumDenom(Calculation))  # , enabled=True
-                    ]
-                ),
-                ]
-            ))
-    for j in data0.LevelName_0.unique():
-        df_by_Level0Name = dff0[dff0['LevelName_0'] == j]
-        x2 = eval(CalculationLogic0(Calculation))
-        for g in appendList2:
-            g.append(dict(
-                df_by_Level0Name,
-                y=df_by_Level0Name.LevelName_0,
-                x=x2,
-                text=x2,
+    )
+    columns_to_removemasterset = mastersetkpifilterednotime.columns 
+    if button_group1 == 'LevelName_0':
+        columns_to_remove_dict = {
+        'LevelName_0': [column for column in columns_to_removemasterset if '_1' not in column and '_2' not in column and column not in ['d_level1_id', 'd_level2_id']],
+        'LevelName_1': [column for column in columns_to_removemasterset if '_2' not in column and column not in ['d_level2_id']],
+        'LevelName_2': [column for column in columns_to_removemasterset if '_1' not in column and column not in ['d_level1_id']],
+        'Filter1_0': [column for column in columns_to_removemasterset if '_2' not in column and '_1' not in column and column not in ['d_level2_id', 'd_level1_id']]
+        }
+    elif button_group1 == 'LevelName_1':
+        columns_to_remove_dict = {
+        'LevelName_0': [column for column in columns_to_removemasterset if '_2' not in column and column not in ['d_level2_id']],
+        'LevelName_1': [column for column in columns_to_removemasterset if '_0' not in column and '_2' not in column and column not in ['d_level0_id', 'd_level2_id']],
+        'LevelName_2': [column for column in columns_to_removemasterset if '_0' not in column and column not in ['d_level0_id']],
+        'Filter1_0': [column for column in columns_to_removemasterset if '_0' not in column and '_2' not in column and column not in ['d_level0_id', 'd_level2_id']]
+        }
+    elif button_group1 == 'LevelName_2':
+        columns_to_remove_dict = {
+        'LevelName_0': [column for column in columns_to_removemasterset if '_1' not in column and column not in ['d_level1_id']],
+        'LevelName_1': [column for column in columns_to_removemasterset if '_0' not in column and column not in ['d_level0_id']],
+        'LevelName_2': [column for column in columns_to_removemasterset if '_0' not in column and '_1' not in column and column not in ['d_level0_id', 'd_level1_id']],
+        'Filter1_0': [column for column in columns_to_removemasterset if '_0' not in column and '_1' not in column and column not in ['d_level0_id', 'd_level1_id']]
+        }
+    elif button_group1 == 'Filter1_0':
+        columns_to_remove_dict = {
+        'LevelName_0': [column for column in columns_to_removemasterset if '_1' not in column and '_2' not in column and column not in ['d_level1_id', 'd_level2_id']],
+        'LevelName_1': [column for column in columns_to_removemasterset if '_0' not in column and '_2' not in column and column not in ['d_level0_id', 'd_level2_id']],
+        'LevelName_2':[column for column in columns_to_removemasterset if '_0' not in column and '_1' not in column and column not in ['d_level0_id', 'd_level1_id']],
+        'Filter1_0': [column for column in columns_to_removemasterset if '_0' not in column and '_1' not in column and '_2' not in column and column not in ['d_level0_id', 'd_level1_id', 'd_level2_id']]
+        }   
+    columns_to_remove = columns_to_remove_dict[button_group] 
+    if 'Filter1_0' not in columns_to_remove and (button_group == 'Filter1_0' or button_group1 == 'Filter1_0'):
+        columns_to_remove.append('Filter1_0')
+    mastersetkpifilterednew = mastersetkpifilterednotime.select(columns_to_remove)
+    columns_to_remove.remove('Numerator')
+    columns_to_remove.remove('Denominator')
+    
+    mastersetkpifilterednotime = (
+    mastersetkpifilterednew.lazy()
+    .groupby(columns_to_remove)
+    .agg(
+        [
+            eval(noemer),
+            eval(teller),
+        ]
+    )
+    #.sort(["LevelName_0"])
+    )
+    polarsdata = mastersetkpifilterednotime.collect()
+    data000 = polarsdata.to_pandas()
+    traces = []
+    iterationslist = data000.eval(button_group).unique()
+    countiterations = iterationslist.shape[0]
+    print(mastersetkpifilterednotime)
+    print(button_group)
+    print(button_group1)
+    print(changed_id)
+    print(countiterations)
+    print(countiterations)
+    print(countiterations)
+    print(countiterations)
+    print('endprint')
+    if countiterations==1:
+        print('countiterations==1 traces')
+        df_by_Level0Name = data000
+        x2 = eval(CalculationLogic0(Calculation)),
+        traces.append(dict(
+            values=x2[0],
+            labels=data000.eval(button_group1),
+            type = 'pie',
+            hole=.7,
+            margin=dict(t=50, b=30, l=0, r=0), 
+            showlegend=False,
+            font=dict(size=17, color='white'),
+            textposition='outside',
+            textinfo='percent+label', 
+            rotation=50,
+            marker=dict(
+               # colors= FilterColor
+            )
+        ))
+    else:
+        print('countiterations>1 traces')
+        for j in data000.eval(button_group1).unique():
+            opacity = '1'
+            df_by_Level0Name = data000[data000[button_group1] == j]
+            x2 = eval(CalculationLogic0(Calculation))
+            traces.append(dict(
+                #df_by_Level0Name,
+                y=x2 if countiterations==1 else df_by_Level0Name.eval(button_group), #Filter1_0,
+                x=df_by_Level0Name.eval(button_group) if countiterations==1 else x2,
+                text=df_by_Level0Name.eval(button_group) if countiterations==1 else x2,
                 text_auto=True,
                 texttemplate="%{value:" + eval(Notation[0]) + "}",  # "%{value:.01%}",
                 textformat=eval(Notation[0]),
-                type='bar',
+                type='pie' if countiterations==1 else 'bar',
                 marker=dict(
-                    opacity=1,
-                    color=Level0NameColor[j],
+                    opacity=opacity,
+                    color=LevelNameColor[j] if LevelOrFilterLegend=='LevelName' else FilterColor[j], 
                     color_discrete_map='identity',
                     line=dict(width=0.1,
-                              color=Level0NameColor[j],
+                              color=LevelNameColor[j] if LevelOrFilterLegend=='LevelName' else FilterColor[j], 
                               color_discrete_map='identity',
                               opacity=1,
                               ),
                 ),
-                orientation="h",
+                #orientation="v",
+                #orientation="h",
+                orientation="v" if countiterations==1 else "h",
                 name=j,
                 transforms=[dict(
                     type='aggregate',
-                    groups=df_by_Level0Name.LevelName_0,
+                    groups=df_by_Level0Name.eval(button_group),
                     aggregations=[
                         dict(target='Numerator', func=AggregateNumDenom(AggregateNum)),  
                         dict(target='Denominator', func=AggregateNumDenom(AggregateDenom))  
                     ]
                 ),
                 ]
-            ))
-    if data1.empty:
+        ))
+    if data000.empty:
         return {"layout": dict(
             xaxis = dict(visible=False),
             yaxis = dict(visible=False),
@@ -3461,848 +3981,434 @@ def update_level1Graph(data00,data11,KPISelect,Totaalswitch,widthBreakpoint): #,
             ],
             plot_bgcolor=graphcolor,
             paper_bgcolor=graphcolor
-            )
+        )
         }
     else:
-        return {
-            'data': tracestotal,
+        if countiterations==1:
+            print('countiterations==1 layout')
+            return {
+            'data': traces,
             'layout': dict(
-                dragmode='select',
-                clickmode='event+select',
-                type='bar',
-                xaxis=dict(type='string',
-                           title='',
-                           showgrid=False,
-                           gridwidth=0,
-                           fixedrange=True,
-                           showline=False,
-                           tickformat=eval(Notation[0]),
-                           visible=False,
-                           color=fontcolor,
-                           font=dict(
-                               size=14,
-                           )
-                           ),
-                yaxis=dict(title='',
-                           showline=False,
-                           showgrid=False,
-                           categoryorder="total ascending",
-                           gridwidth=0,
-                           color=fontcolor,
-                           ),
-                margin={'l': 140, 'b': 25, 't': 37, 'r': 40},
-                showlegend=False,
-                autosize=True,
-                plot_bgcolor=graphcolor,
-                paper_bgcolor=graphcolor,
-                modebar=dict(
-                    bgcolor='transparent',
-                    color=BeautifulSignalColor,
-                ),
                 font=dict(
-                    size=15,
-                ),
-                title=title,
-                hovermode='x-unified',
-                transition={'duration': 500},
+                        size=15,
+                    ),
+                margin={'l': 140, 'b': 25, 't': 37, 'r': 40},
+                annotations = [dict(
+                         align='center',
+                         xref = "paper", yref = "paper",
+                         showarrow = False, 
+                         font=dict(
+                            family="Courier New, monospace",
+                            size=26,
+                            color="#ffffff"
+                            ),
+                         text="Gender",#<i class='material-icons'>gender</i>
+                )],
+                plot_bgcolor=graphcolor,
+                paper_bgcolor=graphcolor
             )
-        }
-
-
-######################################################################################################################
-######################################################################################################################
-################################################----tab 2 aanmaken----###############################################
-######################################################################################################################
-######################################################################################################################
-
-#graph-with-slider
-@app.callback(
-     Output('graph-with-slider', 'figure')
-   # Output('Level2NameSelect','options')
-    ,
-    [Input('dfl1', 'data'),
-     Input('dfl2', 'data'),
-     State('GrainSelect', 'value'),
-     State("KPISelect", "value"),
-     Input("Totaalswitch", "label"),
-     Input("CumulativeSwitch", "label"),
-     Input("PercentageTotalSwitch", "label"),
-     Input("ShowValueSwitch", "label"),
-     State("breakpoints", "widthBreakpoint"),
-     #eval(kpigrouplistinput3[0]),  
-     ]
-
-)
-
-
-def update_figure(data11,data22,GrainSelect, KPISelect,Totaalswitch,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch,widthBreakpoint):#,*args
-    print('execute update_figure')
-    data1 =data11.to_pandas()# pd.DataFrame(data11) #pd.read_json(data11, orient='split')
-    data2 =data22.to_pandas()# pd.DataFrame(data22)
-    #data1 = pd.read_json(data11, orient='split')
-    #data2 = pd.read_json(data22, orient='split')
-    dff2 = data2 
-    dff1 = data1
-    if widthBreakpoint=='sm':
-        title = ''
-    else:
-        title = dict(text=str(KPISelect) + ' per ',# + Level2Entitytype,
-                       # +' -     selected: '+str(Level2NameSelect),
-                       font=dict(#family='Montserrat',
-                                 size=22,
-                                 color=fontcolor,
-                        ),
-    )
-    if widthBreakpoint=='sm':
-        legend=dict(
-                    font=dict(
-                        size=15,
-                        color=fontcolor,
-                    ),
-                    orientation="h"
-                )
-    else:
-        legend=dict(
-                    font=dict(
-                        size=15,
-                        color=fontcolor,
-                    ),
-                    yanchor="top",
-                    y=1,
-                    x=1.01,
-                    xanchor="left",
-                )
-    Level2NameList = dff2['LevelName_2'].unique().tolist()
-    #options = [{'label': str(i), 'value': str(i)} for i in Level2NameList]
-    tracestotal = []
-    traces = []
-    traces2 = []
-    totaaljanee = Totaalloop(Totaalswitch)
-    appendList1 = [tracestotal,traces]
-    appendList2 = eval(totaaljanee)
-    Notation = KPISelectedStyle(KPISelect)
-    dataframe = Cumloop1(CumulativeSwitch)
-    dataframe2 = Cumloop2(CumulativeSwitch)
-    Calculation = CalculationDEF(KPISelect)
-    for z in appendList1:
-        for i in dff2.LevelName_2.unique():
-            df_by_Level2Name = dff2[dff2['LevelName_2'] == i]
-         #   print(df_by_Level2Name)
-           # df_by_Level2Name.to_csv(r'assets/Attributes/dashboard_data/df_by_Level2Name.csv', index=False)
-           # quit()
-           ##df_by_Level2NameCum = dff[dff['Level2Name'] == i]
-           ##df_by_Level2NameCum['Numerator'] = df_by_Level2NameCum['Numerator'].cumsum()
-           ##df_by_Level2NameCum['Denominator'] = df_by_Level2NameCum['Denominator'].cumsum()
-            df_by_Level2Name = df_by_Level2Name.assign(NumeratorCum=lambda df_by_Level2Name: df_by_Level2Name.Numerator.cumsum())
-            df_by_Level2Name = df_by_Level2Name.assign(DenominatorCum=lambda df_by_Level2Name: df_by_Level2Name.Denominator.cumsum())
-            y = eval(eval(dataframe2[1]))
-            
-            z.append(dict(
-                eval(dataframe2[0]),
-                x=eval(dataframe2[0]).Period_int, 
-                y=y,  
-                text=y if ShowValueSwitch == 'True' else '',
-                text_auto=True,
-                customdata=eval(dataframe2[0]).LevelName_2,
-                line=dict(
-                    width=3,
-                    shape="spline",
-                    color=Level2NameColor[i],
-                ),
-                mode=linesormarkers(GrainSelect),
-                marker=dict(
-                    size = 5,
-                    color=Level2NameColor[i],  
-                    line=dict(width=0.1
-                    ),
-                ),
-                type=visualDEF(KPISelect),
-                name=i,
-                transforms=[dict(
-                    type='aggregate',
-                    groups=eval(dataframe2[0]).Period_int,
-                    aggregations=[
-                        dict(target='Numerator', func=AggregateNumDenom(Calculation)),   
-                        dict(target='Denominator', func=AggregateNumDenom(Calculation))
-                    ]
-                ),
-                ]
-            ))
-    for d in appendList2:
-        for v in dff1.LevelName_1.unique():
-            df_by_Level1Name = dff1[dff1['LevelName_1'] == v]
-           ##df_by_Level1NameCum = dff2[dff2['Level1Name'] == v]
-           ##df_by_Level1NameCum['Numerator'] = df_by_Level1NameCum['Numerator'].cumsum()
-           ##df_by_Level1NameCum['Denominator'] = df_by_Level1NameCum['Denominator'].cumsum()
-            df_by_Level1Name = df_by_Level1Name.assign(NumeratorCum=lambda df_by_Level1Name: df_by_Level1Name.Numerator.cumsum())
-            df_by_Level1Name = df_by_Level1Name.assign(DenominatorCum=lambda df_by_Level1Name: df_by_Level1Name.Denominator.cumsum())
-            y2 = eval(eval(dataframe[1]))
-            d.append(dict(
-                eval(dataframe[0]),
-                x=eval(dataframe[0]).Period_int,  
-                cumulative_enabled=True,
-                y=y2, 
-                text=y2,
-                text_auto=True,
-                customdata=eval(dataframe[0]).LevelName_1,
-                mode=linesormarkers(GrainSelect),
-                marker=dict(
-                    size = 5,
-                    color=Level1NameColor[v],
-                    line=dict(width=0.1,
-                              color = 'white'
+            } 
+        else:
+            print('countiterations>1 layout')
+            return {
+                'data': traces,
+                'layout': dict(
+                    dragmode='select',
+                    clickmode='event+select',
+                    barnorm=eval(PercentageTotalSwitchDEF(PercentageTotalSwitchNoTime)),
+                    barmode='stack', #aanzetten indien tweede per
+                    clear_on_unhover=True,
+                    type='bar',
+                    xaxis=dict(type='string',
+                               title='',
+                               showgrid=False,
+                               gridwidth=0,
+                               fixedrange=True,
+                               showline=False,
+                               tickformat=eval(Notation[0]),
+                               visible=True if countiterations==1 else False,
+                               color=fontcolor,
+                               font=dict(
+                                   size=14,
                                )
-                ),
-                type='line',
-                name=v,
-                line= dict(
-                    width=5,
-                    shape="spline",
-                    color=Level1NameColor[v],
-                ),
-                transforms=[dict(
-                    type='aggregate',
-                    groups=eval(dataframe[0]).Period_int,
-                    aggregations=[
-                        dict(target='Numerator', func=AggregateNumDenom(Calculation)),    
-                        dict(target='Denominator', func=AggregateNumDenom(Calculation)) 
-                    ]
-                ),
-                ]
-            ))
-    return {
-        'data': tracestotal,
-        'layout': dict(
-            showlegend=False,
-            clickmode='event+select',
-            barmode='stack',
-            barnorm=eval(PercentageTotalSwitchDEF(PercentageTotalSwitch)),
-            activeselection = dict(color='red'
-                                   ,opacity=0.2),
-            xaxis=dict(type='string',
-                       title='',
-                       rangeselector=dict(
-                               buttons=rangeselector(GrainSelect)
-                           ),
-                       rangeslider=dict(
-                           visible=False,
-                           style=dict(
-                                opacity=0.4,
-                           )
-                       ),
-                       showgrid=False,
-                       gridwidth=0,
-                       gridcolor='transparent',
-                       showline=False,
-                       linewidth=0,
-                       color=fontcolor,
-                       font=dict(
-                           size=12,
-                       )
-                       ),
-            yaxis=dict(title='',
-                       showline=False,
-                       linewidth=0,
-                       tickformat=eval(Notation[0]),
-                       showgrid=False,
-                       fixedrange=True,
-                       gridwidth=0,
-                       color=fontcolor,
-                       ),
-            margin={'l': 60, 'b': 55, 't': 33, 'r': 40},
-            autosize=True,
-            legend=legend,
-            plot_bgcolor=graphcolor,
-            paper_bgcolor=graphcolor,
-            modebar=dict(
-                bgcolor='transparent',
-                color=BeautifulSignalColor,
-            ),
-            font=dict(
-                size=15,
-              #  color=eval(DBColor[1])
-            ),
-            images=dict(
-                source="https://raw.githubusercontent.com/cldougl/plot_images/add_r_img/vox.png",
-                xref="paper", yref="paper",
-                x=1, y=1.05,
-                sizex=0.2, sizey=0.2,
-                xanchor="right", yanchor="bottom"
-            ),
-            title=title,
-            hovermode='x-unified',
-            transition={'duration': 500},
-            fixedrange=False,
-        )
-    }
-
-#graph-level2compare
-@app.callback(
-    Output('graph-level2compare', 'figure'),
-    [Input('dfl1notime', 'data'),
-     Input('dfl2notime', 'data'),
-   #  Input('GrainSelect', 'value'),
-     State("KPISelect", "value"),
-     Input("Totaalswitch", "label"),
-     State("breakpoints","widthBreakpoint")
-    # eval(kpigrouplistinput3[0]),  
-     ]
-)
-def update_level2Graph(data11,data22,KPISelect,Totaalswitch,widthBreakpoint):#,clickData,*args
-    print('execute update_level2Graph')
-    data1 =data11.to_pandas()# pd.DataFrame(data11)
-    data2 =data22.to_pandas()# pd.DataFrame(data22)
-    #data1 = pd.read_json(data11, orient='split')
-    #data2 = pd.read_json(data22, orient='split')
-    dff2tmp = data2 
-    dff1tmp = data1 
-   # dff1tmp['Period_int'] = pd.to_datetime(dff1tmp['Period_int']).dt.tz_localize(None)
-   # dff2tmp['Period_int'] = pd.to_datetime(dff2tmp['Period_int']).dt.tz_localize(None)
-    dff2 = []
-    dff1 = []
-    dff2 = dff2tmp
-    dff1 =  dff1tmp
-    tracestotal = []
-    traces = []
-    traces2 = []
-    if widthBreakpoint=='sm':
-        title = ''
-    else:
-        title = dict(text=str(KPISelect) + ' per ',# + Level2Entitytype,
-                       # +' -     selected: '+str(Level2NameSelect),
-                       font=dict(#family='Montserrat',
-                                 size=22,
-                                 color=fontcolor,
-                        ),
-    )
-    totaaljanee = Totaalloop(Totaalswitch)
-    appendList1 = [tracestotal, traces]
-    appendList2 = eval(totaaljanee)
-    Notation = KPISelectedStyle(KPISelect)
-    Calculation = CalculationDEF(KPISelect)
-    AggregateNum = NumaggregateDEF(KPISelect)
-    AggregateDenom = DenomaggregateDEF(KPISelect)
-    for i in data2.LevelName_2.unique():
-        df_by_Level2Name = dff2[dff2['LevelName_2'] == i]
-        x = eval(CalculationLogic2(Calculation))
-        for z in appendList1:
-            z.append(dict(
-                df_by_Level2Name,
-                y=df_by_Level2Name.LevelName_2,
-                x=x,
-                text=x,
-                texttemplate="%{value:"+eval(Notation[0])+"}",#"%{value:.01%}",
-                textformat=eval(Notation[0]),
-                text_auto=True,
-                marker = dict(
-                        color=Level2NameColor[i],
-                        color_discrete_map='identity',
-                        line = dict(width=0.1)
-                ),
-                type='bar',
-                orientation="h",
-                name=i,
-                transforms=[dict(
-                    type='aggregate',
-                    groups=df_by_Level2Name.LevelName_2,
-                    aggregations=[
-                        dict(target='Numerator', func=AggregateNumDenom(AggregateNum)),  # , enabled=True
-                        dict(target='Denominator', func=AggregateNumDenom(AggregateDenom))  # , enabled=True
-                    ]
-                ),
-                ]
-            ))
-    for j in dff1['LevelName_1'].unique():
-        df_by_Level1Name = dff1[dff1['LevelName_1'] == j]
-        x2 = eval(CalculationLogic1(Calculation))
-        for g in appendList2:
-            g.append(dict(
-                df_by_Level1Name,
-                y=df_by_Level1Name.LevelName_1,
-                x=x2,
-                text=x2,
-                texttemplate="%{value:" + eval(Notation[0]) + "}",  # "%{value:.01%}",
-                textformat=eval(Notation[0]),
-                text_auto=True,
-                type='bar',
-                marker=dict(
-                    opacity=1,
-                    color=Level1NameColor[j],
-                    color_discrete_map='identity',
-                    line=dict(color=Level1NameColor[j],
-                              width=0.1
-                              ),
-                ),
-                orientation="h",
-                name=j,
-                transforms=[dict(
-                    type='aggregate',
-                    groups=df_by_Level1Name.LevelName_1,
-                    aggregations=[
-                        dict(target='Numerator', func=AggregateNumDenom(AggregateNum)),  # , enabled=True
-                        dict(target='Denominator', func=AggregateNumDenom(AggregateDenom))  # , enabled=True
-                    ]
-                ),
-                ]
-            ))
-    if data2.empty:
-        return {"layout": dict(
-            xaxis = dict(visible=False),
-            yaxis = dict(visible=False),
-            annotations=[
-                            dict(
-                                xref="paper",
-                                yref="paper",
-                                x=0.5,
-                                y=0.5,
-                                text="No data available",
-                                showarrow=False,
-                                font=dict(size=26,color=fontcolor),
+                               ),
+                    yaxis=dict(title='',
+                               showline=False,
+                               showgrid=False,
+                               categoryorder="total ascending",
+                               gridwidth=0,
+                               color=fontcolor,
+                               ),
+                    margin={'l': 140, 'b': 25, 't': 37, 'r': 40},
+                    showlegend=False if button_group1==button_group else True,
+                    legend=dict(
+                            font=dict(
+                            color=fontcolor  # Change the font color here
+                                )
+                            ),
+                    autosize=True,
+                    plot_bgcolor=graphcolor,
+                    paper_bgcolor=graphcolor,
+                    modebar=dict(
+                        bgcolor='transparent',
+                        color=BeautifulSignalColor,
+                    ),
+                    font=dict(
+                        size=15,
+                    ),
+                    title=title,
+                    hovermode='x-unified',
+                    transition={'duration': 500},
+                    style={'overflow': 'auto'}
                 )
-            ],
-            plot_bgcolor=graphcolor,
-            paper_bgcolor=graphcolor
-            )
-        }
-    else:
-        return {
-            'data': tracestotal,
-            'layout': dict(
-                dragmode='select',
-                clickmode='event+select',
-                type='bar',
-                xaxis=dict(type='string',
-                           title='',
-                           visible=False,
-                           autorange=True,
-                           fixedrange=True,
-                           showgrid=False,
-                           showline=False,
-                           gridwidth=0,
-                           tickformat=eval(Notation[0]),
-                           color=fontcolor,
-                           font=dict(
-                               size=14,
-                           )
-                           ),
-                yaxis=dict(title='',
-                           showline=False,
-                           showgrid=False,
-                           categoryorder="total ascending",
-                           gridwidth=0,
-                           color=fontcolor,
-                           ),
-                margin={'l': 140, 'b': 25, 't': 37, 'r': 40},
-                showlegend=False,
-                plot_bgcolor=graphcolor,
-                paper_bgcolor=graphcolor,
-                modebar=dict(
-                    bgcolor='transparent',
-                    color=BeautifulSignalColor,
-                ),
-                font=dict(
-                    size=15,
-                ),
-                title=title,
-                hovermode='x-unified',
-                transition={'duration': 500},
-            )
-        }
-
-
-######################################################################################################################
-######################################################################################################################
-################################################----comparetegel aanmaken----###############################################
-######################################################################################################################
-######################################################################################################################
-
-"""
-#graph-compare-kpi
-@app.callback([
-    Output('graph-compare-kpi', 'figure'),
-    Output('TopImage','src'),
-    ],
-    [Input('dfl0', 'data'),
-     Input('dfl1', 'data'),
-     Input('dfl2', 'data'),
-     Input('GrainSelect', 'value'),
-     Input("KPISelect", "value"),
-  #   Input("KPIGroupSelect", "value"),
-     Input("KPISelectCompare", "value"),
-     Input("Level0NameSelect", "value"),
-     Input("Level1NameSelect", "value"),
-     Input("Level2NameSelect", "value"),
-     Input('tabsdrilldown','active_tab'),
-    # eval(kpigrouplistinput3[0]),  
-     ]
-)
-
-
-def update_kpicompare(data00,data11,data22,GrainSelect, KPISelect, KPISelectCompare,Level0NameSelect,Level1NameSelect, Level2NameSelect,tabsdrilldown):#,*args
-    print('update update_kpicompare')
-    data0 = pd.read_json(data00, orient='split')
-    data1 = pd.read_json(data11, orient='split')
-    data2 = pd.read_json(data22, orient='split')
-    if tabsdrilldown == 'tab-0':
-        dfftmp = pd.DataFrame(update_filter_l0(data0, GrainSelect, KPISelect,Level0NameSelect))
-        dffcomptmp = pd.DataFrame(update_filter_compare_l0(dfl0Compare, GrainSelect, KPISelectCompare))
-        TopImageName = dfftmp['LevelName_0'].unique().astype(str)
-    elif tabsdrilldown == 'tab-1':
-        dfftmp = pd.DataFrame(update_filter_l1(data1, GrainSelect, KPISelect,Level0NameSelect,Level1NameSelect))
-        dffcomptmp = pd.DataFrame(update_filter_compare_l1(dfl1Compare, GrainSelect, KPISelectCompare, Level1NameSelect))
-        if dfftmp['LevelName_1'].nunique() == 1:
-            TopImageName = dfftmp['LevelName_1'].unique().astype(str)
+            }
+        """
+    elif button_group == 'LevelName_1':
+        columns_to_removemasterset = mastersetkpifilterednotime.columns
+        if button_group1=='LevelName_0':
+            mastersetkpifilterednewcol = [column for column in columns_to_removemasterset if '_2' not in column and column not in ['d_level2_id']]
+        elif button_group1=='LevelName_1':
+            mastersetkpifilterednewcol = [column for column in columns_to_removemasterset if '_0' not in column and '_2' not in column and column not in ['d_level0_id', 'd_level2_id']]
+        elif button_group1=='LevelName_2':
+            mastersetkpifilterednewcol = [column for column in columns_to_removemasterset if '_0' not in column and column not in ['d_level0_id']]
         else:
-            TopImageName = dfftmp['LevelName_0'].unique().astype(str)
-    elif tabsdrilldown == 'tab-2':
-        dfftmp = pd.DataFrame(update_filter_l2(data2, GrainSelect, KPISelect,Level0NameSelect,Level1NameSelect, Level2NameSelect))
-        dffcomptmp = pd.DataFrame(update_filter_compare_l2(dfl2Compare, GrainSelect, KPISelectCompare, Level1NameSelect, Level2NameSelect))
-        if dfftmp['LevelName_2'].nunique() == 1:
-            TopImageName = dfftmp['LevelName_2'].unique().astype(str)
-        else:
-            TopImageName = dfftmp['LevelName_1'].unique().astype(str)
-    else:
-        dfftmp = pd.DataFrame(update_filter_l0(data0, GrainSelect, KPISelect,Level0NameSelect))
-        dffcomptmp = pd.DataFrame(update_filter_compare_l0(dfl0Compare, GrainSelect, KPISelectCompare))
-        TopImageName = dfftmp['LevelName_0'].unique().astype(str)
-    TopImageURL = f'assets/Attributes/Images/{TopImageName[0]}.png' if len(TopImageName) == 1 else '' 
-    TopImageURLCheck =[]
-    if os.path.exists(TopImageURL):
-        TopImageURLCheck.append(TopImageURL)
-    else:
-        TopImageURLCheck.append(f'assets/Attributes/Images/ethereum.png')
-    TopImage= 'data:image/png;base64,{}'.format(base64.b64encode(open(TopImageURLCheck[0], 'rb').read()).decode())
-    AggregateNum = NumaggregateDEF(KPISelect)
-    AggregateDenom = DenomaggregateDEF(KPISelect)
-    AggregateNumcomp = NumaggregateDEF(KPISelectCompare)
-    AggregateDenomcomp = DenomaggregateDEF(KPISelectCompare)
-    dfftmp.fillna(value=0, inplace=True)
-    dffcomptmp.fillna(value=0, inplace=True)
-    dff = dfftmp.groupby(columnsdftotal, as_index=False, sort=False).agg(
-        {'Denominator': [eval(AggregateNumDenom(AggregateDenom))], 'Numerator': [eval(AggregateNumDenom(AggregateNum))]},dtype=object);
-    dffcomp = dffcomptmp.groupby(columnsdftotal, as_index=False, sort=False).agg(
-        {'Denominator': [eval(AggregateNumDenom(AggregateDenomcomp))], 'Numerator': [eval(AggregateNumDenom(AggregateNumcomp))]},dtype=object);
-    dff.reset_index()
-    dffcomp.reset_index()
-    dff.columns = dff.columns.droplevel(1)
-    dffcomp.columns = dffcomp.columns.droplevel(1)
-    tracestotal = []
-    traceskpi = []
-    traceskpicomp = []
-    Notation = KPISelectedStyle(KPISelect)
-    NotationComp = KPISelectedStyle(KPISelectCompare)
-    KPIList = [KPISelect,KPISelectCompare]
-    appendList1 = [tracestotal, traceskpi]
-    appendList2 = [tracestotal, traceskpicomp]
-    Calculation = CalculationDEF(KPISelect)
-    CalculationComp = CalculationDEF(KPISelectCompare)
-    ycomp = eval(CalculationLogicTotalCompare(CalculationComp))
-    y = eval(CalculationLogicTotal(Calculation))
-    for i in appendList1:
-        i.append(dict(
-            x=dff.Period_int,
-            y=y,
-            yaxis='y1',
-            mode=linesormarkers(GrainSelect),
-            opacity=1,
-            type='Scatter',
-            line=dict(
-                width=3,
-                shape="spline",
-                color='#FFA500'  
-            ),
-            name=KPIList[0],
-            transforms=[dict(
-                type='aggregate',
-                groups=dff.Period_int,
-                aggregations=[
-                    dict(target='Numerator', func=AggregateNumDenom(Calculation)),  
-                    dict(target='Denominator', func=AggregateNumDenom(Calculation))  
-                ]
-            ),
+            mastersetkpifilterednewcol = [column for column in columns_to_removemasterset if '_0' not in column and '_2' not in column and column not in ['d_level0_id', 'd_level2_id']]
+
+        #mastersetkpifilterednewcol = [column for column in columns_to_removemasterset if '_1' not in column and '_2' not in column and column not in ['d_level1_id', 'd_level2_id']]
+        # Select only the filtered columns
+        mastersetkpifilterednew = mastersetkpifilterednotime.select(mastersetkpifilterednewcol)
+        mastersetkpifilterednewcol.remove('Numerator')
+        mastersetkpifilterednewcol.remove('Denominator')
+        mastersetkpifilterednotime = (
+        mastersetkpifilterednew.lazy()
+        .groupby(mastersetkpifilterednewcol)
+        .agg(
+            [
+                eval(noemer),
+                eval(teller),
             ]
-    ))
-    for j in appendList2:
-        j.append(dict(
-            x=dffcomp.Period_int,
-            y=ycomp,  
-            mode=linesormarkers(GrainSelect),
-            showgrid=False,
-            yaxis='y2',
-            secondary_y=True,
-            opacity=1,
-            type='line',
-            line=dict(
-                width=3,
-                shape="spline",
-                color='#005AFF',
-                #               
-            ),
-           # fill='tozeroy',
-            name=KPIList[1],
-            transforms=[dict(
-                type='aggregate',
-                groups=dffcomp.Period_int,
-                aggregations=[
-                    dict(target='Numerator', func=AggregateNumDenom(CalculationComp)),  # , enabled=True
-                    dict(target='Denominator', func=AggregateNumDenom(CalculationComp))  # , enabled=True
-                ]
-        ),
-        ]
-    ))
-    return {
-        'data': tracestotal,
-        'layout': dict(
-            xaxis=dict(type='string',
-                       title='',
-                       rangeselector=dict(
-                           buttons=list([
-                               dict(count=1,
-                                    label="1m",
-                                    step="month",
-                                    stepmode="backward"),
-                               dict(count=6,
-                                    label="6m",
-                                    step="month",
-                                    stepmode="backward"),
-                               dict(count=1,
-                                    label="YTD",
-                                    step="year",
-                                    stepmode="todate"),
-                               dict(count=1,
-                                    label="1y",
-                                    step="year",
-                                    stepmode="backward"),
-                               dict(step="all")
-                           ])
-                       ),
-                       rangeslider=dict(
-                            visible=False
-                       ),
-                     
-                       showgrid=False,
-                       showline=False,
-                       color=fontcolor,
-                       font=dict(
-                           size=14,
-                       )
-                       ),
-            yaxis=dict(
-                       fixedrange=False,
-                       linecolor='#FFA500',# kpicolorDEF(KPISelect),
-                       showline=True,
-                       linewidth=2,
-                       showgrid=False,
-                       tickformat=eval(Notation[0]),
-                       yaxis='y1',
-                       secondary_y=False,
-                       color=fontcolor,
-                       tickcolor='#FFA500'
-                       ),
-            yaxis2=dict(
-                       fixedrange=False,
-                       showline=True,
-                       showgrid=False,
-                       font=dict(color='#005AFF'),
-                       linecolor='#005AFF',
-                       linewidth=2,
-                       tickformat=eval(NotationComp[0]),
-                       tickcolor='#005AFF',
-                       yaxis='y2',
-                       secondary_y=True,
-                       overlaying="y",
-                       color=fontcolor,
-                       side="right"
-                       ),
-            margin={'l': 60, 'b': 45, 't': 33, 'r': 60},
-            secondary_y=True,
-            legend=dict(
-                font=dict(
-                    size=15,
-                    color=fontcolor,
-                ),
-                orientation="h",
-                yanchor="top",
-                y=0.99,
-                x=0.01,
-                xanchor="left",
-            ),
-            plot_bgcolor=graphcolor,
-            paper_bgcolor=graphcolor,
-            modebar=dict(
-                bgcolor='transparent',
-                color=BeautifulSignalColor,
-            ),
-            font=dict(
-                size=15,
-            ),
-            title=dict(text=str(KPISelect) + ' over time per vergeleken met ' + str(KPISelectCompare),# + ' ' + Level2Entitytype,
-                       # +' -     selected: '+str(Level2NameSelect),
-                       font=dict(
-                                 size=22,
-                                 color=fontcolor,
-                           ),
-                       ),
-            hovermode='x-unified',
-            transition={'duration': 500},
-            autosize=True,
         )
-    },TopImage
-
-
-#graph-compare-kpi2
-@app.callback(
-    Output('graph-compare-kpi2', 'figure')
-    ,
-    [Input('dfl0', 'data'),
-     Input('dfl1', 'data'),
-     Input('dfl2', 'data'),
-     Input('GrainSelect', 'value'),
-     Input("KPISelect", "value"),
-     Input("KPISelectCompare", "value"),
-     Input('dflcomparekpi', 'data'),
-     #eval(kpigrouplistinput3[0]),  
-     ]
-)
-
-
-def update_kpicompare(data00,data11,data22,GrainSelect, KPISelect, KPISelectCompare,dflcomparekpi):#,*args
-    dffcomparefilter = pd.read_json(dflcomparekpi, orient='split')
-    data0 = pd.read_json(data00, orient='split')
-    data1 = pd.read_json(data11, orient='split')
-    data2 = pd.read_json(data22, orient='split')
-    dfftmp = dffcomparefilter
-    #if tabsdrilldown == 'tab-0':
-    #    dfftmp = pd.DataFrame(update_filter_l0(data0, GrainSelect, KPISelect))
-    #    dffcomptmp = pd.DataFrame(update_filter_compare_l0(dfl0Compare, GrainSelect, KPISelectCompare))
-    #elif tabsdrilldown == 'tab-1':
-    #    dfftmp = pd.DataFrame(update_filter_l1(data1, GrainSelect, KPISelect,Level1NameSelect))
-    #    dffcomptmp = pd.DataFrame(update_filter_compare_l1(dfl1Compare, GrainSelect, KPISelectCompare, Level1NameSelect))
-    #elif tabsdrilldown == 'tab-2':
-    #    dfftmp = pd.DataFrame(update_filter_l2(data2, GrainSelect, KPISelect,Level1NameSelect, Level2NameSelect))
-    #    dffcomptmp = pd.DataFrame(update_filter_compare_l2(dfl2Compare, GrainSelect, KPISelectCompare, Level1NameSelect, Level2NameSelect))
-    #else:
-    #    dfftmp = pd.DataFrame(update_filter_l0(data0, GrainSelect, KPISelect))
-    #    dffcomptmp = pd.DataFrame(update_filter_compare_l0(dfl0Compare, GrainSelect, KPISelectCompare))
-    AggregateNum = NumaggregateDEF(KPISelect)
-    AggregateDenom = DenomaggregateDEF(KPISelect)
-    dfftmp.fillna(value=0, inplace=True)
-   
-    dff = dfftmp.groupby(columnsdftotal, as_index=False, sort=False).agg(
-        {'Denominator': [eval(AggregateNumDenom(AggregateDenom))], 'Numerator': [eval(AggregateNumDenom(AggregateNum))]},dtype=object)
-    dff.reset_index() 
-    dff.columns = dff.columns.droplevel(1)
-    appendList1 = []
-    Calculation = CalculationDEF(KPISelect)
-    y = eval(CalculationLogicTotal(Calculation))
-    dff['pct_changed_tmp'] = y
-    for i in dff.d_kpi_id.unique():
-        Calculation = CalculationDEF(KPISelect)
-        df_filtered_kpi = dff[dff['d_kpi_id'] == i]
-        df_filtered_kpi['pct_changed'] = df_filtered_kpi['pct_changed_tmp'].pct_change()
-        appendList1.append(dict(
-            x=df_filtered_kpi.Period_int,
-            y=df_filtered_kpi.pct_changed,
-            yaxis='y1',
-            mode=linesormarkers(GrainSelect),
-            opacity=1,
-            type='Scatter',
-            line=dict(
-                width=3,
-                shape="spline",
-                #color='#FFA500'  
-            ),
-            name=i,
-            #transforms=[dict(
-            #    type='aggregate',
-            #    groups=df_filtered_kpi.Period_int,
-            #    aggregations=[
-            #        dict(target='Numerator', func=AggregateNumerator(Calculation)),  
-            #        dict(target='Denominator', func=AggregateDenominator(Calculation))  
-            #    ]
-            #),
-            #]
-    ))
-    return {
-        'data': appendList1,
-        'layout': dict(
-            xaxis=dict(type='string',
-                       title='',
-                       rangeselector=dict(
-                           buttons=list([
-                               dict(count=1,
-                                    label="1m",
-                                    step="month",
-                                    stepmode="backward"),
-                               dict(count=6,
-                                    label="6m",
-                                    step="month",
-                                    stepmode="backward"),
-                               dict(count=1,
-                                    label="YTD",
-                                    step="year",
-                                    stepmode="todate"),
-                               dict(count=1,
-                                    label="1y",
-                                    step="year",
-                                    stepmode="backward"),
-                               dict(step="all")
-                           ])
-                       ),
-                       rangeslider=dict(
-                            visible=False
-                       ),
-                     
-                       showgrid=False,
-                       showline=False,
-                       color=fontcolor,
-                       font=dict(
-                           size=14,
-                       )
-                       ),
-            yaxis=dict(
-                       fixedrange=False,
-                       showline=True,
-                       linewidth=2,
-                       showgrid=False,
-                       tickformat=".1%",
-                       yaxis='y1',
-                       secondary_y=False,
-                       color=fontcolor,
-                       ),
-            margin={'l': 60, 'b': 45, 't': 33, 'r': 60},
-            legend=dict(
-                font=dict(
-                    size=15,
-                    color=fontcolor,
-                ),
-                orientation="h",
-                yanchor="top",
-                y=0.99,
-                x=0.01,
-                xanchor="left",
-            ),
-            plot_bgcolor=graphcolor,
-            paper_bgcolor=graphcolor,
-            modebar=dict(
-                bgcolor='transparent',
-                color=BeautifulSignalColor,
-            ),
-            font=dict(
-                size=15,
-            ),
-            title=dict(text=str(KPISelect) + ' over time per vergeleken met ' + str(KPISelectCompare),# + ' ' + Level2Entitytype,
-                       # +' -     selected: '+str(Level2NameSelect),
-                       font=dict(
-                                 size=22,
-                                 color=fontcolor,
-                           ),
-                       ),
-            hovermode='x-unified',
-            transition={'duration': 500},
-            autosize=True,
+        #.sort(["LevelName_0"])
         )
-    }
+        polarsdata = mastersetkpifilterednotime.collect()
+        data111 = polarsdata.to_pandas()
+
+
+        dff0 = []
+        dff1 = []
+   #     dff1 = dff1tmp
+        tracestotal = []
+        traces = []
+        traces2 = []
+        appendList1 = [tracestotal, traces]
+        appendList2 = eval(totaaljanee)
+        for j in data111.eval(button_group1).unique():
+            df_by_Level1Name = data111[data111[button_group1] == j]
+            x = eval(CalculationLogic1(Calculation))
+            for g in appendList1:
+                g.append(dict(
+                    df_by_Level1Name,
+                    y=df_by_Level1Name.LevelName_1,
+                    x=x,
+                    text=x,
+                    ticktext=df_by_Level1Name.LevelName_1,
+                    texttemplate="%{value:" + eval(Notation[0]) + "}",
+                    text_auto=True,
+                    type='bar',
+                    marker=dict(
+                        color=LevelNameColor[j],
+                        color_discrete_map='identity',
+                    ),
+                    orientation="h",
+                    name=j,
+                    transforms=[dict(
+                        type='aggregate',
+                        groups=df_by_Level1Name.LevelName_1,
+                        aggregations=[
+                            dict(target='Numerator', func=AggregateNumDenom(Calculation)),  # , enabled=True
+                            dict(target='Denominator', func=AggregateNumDenom(Calculation))  # , enabled=True
+                        ]
+                    ),
+                    ]
+                ))
+        if Totaalswitch=='True':
+            data0 =mastersetkpifilterednotime.to_pandas()#pd.DataFrame(data00)
+            data00 = data0.drop(columns=columns_to_remove0)
+            columns_to_remove0 = data0.columns[data0.columns.str.contains('_1|_2|d_level1_id|d_level2_id')]
+            columnsdffpol0 = data00.columns.tolist()
+            columnsdffpol0.remove('Numerator')
+            columnsdffpol0.remove('Denominator')
+            data000 = data00.groupby(columnsdffpol0, as_index=False, sort=False).agg(
+                {'Denominator': [eval(AggregateNumDenom(KPIDenomAgg[KPISelect]))], 'Numerator': [eval(AggregateNumDenom(KPINumAgg[KPISelect]))]},dtype=object)
+            data000.reset_index() 
+            data000.columns = data000.columns.droplevel(1)
+            for j in data000.LevelName_0.unique():
+                df_by_Level0Name = dff0[dff0['LevelName_0'] == j]
+                x2 = eval(CalculationLogic0(Calculation))
+                for g in appendList2:
+                    g.append(dict(
+                        df_by_Level0Name,
+                        y=df_by_Level0Name.LevelName_0,
+                        x=x2,
+                        text=x2,
+                        text_auto=True,
+                        texttemplate="%{value:" + eval(Notation[0]) + "}",  # "%{value:.01%}",
+                        textformat=eval(Notation[0]),
+                        type='bar',
+                        marker=dict(
+                            opacity=1,
+                            color=LevelNameColor[j],
+                            color_discrete_map='identity',
+                            line=dict(width=0.1,
+                                      color=LevelNameColor[j],
+                                      color_discrete_map='identity',
+                                      opacity=1,
+                                      ),
+                        ),
+                        orientation="h",
+                        name=j,
+                        transforms=[dict(
+                            type='aggregate',
+                            groups=df_by_Level0Name.LevelName_0,
+                            aggregations=[
+                                dict(target='Numerator', func=AggregateNumDenom(AggregateNum)),  
+                                dict(target='Denominator', func=AggregateNumDenom(AggregateDenom))  
+                            ]
+                        ),
+                        ]
+                    ))
+        if data111.empty:
+            return {"layout": dict(
+                xaxis = dict(visible=False),
+                yaxis = dict(visible=False),
+                annotations=[
+                                dict(
+                                    xref="paper",
+                                    yref="paper",
+                                    x=0.5,
+                                    y=0.5,
+                                    text="No data available",
+                                    showarrow=False,
+                                    font=dict(size=26,color=fontcolor),
+                    )
+                ],
+                plot_bgcolor=graphcolor,
+                paper_bgcolor=graphcolor
+                )
+            }
+        else:
+            return {
+                'data': tracestotal,
+                'layout': dict(
+                    dragmode='select',
+                    clear_on_unhover=True,
+                    clickmode='event+select',
+                    barmode='stack',
+                    type='bar',
+                    xaxis=dict(type='string',
+                               title='',
+                               showgrid=False,
+                               gridwidth=0,
+                               fixedrange=True,
+                               showline=False,
+                               tickformat=eval(Notation[0]),
+                               visible=False,
+                               color=fontcolor,
+                               font=dict(
+                                   size=14,
+                               )
+                               ),
+                    yaxis=dict(title='',
+                               showline=False,
+                               showgrid=False,
+                               categoryorder="total ascending",
+                               gridwidth=0,
+                               color=fontcolor,
+                               ),
+                    margin={'l': 140, 'b': 25, 't': 37, 'r': 40},
+                    showlegend=False if button_group1 == 'LevelName_1' else True,
+                    legend=dict(
+                            font=dict(
+                            color=fontcolor  # Change the font color here
+                                )
+                            ),
+                    autosize=True,
+                    plot_bgcolor=graphcolor,
+                    paper_bgcolor=graphcolor,
+                    modebar=dict(
+                        bgcolor='transparent',
+                        color=BeautifulSignalColor,
+                    ),
+                    font=dict(
+                        size=15,
+                    ),
+                    title=title,
+                    hovermode='x-unified',
+                    transition={'duration': 500},
+                )
+            }
+    elif button_group == 'LevelName_2':
+        data2 =mastersetkpifilterednotime.to_pandas()# pd.DataFrame(data22)
+        if button_group1=='LevelName_0':
+            columns_to_remove = data2.columns[data2.columns.str.contains('_1|d_level1_id')]
+        elif button_group1=='LevelName_1':
+            columns_to_remove = data2.columns[data2.columns.str.contains('_0|d_level0_id')]
+        elif button_group1=='LevelName_2':
+            columns_to_remove = data2.columns[data2.columns.str.contains('_0|_1|d_level0_id|d_level1_id')]
+        else:
+            columns_to_remove = data2.columns[data2.columns.str.contains('_0|_1|d_level0_id|d_level1_id')]
+        data22 = data2.drop(columns=columns_to_remove)
+        columnsdffpol = data22.columns.tolist()
+        tracestotal = []
+        traces = []
+        traces2 = []
+        appendList1 = [tracestotal, traces]
+        appendList2 = eval(totaaljanee)
+        for i in data22.eval(button_group1).unique():
+            df_by_Level2Name = data22[data22[button_group1] == i]
+            x = eval(CalculationLogic2(Calculation))
+            for z in appendList1:
+                z.append(dict(
+                    df_by_Level2Name,
+                    y=df_by_Level2Name.LevelName_2,
+                    x=x,
+                    text=x,
+                    texttemplate="%{value:"+eval(Notation[0])+"}",#"%{value:.01%}",
+                    textformat=eval(Notation[0]),
+                    text_auto=True,
+                    marker = dict(
+                            color=LevelNameColor[i],
+                            color_discrete_map='identity',
+                            line = dict(width=0.1)
+                    ),
+                    type='bar',
+                    orientation="h",
+                    name=i,
+                    transforms=[dict(
+                        type='aggregate',
+                        groups=df_by_Level2Name.LevelName_2,
+                        aggregations=[
+                            dict(target='Numerator', func=AggregateNumDenom(AggregateNum)),  # , enabled=True
+                            dict(target='Denominator', func=AggregateNumDenom(AggregateDenom))  # , enabled=True
+                        ]
+                    ),
+                    ]
+                ))
+        if Totaalswitch=='True':
+            data1 =mastersetkpifilterednotime.to_pandas()# pd.DataFrame(data11)
+            columns_to_remove1 = data1.columns[data1.columns.str.contains('_0|_2|d_level0_id|d_level2_id')]
+            data11 = data1.drop(columns=columns_to_remove1)
+            columnsdffpol1 = data11.columns.tolist()
+            columnsdffpol1.remove('Numerator')
+            columnsdffpol1.remove('Denominator')
+            data111 = data11.groupby(columnsdffpol1, as_index=False, sort=False).agg(
+                {'Denominator': [eval(AggregateNumDenom(KPIDenomAgg[KPISelect]))], 'Numerator': [eval(AggregateNumDenom(KPINumAgg[KPISelect]))]},dtype=object)
+            data111.reset_index() 
+            data111.columns = data111.columns.droplevel(1)
+            for j in data111['LevelName_1'].unique():
+                df_by_Level1Name = data111[data111['LevelName_1'] == j]
+                x2 = eval(CalculationLogic1(Calculation))
+                for g in appendList2:
+                    g.append(dict(
+                        df_by_Level1Name,
+                        y=df_by_Level1Name.LevelName_1,
+                        x=x2,
+                        text=x2,
+                        texttemplate="%{value:" + eval(Notation[0]) + "}",  # "%{value:.01%}",
+                        textformat=eval(Notation[0]),
+                        text_auto=True,
+                        type='bar',
+                        marker=dict(
+                            opacity=1,
+                            color=LevelNameColor[j],
+                            color_discrete_map='identity',
+                            line=dict(color=LevelNameColor[j],
+                                      width=0.1
+                                      ),
+                        ),
+                        orientation="h",
+                        name=j,
+                        transforms=[dict(
+                            type='aggregate',
+                            groups=df_by_Level1Name.LevelName_1,
+                            aggregations=[
+                                dict(target='Numerator', func=AggregateNumDenom(AggregateNum)),  # , enabled=True
+                                dict(target='Denominator', func=AggregateNumDenom(AggregateDenom))  # , enabled=True
+                            ]
+                        ),
+                        ]
+                    ))
+        if data2.empty:
+            return {"layout": dict(
+                xaxis = dict(visible=False),
+                yaxis = dict(visible=False),
+                annotations=[
+                                dict(
+                                    xref="paper",
+                                    yref="paper",
+                                    x=0.5,
+                                    y=0.5,
+                                    text="No data available",
+                                    showarrow=False,
+                                    font=dict(size=26,color=fontcolor),
+                    )
+                ],
+                plot_bgcolor=graphcolor,
+                paper_bgcolor=graphcolor
+                )
+            }
+        else:
+            return {
+                'data': tracestotal,
+                'layout': dict(
+                    dragmode='select',
+                    clickmode='event+select',
+                    barmode='stack',
+                    clear_on_unhover=True,
+                    type='bar',
+                    xaxis=dict(type='string',
+                               title='',
+                               visible=False,
+                               autorange=True,
+                               fixedrange=True,
+                               showgrid=False,
+                               showline=False,
+                               gridwidth=0,
+                               tickformat=eval(Notation[0]),
+                               color=fontcolor,
+                               font=dict(
+                                   size=14,
+                               )
+                               ),
+                    yaxis=dict(title='',
+                               showline=False,
+                               showgrid=False,
+                               categoryorder="total ascending",
+                               gridwidth=0,
+                               color=fontcolor,
+                               ),
+                    margin={'l': 140, 'b': 25, 't': 37, 'r': 40},
+                    showlegend=False if button_group1 == 'LevelName_2' else True,
+                    legend=dict(
+                            font=dict(
+                            color=fontcolor  # Change the font color here
+                                )
+                            ),
+                    plot_bgcolor=graphcolor,
+                    paper_bgcolor=graphcolor,
+                    modebar=dict(
+                        bgcolor='transparent',
+                        color=BeautifulSignalColor,
+                    ),
+                    font=dict(
+                        size=15,
+                    ),
+                    title=title,
+                    hovermode='x-unified',
+                    transition={'duration': 500},
+                )
+            }
+
 """
 #app.config['suppress_callback_exceptions'] = True
 
@@ -4310,7 +4416,7 @@ def update_kpicompare(data00,data11,data22,GrainSelect, KPISelect, KPISelectComp
 @app.callback(
     Output("modal", "is_open"),
     [Input("open-settings", "n_clicks"), Input("close-settings", "n_clicks")],
-    [State("modal", "is_open")],
+    [State("modal", "is_open")],prevent_initial_callback=True
 )
 def toggle_modal(n1, n2, is_open):
     if n1 or n2:
@@ -4319,11 +4425,14 @@ def toggle_modal(n1, n2, is_open):
 
 @app.callback(
     Output("modalfilter", "is_open"),
-    [Input("Opennavbar-right", "n_clicks"), Input("close-filter", "n_clicks")],
-    [State("modalfilter", "is_open")],
+    [Input("Opennavbar-right", "n_clicks"), 
+     Input("close-filter", "n_clicks"),
+     Input("sweepl0filter", "n_clicks"),
+     ],
+    [State("modalfilter", "is_open")],prevent_initial_callback=True
 )
-def toggle_modal(n1, n2, is_open):
-    if n1 or n2:
+def toggle_modal(n1, n2, n3, is_open):
+    if n1 or n2 or n3:
         return not is_open
     return is_open
 
@@ -4342,6 +4451,33 @@ def toggle_modal(n1, n2, is_open):
 #    Output("Level0DD", "children"),
 #    Input("Level0DD", "id"),
 #)
+@app.callback(
+    Output('graphlevel0', 'figure', allow_duplicate=True),
+    [Input('graph-level0compare', 'hoverData'),
+    Input('button_group', 'value'),
+    Input('pieorbar', 'data'),
+     State('graphlevel0', 'figure'),
+     ],prevent_initial_call=True
+)
+def opacity_level0Graph(hoverData,button_group,pieorbar,figure):
+    print('update opacity')
+    if pieorbar == 'pie':
+        raise PreventUpdate
+    else:
+        if hoverData is None or hoverData.get('clear_data'):
+            for item in figure['data']:
+                item['marker'].update({'opacity': 1})
+        else:
+            for item in figure['data']:
+                if hoverData['points'][0]['label'] in item[f'{button_group}']:
+                    item['marker'].update({'opacity': 1})
+                else:
+                    item['marker'].update({'opacity': 0.2})
+        #print(figure)
+        updated_marker_opacity = figure['data']
+        patched_figure = Patch()
+        patched_figure['data'] = updated_marker_opacity
+        return patched_figure
 
 app.clientside_callback(
     """window.onload=function () {
