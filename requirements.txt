@@ -11,7 +11,7 @@ dash-tools
 openpyxl==3.0.10
 dash-breakpoints==0.1.0
 pyarrow==11.0.0
-dash-extensions==0.1.13
+dash-extensions==0.1.11
 celery==5.2.7
 diskcache==5.6.1
 multiprocess>=0.70.12
