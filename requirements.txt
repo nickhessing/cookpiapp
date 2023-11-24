@@ -25,4 +25,4 @@ py-mini-racer==0.6.0
 asyncio==3.4.3
 dash-loading-spinners==1.0.0
 redis==4.6.0
-polars==0.18.8
+polars==0.18.4
