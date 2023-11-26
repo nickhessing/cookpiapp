@@ -102,7 +102,7 @@ external_stylesheets = [
 # Connect to your internal Redis instance using the REDIS_URL environment variable
 # The REDIS_URL is set to the internal Redis URL e.g. redis://red-343245ndffg023:6379
 print(os.environ)
-if 'redis://red-clg96tf14gps73cecsvg:6379' in os.environ: 
+if 'redis://red-clg96tf14gps73cecsvg:6379' in os.environ.values(): 
     print('os.environ in environment')
     # Use Redis & Celery if REDIS_URL set as an env variable
    # from celery import Celery
