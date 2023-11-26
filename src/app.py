@@ -125,7 +125,7 @@ app = DashProxy(__name__,
                # ,session_check=False, arg_check=False
                 ,suppress_callback_exceptions=True,external_stylesheets=external_stylesheets
                 )
-
+initial_callback_executed = False
 
 #app = DashProxy(__name__,
 #                transforms=[ServersideOutputTransform(session_check=False, arg_check=False,backend = RedisStore('redis://red-clg96tf14gps73cecsvg:6379'))]#,
@@ -149,6 +149,7 @@ app = DashProxy(__name__,
 #celery = make_celery(app.server)
 
 server = app.server
+callback_triggered = False
 
 #app.css.config.serve_locally = True
 
@@ -1600,6 +1601,7 @@ app.layout = html.Div([
             ),
     html.Div(html.Nav(id='navbar')),
     html.Span(html.I(''),style={'margin-top': '5em','display': 'block'}),
+    dcc.Store(id='dflmasterfrontpolarsRedis'),
     dcc.Store(id='mastersetkpifiltered'),
     dcc.Store(id='mastersetkpifilterednotime'),
     dcc.Store(id='dfl0'),
@@ -1637,6 +1639,21 @@ app.layout = html.Div([
                 ]),
 ],
 )
+
+
+
+
+@app.callback(
+    Output("dflmasterfrontpolarsRedis", "data"),
+    [Input("collapse-button", "n_clicks")],
+)
+def polarsdataframeinitial(n):
+    print('execute polarsdataframeinitial')
+    dflmasterfrontpolarsRedis = dflmasterfrontpolars
+    print(dflmasterfrontpolarsRedis)
+    return Serverside(dflmasterfrontpolarsRedis)
+        
+
 
 @app.callback(
     Output("collapse", "is_open"),
@@ -2002,7 +2019,8 @@ def coinsinwallet(coinsinwallet,CompetitorSwitch):
               Output("button_group1", "options"),
               Output("pieorbar", "data"),
             #  Output('sweepers', 'children'),
-             ],            
+             ],           
+              Input('dflmasterfrontpolarsRedis', 'data'),
               Input('GrainSelect', 'value'),
               Input('KPISelect', 'value'),
               Input('KPIGroupSelect', 'value'),
@@ -2020,10 +2038,14 @@ def coinsinwallet(coinsinwallet,CompetitorSwitch):
               ,            
               State('dropdown0', 'value')
               ,memoize=True)#,prevent_initial_callback=True
-def clean_data(GrainSelect,KPISelect,KPIGroupSelect,button_group,Level0NameSelect,Level1NameSelect,Level2NameSelect,Category1Select,WalletSwitch,CompetitorSwitch,coinsinwallet,coinsinwalletComp,daterange
+def clean_data(dflmasterfrontpolarsRedis,GrainSelect,KPISelect,KPIGroupSelect,button_group,Level0NameSelect,Level1NameSelect,Level2NameSelect,Category1Select,WalletSwitch,CompetitorSwitch,coinsinwallet,coinsinwalletComp,daterange
                ,dropdown0State):#,*args,sweepl1 relayoutl1barclickdatal2bar,clickdatal0,clickdatal1,clickdatal2,relayoutDatal0
     print('bigboi')
     try:
+        print(dflmasterfrontpolarsRedis)
+        dflmasterfrontpolarsRedisje = dflmasterfrontpolarsRedis
+        print(dflmasterfrontpolarsRedisje)
+        print(type(dflmasterfrontpolarsRedisje))
         changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
         datefromtmp = []
         datetotmp = []
@@ -2031,11 +2053,11 @@ def clean_data(GrainSelect,KPISelect,KPIGroupSelect,button_group,Level0NameSelec
         datetotmp.append(daterange[1])
         KPILevelCountSelected = KPILevelCountList[KPISelect]
         if coinsinwallet and WalletSwitch == 'True' and CompetitorSwitch =='True':
-            dflmasterfrontpolarswallet = dflmasterfrontpolars.filter(pl.col("d_level0_id").is_in(coinsinwalletComp))
+            dflmasterfrontpolarswallet = dflmasterfrontpolarsRedisje.filter(pl.col("d_level0_id").is_in(coinsinwalletComp))
         elif coinsinwallet and WalletSwitch == 'True':
-            dflmasterfrontpolarswallet = dflmasterfrontpolars.filter(pl.col("d_level0_id").is_in(coinsinwallet))
+            dflmasterfrontpolarswallet = dflmasterfrontpolarsRedisje.filter(pl.col("d_level0_id").is_in(coinsinwallet))
         else:
-            dflmasterfrontpolarswallet = dflmasterfrontpolars
+            dflmasterfrontpolarswallet = dflmasterfrontpolarsRedisje
         #if not str(dropdown0State)=='None' and len([item for item in ctx.triggered if 'prop_id' in item]) >1:
         #    print('dash.exceptions.PreventUpdate')
         #    raise dash.exceptions.PreventUpdate
