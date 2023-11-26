@@ -101,7 +101,7 @@ external_stylesheets = [
 
 # Connect to your internal Redis instance using the REDIS_URL environment variable
 # The REDIS_URL is set to the internal Redis URL e.g. redis://red-343245ndffg023:6379
-
+print(os.environ)
 if 'redis://red-clg96tf14gps73cecsvg:6379' in os.environ: 
     print('os.environ in environment')
     # Use Redis & Celery if REDIS_URL set as an env variable
@@ -112,6 +112,7 @@ if 'redis://red-clg96tf14gps73cecsvg:6379' in os.environ:
     one_backend = RedisBackend(host='red-clg96tf14gps73cecsvg', port=6379)
 
 else:
+    print('host = localhost')
     #from celery import Celery
    # celery_app = Celery(__name__, broker='redis://127.0.0.1:6379', backend='redis://127.0.0.1:6379')
     #background_callback_manager = CeleryManager(celery_app)
