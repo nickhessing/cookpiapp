@@ -1650,7 +1650,6 @@ app.layout = html.Div([
 def polarsdataframeinitial(n):
     print('execute polarsdataframeinitial')
     dflmasterfrontpolarsRedis = dflmasterfrontpolars
-    print(dflmasterfrontpolarsRedis)
     return Serverside(dflmasterfrontpolarsRedis)
         
 
@@ -1876,21 +1875,22 @@ def reset_clickDatal0(n_clicks):#,n_clicks2
      Input("Level1NameSelect", "value"),
      Input("Level2NameSelect", "value"),
      Input("KPISelect", "value"),
+     Input("dflmasterfrontpolarsRedis", "data"),
  prevent_initial_call=True
 )
 
-def DropdownOptions(Category1Select,Level0NameSelect,Level1NameSelect,Level2NameSelect,KPISelect):  #,*args ,Level2NameSelect,toggle, relayoutData
+def DropdownOptions(Category1Select,Level0NameSelect,Level1NameSelect,Level2NameSelect,KPISelect,dflmasterfrontpolarsRedis):  #,*args ,Level2NameSelect,toggle, relayoutData
     print('execute DropdownOptions')
     try:    
         if KPISelect in KPIName_listlevel0:
-            dffonlykpifiltered = dflmasterfrontpolars.filter((pl.col("KPIName") == KPISelect)
+            dffonlykpifiltered = dflmasterfrontpolarsRedis.filter((pl.col("KPIName") == KPISelect)
                                      & (pl.col("Filter1_0").is_in(Category1Select)))
         elif KPISelect in KPIName_listlevel1:
-            dffonlykpifiltered = dflmasterfrontpolars.filter((pl.col("KPIName") == KPISelect)
+            dffonlykpifiltered = dflmasterfrontpolarsRedis.filter((pl.col("KPIName") == KPISelect)
                                      & (pl.col("LevelName_0").is_in(Level0NameSelect))
                                      & (pl.col("Filter1_0").is_in(Category1Select)))
         elif KPISelect in KPIName_listlevel2:
-            dffonlykpifiltered = dflmasterfrontpolars.filter((pl.col("KPIName") == KPISelect)
+            dffonlykpifiltered = dflmasterfrontpolarsRedis.filter((pl.col("KPIName") == KPISelect)
                                      & (pl.col("LevelName_0").is_in(Level0NameSelect))
                                      & (pl.col("LevelName_1").is_in(Level1NameSelect))
                                      & (pl.col("Filter1_0").is_in(Category1Select)))
@@ -2042,10 +2042,7 @@ def clean_data(dflmasterfrontpolarsRedis,GrainSelect,KPISelect,KPIGroupSelect,bu
                ,dropdown0State):#,*args,sweepl1 relayoutl1barclickdatal2bar,clickdatal0,clickdatal1,clickdatal2,relayoutDatal0
     print('bigboi')
     try:
-        print(dflmasterfrontpolarsRedis)
-        dflmasterfrontpolarsRedisje = dflmasterfrontpolarsRedis
-        print(dflmasterfrontpolarsRedisje)
-        print(type(dflmasterfrontpolarsRedisje))
+        dflmasterfrontpolarsRedis
         changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
         datefromtmp = []
         datetotmp = []
@@ -2053,11 +2050,11 @@ def clean_data(dflmasterfrontpolarsRedis,GrainSelect,KPISelect,KPIGroupSelect,bu
         datetotmp.append(daterange[1])
         KPILevelCountSelected = KPILevelCountList[KPISelect]
         if coinsinwallet and WalletSwitch == 'True' and CompetitorSwitch =='True':
-            dflmasterfrontpolarswallet = dflmasterfrontpolarsRedisje.filter(pl.col("d_level0_id").is_in(coinsinwalletComp))
+            dflmasterfrontpolarswallet = dflmasterfrontpolarsRedis.filter(pl.col("d_level0_id").is_in(coinsinwalletComp))
         elif coinsinwallet and WalletSwitch == 'True':
-            dflmasterfrontpolarswallet = dflmasterfrontpolarsRedisje.filter(pl.col("d_level0_id").is_in(coinsinwallet))
+            dflmasterfrontpolarswallet = dflmasterfrontpolarsRedis.filter(pl.col("d_level0_id").is_in(coinsinwallet))
         else:
-            dflmasterfrontpolarswallet = dflmasterfrontpolarsRedisje
+            dflmasterfrontpolarswallet = dflmasterfrontpolarsRedis
         #if not str(dropdown0State)=='None' and len([item for item in ctx.triggered if 'prop_id' in item]) >1:
         #    print('dash.exceptions.PreventUpdate')
         #    raise dash.exceptions.PreventUpdate
@@ -2262,10 +2259,6 @@ def clean_data(dflmasterfrontpolarsRedis,GrainSelect,KPISelect,KPIGroupSelect,bu
         changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
         dffcomparejson = dfllComparepolar[0]
         mastersetkpifilteredjsonnotime = mastersetkpifilterednotime.collect()
-        print('mastersetkpifilteredjsonnotime')
-        print('mastersetkpifilteredjsonnotime')
-        print(mastersetkpifilteredjsonnotime)
-        print('mastersetkpifilteredjsonnotime')
         dffgroups = dflpolarsgroup.sort("KPIGroup")
         string_prefix = 'You have selected: '
         if datefromtmp is not None:
@@ -2995,7 +2988,7 @@ def update_kpiaggcontainer(graphsloop,GrainSelect,dflcomparekpi,CumulativeSwitch
      ,prevent_initial_call=True
 )
 
-def update_kpiagg_data(GrainSelect,KPISelect,mastersetkpifiltered,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch,widthBreakpoint,button_group,button_group1,Totaalswitch):  #,*args ,Level2NameSelect,toggle, relayoutData
+def update_kpiagg_data(GrainSelect,KPISelect,mastersetkpifilteredstore,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch,widthBreakpoint,button_group,button_group1,Totaalswitch):  #,*args ,Level2NameSelect,toggle, relayoutData
     print('execute update_kpiagg data')
     try:
         changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
@@ -3005,7 +2998,7 @@ def update_kpiagg_data(GrainSelect,KPISelect,mastersetkpifiltered,CumulativeSwit
         #    raise dash.exceptions.PreventUpdate
         #else:
         #update_filter_l0(data0, GrainSelect, KPISelect)  # ,Level2NameSelect
-        columns_to_removemasterset = mastersetkpifiltered.columns
+        columns_to_removemasterset = mastersetkpifilteredstore.columns
         noemer = f'pl.col("Denominator").{eval(AggregateNumDenom(KPIDenomAgg[KPISelect]))}()'
         teller = f'pl.col("Numerator").{eval(AggregateNumDenom(KPINumAgg[KPISelect]))}()'
         dataframe = Cumloop0(CumulativeSwitch)
@@ -3045,7 +3038,7 @@ def update_kpiagg_data(GrainSelect,KPISelect,mastersetkpifiltered,CumulativeSwit
                         xanchor="left",
                     )
 
-        data0 = mastersetkpifiltered.to_pandas()
+        data0 = mastersetkpifilteredstore.to_pandas()
         LevelOrFilter = button_group.split('_')[0]
         LevelOrFilterNumber = button_group.split('_')[1]
         columns_to_remove_dict = {
@@ -3064,7 +3057,7 @@ def update_kpiagg_data(GrainSelect,KPISelect,mastersetkpifiltered,CumulativeSwit
         traces3 = []
         mastersetkpifilterednewcol = columns_to_remove#[column for column in columns_to_removemasterset if '_1' not in column and '_2' not in column and column not in ['d_level1_id', 'd_level2_id']]
         # Select only the filtered columns
-        mastersetkpifilterednew = mastersetkpifiltered.select(columns_to_remove)
+        mastersetkpifilterednew = mastersetkpifilteredstore.select(columns_to_remove)
         mastersetkpifilterednewcol.remove('Numerator')
         mastersetkpifilterednewcol.remove('Denominator')
         mastersetkpifilterednotimee = (
@@ -4030,10 +4023,8 @@ def update_kpiagg(GrainSelect,KPISelect,graphlevel0datasetje,CumulativeSwitch,Pe
     # eval(kpigrouplistinput3[0]),  
      ],prevent_initial_call=True
 )
-def update_level0Graph_data(mastersetkpifilterednotime,button_group,button_group1,PercentageTotalSwitchNoTime,sweepertje,KPISelect,Totaalswitch,widthBreakpoint): #,hoverData,*args
+def update_level0Graph_data(mastersetkpifilterednotimestore,button_group,button_group1,PercentageTotalSwitchNoTime,sweepertje,KPISelect,Totaalswitch,widthBreakpoint): #,hoverData,*args
     print('update_level0Graph dataset')
-    print(type(mastersetkpifilterednotime))
-    print('type(mastersetkpifilterednotime)')
     try:
         changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
         changed_id2 = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
@@ -4056,7 +4047,7 @@ def update_level0Graph_data(mastersetkpifilterednotime,button_group,button_group
                                      color=fontcolor,
                             ),
         )
-        columns_to_removemasterset = mastersetkpifilterednotime.columns 
+        columns_to_removemasterset = mastersetkpifilterednotimestore.columns 
         if button_group1 == 'LevelName_0':
             columns_to_remove_dict = {
             'LevelName_0': [column for column in columns_to_removemasterset if '_1' not in column and '_2' not in column and column not in ['d_level1_id', 'd_level2_id']],
@@ -4088,7 +4079,7 @@ def update_level0Graph_data(mastersetkpifilterednotime,button_group,button_group
         columns_to_remove = columns_to_remove_dict[button_group] 
         if 'Filter1_0' not in columns_to_remove and (button_group == 'Filter1_0' or button_group1 == 'Filter1_0'):
             columns_to_remove.append('Filter1_0')
-        mastersetkpifilterednew = mastersetkpifilterednotime.select(columns_to_remove)
+        mastersetkpifilterednew = mastersetkpifilterednotimestore.select(columns_to_remove)
         columns_to_remove.remove('Numerator')
         columns_to_remove.remove('Denominator')
 
@@ -4216,11 +4207,6 @@ def update_level0Graph(graphlevel0comparedataset,button_group,button_group1,Perc
         traces = []
         iterationslist = data000.eval(button_group).unique()
         countiterations = iterationslist.shape[0]
-        print(graphlevel0comparedataset)
-        print(button_group)
-        print(button_group1)
-        print(changed_id)
-        print('endprint')
         if countiterations==1:
             print('countiterations==1 traces')
             df_by_Level0Name = data000
