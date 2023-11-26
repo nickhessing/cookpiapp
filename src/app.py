@@ -283,6 +283,7 @@ ListGrain = ['int_day', 'int_month', 'int_quarter', 'int_year']
 #dfl2polars = dfl2polars.with_columns(dfl2polars["Period_int"].cast(pl.Utf8))
 dflmasterfrontpolars = pl.scan_parquet('assets/Attributes/dashboard_data/dflmasterfront.parquet').collect()
 dflmasterfrontpolars = dflmasterfrontpolars.with_columns(dflmasterfrontpolars["Period_int"].cast(pl.Utf8))
+dflmasterfrontpolars = dflmasterfrontpolars.filter(pl.col("Grain") == "M")
 
 GrainNameListtmp = pl.DataFrame(dflmasterfrontpolars["Grain"].unique())
 tmp =GrainNameListtmp.rows(named=True)
@@ -2043,7 +2044,6 @@ def clean_data(dflmasterfrontpolarsRedis,GrainSelect,KPISelect,KPIGroupSelect,bu
                ,dropdown0State):#,*args,sweepl1 relayoutl1barclickdatal2bar,clickdatal0,clickdatal1,clickdatal2,relayoutDatal0
     print('bigboi')
     try:
-        dflmasterfrontpolarsRedis
         changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
         datefromtmp = []
         datetotmp = []
