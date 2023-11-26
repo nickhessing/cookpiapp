@@ -101,7 +101,7 @@ external_stylesheets = [
 
 # Connect to your internal Redis instance using the REDIS_URL environment variable
 # The REDIS_URL is set to the internal Redis URL e.g. redis://red-343245ndffg023:6379
-print(os.environ)
+
 if 'redis://red-clg96tf14gps73cecsvg:6379' in os.environ.values(): 
     print('os.environ in environment')
     # Use Redis & Celery if REDIS_URL set as an env variable
@@ -2992,6 +2992,7 @@ def update_kpiaggcontainer(graphsloop,GrainSelect,dflcomparekpi,CumulativeSwitch
 def update_kpiagg_data(GrainSelect,KPISelect,mastersetkpifilteredstore,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch,widthBreakpoint,button_group,button_group1,Totaalswitch):  #,*args ,Level2NameSelect,toggle, relayoutData
     print('execute update_kpiagg data')
     try:
+        print(mastersetkpifilteredstore)
         changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
         changed_id2 = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
         #if not str(graphlevel0State)=='None' and len([item for item in ctx.triggered if 'prop_id' in item]) >1:
@@ -3000,6 +3001,7 @@ def update_kpiagg_data(GrainSelect,KPISelect,mastersetkpifilteredstore,Cumulativ
         #else:
         #update_filter_l0(data0, GrainSelect, KPISelect)  # ,Level2NameSelect
         columns_to_removemasterset = mastersetkpifilteredstore.columns
+        print(columns_to_removemasterset)
         noemer = f'pl.col("Denominator").{eval(AggregateNumDenom(KPIDenomAgg[KPISelect]))}()'
         teller = f'pl.col("Numerator").{eval(AggregateNumDenom(KPINumAgg[KPISelect]))}()'
         dataframe = Cumloop0(CumulativeSwitch)
