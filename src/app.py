@@ -3075,7 +3075,8 @@ def update_kpiagg_data(GrainSelect,KPISelect,mastersetkpifilteredstore,Cumulativ
         #.sort(["LevelName_0"])
         )
         mastersetkpifilterednotimee.fill_null(0)
-        return Serverside(mastersetkpifilterednotimee.collect())
+        mastersetkpifilterednotimeecollect = mastersetkpifilterednotimee.collect()
+        return Serverside(mastersetkpifilterednotimeecollect)
     except Exception as e:
         logging.error(f"Exception in callback: {str(e)}")
         raise
@@ -3177,8 +3178,7 @@ def update_kpiagg(GrainSelect,KPISelect,graphlevel0datasetje,CumulativeSwitch,Pe
         ##.sort(["LevelName_0"])
         #)
 
-        graphlevel0dataa = graphlevel0datasetje
-        data000 = graphlevel0dataa.to_pandas()
+        data000 = graphlevel0datasetje.to_pandas()
         data000['Period_int'] = pd.to_datetime(data000['Period_int'])
         data000 = data000.sort_values(by='Period_int')
         """
@@ -4204,8 +4204,7 @@ def update_level0Graph(graphlevel0comparedataset,button_group,button_group1,Perc
         #)
         ##.sort(["LevelName_0"])
         #)
-        graphlevel0comparedatasethier = graphlevel0comparedataset
-        data000 = graphlevel0comparedatasethier.to_pandas()
+        data000 = graphlevel0comparedataset.to_pandas()
         traces = []
         iterationslist = data000.eval(button_group).unique()
         countiterations = iterationslist.shape[0]
