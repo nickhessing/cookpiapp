@@ -283,7 +283,7 @@ ListGrain = ['int_day', 'int_month', 'int_quarter', 'int_year']
 #dfl2polars = dfl2polars.with_columns(dfl2polars["Period_int"].cast(pl.Utf8))
 dflmasterfrontpolars = pl.scan_parquet('assets/Attributes/dashboard_data/dflmasterfront.parquet').collect()
 dflmasterfrontpolars = dflmasterfrontpolars.with_columns(dflmasterfrontpolars["Period_int"].cast(pl.Utf8))
-dflmasterfrontpolars = dflmasterfrontpolars.filter((pl.col("Grain") == "Y"))
+dflmasterfrontpolars = dflmasterfrontpolars.filter((pl.col("Grain") == "M"))
 print(dflmasterfrontpolars)
 GrainNameListtmp = pl.DataFrame(dflmasterfrontpolars["Grain"].unique())
 tmp =GrainNameListtmp.rows(named=True)
@@ -4112,7 +4112,7 @@ def update_level0Graph_data(mastersetkpifilterednotimestore,button_group,button_
         #print(countiterations)
         #print('endprint')
         mastersetkpifilterednotimeee.fill_null(0)
-        return Serverside(mastersetkpifilterednotimeee)
+        return Serverside(mastersetkpifilterednotimeee.collect())
     except Exception as e:
         logging.error(f"Exception in callback: {str(e)}")
         raise
@@ -4205,7 +4205,7 @@ def update_level0Graph(graphlevel0comparedataset,button_group,button_group1,Perc
         #)
         ##.sort(["LevelName_0"])
         #)
-        graphlevel0comparedatasethier = graphlevel0comparedataset.collect()
+        graphlevel0comparedatasethier = graphlevel0comparedataset
         data000 = graphlevel0comparedatasethier.to_pandas()
         traces = []
         iterationslist = data000.eval(button_group).unique()
