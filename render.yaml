@@ -4,7 +4,7 @@ services:
     region: ohio
     env: python
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "celery -A src app celery_app worker --loglevel=INFO --concurrency=2"
+    startCommand: "celery app celery_app worker --loglevel=INFO --concurrency=2"
     autoDeploy: false
     envVars:
       - key: CELERY_BROKER_URL
@@ -18,7 +18,7 @@ services:
     region: ohio
     env: python
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn --chdir src app:server"
+    startCommand: "gunicorn app:server"
     autoDeploy: false
     envVars:
       - key: CELERY_BROKER_URL
@@ -32,7 +32,7 @@ services:
     plan: free
     env: python
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "celery flower --app src.tasks --loglevel info"
+    startCommand: "celery flower --app tasks --loglevel info"
     autoDeploy: false
     envVars:
       - key: CELERY_BROKER_URL

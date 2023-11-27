@@ -120,7 +120,7 @@ else:
 #app = dash.Dash(__name__,background_callback_manager=background_callback_manager,suppress_callback_exceptions=True)
 app = DashProxy(__name__,
                 transforms=[ServersideOutputTransform(backends=[one_backend])]#,]session_check=False, arg_check=False
-                ,background_callback_manager=background_callback_manager
+               # ,background_callback_manager=background_callback_manager
                # ,session_check=False, arg_check=False
                 ,suppress_callback_exceptions=True,external_stylesheets=external_stylesheets
                 )
@@ -2038,8 +2038,8 @@ def coinsinwallet(coinsinwallet,CompetitorSwitch):
               ,            
               State('dropdown0', 'value')
               ,memoize=True
-              ,background=True
-              ,manager=background_callback_manager
+              #,background=True
+              #,manager=background_callback_manager
                )#,prevent_initial_callback=True
 def clean_data(dflmasterfrontpolarsRedis,GrainSelect,KPISelect,KPIGroupSelect,button_group,Level0NameSelect,Level1NameSelect,Level2NameSelect,Category1Select,WalletSwitch,CompetitorSwitch,coinsinwallet,coinsinwalletComp,daterange
                ,dropdown0State):#,*args,sweepl1 relayoutl1barclickdatal2bar,clickdatal0,clickdatal1,clickdatal2,relayoutDatal0
@@ -2297,8 +2297,8 @@ def clean_data(dflmasterfrontpolarsRedis,GrainSelect,KPISelect,KPIGroupSelect,bu
     #Input("CompetitorSwitch", "label")
     #,
     State('cardsid', 'children')
-    ,background=True
-    ,manager=background_callback_manager
+    #,background=True
+    #,manager=background_callback_manager
     #,running=[
     #    (Output("dflcomparekpi", "disabled"), True, False),
     #],
@@ -2993,8 +2993,8 @@ def update_kpiaggcontainer(graphsloop,GrainSelect,dflcomparekpi,CumulativeSwitch
      #State('graphlevel0', 'figure'),
      ]
      ,prevent_initial_call=True
-     ,background=True
-     ,manager=background_callback_manager
+     #,background=True
+     #,manager=background_callback_manager
 )
 
 def update_kpiagg_data(GrainSelect,KPISelect,mastersetkpifilteredstore,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch,widthBreakpoint,button_group,button_group1,Totaalswitch):  #,*args ,Level2NameSelect,toggle, relayoutData
@@ -3958,8 +3958,8 @@ def update_kpiagg(GrainSelect,KPISelect,graphlevel0datasetje,CumulativeSwitch,Pe
     # eval(kpigrouplistinput3[0]),  
      ]
      ,prevent_initial_call=True
-     ,background=True
-    ,manager=background_callback_manager
+    # ,background=True
+    #,manager=background_callback_manager
 
 )
 def update_level0Graph_data(mastersetkpifilterednotimestore,button_group,button_group1,PercentageTotalSwitchNoTime,sweepertje,KPISelect,Totaalswitch,widthBreakpoint): #,hoverData,*args
