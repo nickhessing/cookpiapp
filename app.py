@@ -120,7 +120,7 @@ else:
 #app = dash.Dash(__name__,background_callback_manager=background_callback_manager,suppress_callback_exceptions=True)
 app = DashProxy(__name__,
                 transforms=[ServersideOutputTransform(backends=[one_backend])]#,]session_check=False, arg_check=False
-               # ,background_callback_manager=background_callback_manager
+                ,background_callback_manager=background_callback_manager
                # ,session_check=False, arg_check=False
                 ,suppress_callback_exceptions=True,external_stylesheets=external_stylesheets
                 )
@@ -2271,7 +2271,6 @@ def clean_data(dflmasterfrontpolarsRedis,GrainSelect,KPISelect,KPIGroupSelect,bu
             string_prefix = string_prefix + 'End Date: ' + end_date_string
         if len(string_prefix) == len('You have selected: '):
             string_prefix = 'Select a date to see it displayed here'
-        print(mastersetkpifiltered)
         return Serverside(mastersetkpifiltered),Serverside(mastersetkpifilteredjsonnotime),Serverside(dffgroups),Serverside(dffcomparejson),string_prefix,'bs' if not level0 else level0[0],'bs' if not level1 else level1[0],'bs' if not level2 else level2[0],button_groups,button_groups,pieorbar#,eval(button_sweeps_3[0]) #sweep0style,sweep1style,sweep2style,
 #pickle.dumps(
     except Exception as e:
@@ -2971,7 +2970,7 @@ def update_kpiaggcontainer(graphsloop,GrainSelect,dflcomparekpi,CumulativeSwitch
         raise
 
 @app.callback(
-    Output('graphlevel0data', 'data',allow_duplicate=True),
+    Output('graphlevel0data', 'data'),
    # Output("Category1Select", "value"),
   #  Output("Level0NameSelect", "options"),
    # Output('animatedbar', 'figure'),
@@ -3040,20 +3039,19 @@ def update_kpiagg_data(GrainSelect,KPISelect,mastersetkpifilteredstore,Cumulativ
         mastersetkpifilterednotimeecollect = mastersetkpifilterednotimee.collect()
         return Serverside(mastersetkpifilterednotimeecollect)
     except Exception as e:
-        logging.error(f"Exception in callback: {str(e)}")
+        logging.error(f"Exception in callback update_kpiagg_data: {str(e)}")
         raise
 
 
 @app.callback(
-    Output('graphlevel0', 'figure',allow_duplicate=True),
+    Output('graphlevel0', 'figure'),
    # Output("Category1Select", "value"),
   #  Output("Level0NameSelect", "options"),
    # Output('animatedbar', 'figure'),
     
-     [
+     [Input('graphlevel0data', 'data'),
      Input('GrainSelect', 'value'),
      Input("KPISelect", "value"),
-     Input('graphlevel0data', 'data'),
      Input("CumulativeSwitch", "label"),
      Input("PercentageTotalSwitch", "label"),
      Input("ShowValueSwitch", "label"),
@@ -3068,7 +3066,7 @@ def update_kpiagg_data(GrainSelect,KPISelect,mastersetkpifilteredstore,Cumulativ
      ,prevent_initial_call=True
 )
 
-def update_kpiagg(GrainSelect,KPISelect,graphlevel0datasetje,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch,widthBreakpoint,button_group,button_group1,Totaalswitch):  #,*args ,Level2NameSelect,toggle, relayoutData
+def update_kpiagg(graphlevel0datasetje,GrainSelect,KPISelect,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch,widthBreakpoint,button_group,button_group1,Totaalswitch):  #,*args ,Level2NameSelect,toggle, relayoutData
     print('execute update_kpiagg')
     try:
         dataframe = Cumloop0(CumulativeSwitch)
@@ -3111,6 +3109,7 @@ def update_kpiagg(GrainSelect,KPISelect,graphlevel0datasetje,CumulativeSwitch,Pe
         LevelOrFilterNumber = button_group.split('_')[1]
         traces3 = []
         print(graphlevel0datasetje)
+        print(type(graphlevel0datasetje))
         data000 = graphlevel0datasetje.to_pandas()
         data000['Period_int'] = pd.to_datetime(data000['Period_int'])
         data000 = data000.sort_values(by='Period_int')
@@ -3942,7 +3941,7 @@ def update_kpiagg(GrainSelect,KPISelect,graphlevel0datasetje,CumulativeSwitch,Pe
 
 """
 @app.callback(
-    Output('graph-level0compare-dataset', 'data', allow_duplicate=True),
+    Output('graph-level0compare-dataset', 'data'),
     [Input('mastersetkpifilterednotime', 'data'),
      Input('button_group','value'),
      Input('button_group1','value'),
@@ -3962,12 +3961,12 @@ def update_kpiagg(GrainSelect,KPISelect,graphlevel0datasetje,CumulativeSwitch,Pe
     #,manager=background_callback_manager
 
 )
-def update_level0Graph_data(mastersetkpifilterednotimestore,button_group,button_group1,PercentageTotalSwitchNoTime,sweepertje,KPISelect,Totaalswitch,widthBreakpoint): #,hoverData,*args
+def update_level0Graph_data(mastersetkpifilterednotime,button_group,button_group1,PercentageTotalSwitchNoTime,sweepertje,KPISelect,Totaalswitch,widthBreakpoint): #,hoverData,*args
     print('update_level0Graph dataset')
     try:
         noemer = f'pl.col("Denominator").{eval(AggregateNumDenom(KPIDenomAgg[KPISelect]))}()'
         teller = f'pl.col("Numerator").{eval(AggregateNumDenom(KPINumAgg[KPISelect]))}()'
-        columns_to_removemasterset = mastersetkpifilterednotimestore.columns 
+        columns_to_removemasterset = mastersetkpifilterednotime.columns 
         if button_group1 == 'LevelName_0':
             columns_to_remove_dict = {
             'LevelName_0': [column for column in columns_to_removemasterset if '_1' not in column and '_2' not in column and column not in ['d_level1_id', 'd_level2_id']],
@@ -3999,7 +3998,7 @@ def update_level0Graph_data(mastersetkpifilterednotimestore,button_group,button_
         columns_to_remove = columns_to_remove_dict[button_group] 
         if 'Filter1_0' not in columns_to_remove and (button_group == 'Filter1_0' or button_group1 == 'Filter1_0'):
             columns_to_remove.append('Filter1_0')
-        mastersetkpifilterednew = mastersetkpifilterednotimestore.select(columns_to_remove)
+        mastersetkpifilterednew = mastersetkpifilterednotime.select(columns_to_remove)
         columns_to_remove.remove('Numerator')
         columns_to_remove.remove('Denominator')
 
@@ -4017,11 +4016,11 @@ def update_level0Graph_data(mastersetkpifilterednotimestore,button_group,button_
         export = mastersetkpifilterednotimeee.collect()
         return Serverside(export)
     except Exception as e:
-        logging.error(f"Exception in callback: {str(e)}")
+        logging.error(f"Exception in callback update_level0Graph_data: {str(e)}")
         raise
 
 @app.callback(
-    Output('graph-level0compare', 'figure', allow_duplicate=True),
+    Output('graph-level0compare', 'figure'),
     [Input('graph-level0compare-dataset', 'data'),
      Input('button_group','value'),
      Input('button_group1','value'),
