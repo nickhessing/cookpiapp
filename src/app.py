@@ -67,7 +67,6 @@ import dash_loading_spinners as dls
 import subprocess
 import numpy as np
 
-
 # Usage example:
 def save_string_to_file(filename, content):
     with open(filename, 'w') as file:
@@ -2039,8 +2038,8 @@ def coinsinwallet(coinsinwallet,CompetitorSwitch):
               ,            
               State('dropdown0', 'value')
               ,memoize=True
-              #,background=True
-              #,manager=background_callback_manager
+              ,background=True
+              ,manager=background_callback_manager
                )#,prevent_initial_callback=True
 def clean_data(dflmasterfrontpolarsRedis,GrainSelect,KPISelect,KPIGroupSelect,button_group,Level0NameSelect,Level1NameSelect,Level2NameSelect,Category1Select,WalletSwitch,CompetitorSwitch,coinsinwallet,coinsinwalletComp,daterange
                ,dropdown0State):#,*args,sweepl1 relayoutl1barclickdatal2bar,clickdatal0,clickdatal1,clickdatal2,relayoutDatal0
