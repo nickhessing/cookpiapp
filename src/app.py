@@ -106,7 +106,7 @@ if 'redis://red-clg96tf14gps73cecsvg:6379' in os.environ.values():
     print('os.environ in environment')
     # Use Redis & Celery if REDIS_URL set as an env variable
     from celery import Celery
-    celery_app = Celery(__name__, broker=os.environ['redis://red-clg96tf14gps73cecsvg:6379'], backend=os.environ['redis://red-clg96tf14gps73cecsvg:6379'])
+    celery_app = Celery(__name__, broker='redis://red-clg96tf14gps73cecsvg:6379', backend='redis://red-clg96tf14gps73cecsvg:6379')
     background_callback_manager = CeleryManager(celery_app)
     one_backend = RedisBackend(host='red-clg96tf14gps73cecsvg', port=6379)
 
