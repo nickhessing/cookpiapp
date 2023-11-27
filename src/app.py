@@ -2297,8 +2297,8 @@ def clean_data(dflmasterfrontpolarsRedis,GrainSelect,KPISelect,KPIGroupSelect,bu
     #Input("CompetitorSwitch", "label")
     #,
     State('cardsid', 'children')
-    #,background=True
-    #,manager=background_callback_manager
+    ,background=True
+    ,manager=background_callback_manager
     #,running=[
     #    (Output("dflcomparekpi", "disabled"), True, False),
     #],
@@ -2993,6 +2993,8 @@ def update_kpiaggcontainer(graphsloop,GrainSelect,dflcomparekpi,CumulativeSwitch
      #State('graphlevel0', 'figure'),
      ]
      ,prevent_initial_call=True
+     ,background=True
+     ,manager=background_callback_manager
 )
 
 def update_kpiagg_data(GrainSelect,KPISelect,mastersetkpifilteredstore,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch,widthBreakpoint,button_group,button_group1,Totaalswitch):  #,*args ,Level2NameSelect,toggle, relayoutData
@@ -3954,7 +3956,11 @@ def update_kpiagg(GrainSelect,KPISelect,graphlevel0datasetje,CumulativeSwitch,Pe
      Input("Totaalswitch", "label"),
      State("breakpoints", "widthBreakpoint"),
     # eval(kpigrouplistinput3[0]),  
-     ],prevent_initial_call=True
+     ]
+     ,prevent_initial_call=True
+     ,background=True
+    ,manager=background_callback_manager
+
 )
 def update_level0Graph_data(mastersetkpifilterednotimestore,button_group,button_group1,PercentageTotalSwitchNoTime,sweepertje,KPISelect,Totaalswitch,widthBreakpoint): #,hoverData,*args
     print('update_level0Graph dataset')
