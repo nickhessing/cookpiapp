@@ -282,7 +282,6 @@ ListGrain = ['int_day', 'int_month', 'int_quarter', 'int_year']
 dflmasterfrontpolars = pl.scan_parquet('assets/Attributes/dashboard_data/dflmasterfront.parquet').collect()
 dflmasterfrontpolars = dflmasterfrontpolars.with_columns(dflmasterfrontpolars["Period_int"].cast(pl.Utf8))
 dflmasterfrontpolars = dflmasterfrontpolars.filter((pl.col("Grain") == "M"))
-print(dflmasterfrontpolars)
 GrainNameListtmp = pl.DataFrame(dflmasterfrontpolars["Grain"].unique())
 tmp =GrainNameListtmp.rows(named=True)
 GrainNameList = [i['Grain'] for i in tmp] 
@@ -313,7 +312,6 @@ print('Catergory0List boven')
 Catergory0Listtmp = pl.DataFrame(dflmasterfrontpolars["Filter1_0"].unique())
 tmp =Catergory0Listtmp.rows(named=True)
 Catergory0List = [i['Filter1_0'] for i in tmp] 
-print(Catergory0List)
 print('Catergory0List boven')
 #Level1NameList = dfl1['LevelName_1'].unique()
 #Level2NameList = dfl2['LevelName_2'].unique().tolist()
@@ -2806,11 +2804,10 @@ def update_kpiaggcontainer(graphsloop,GrainSelect,dflcomparekpi,CumulativeSwitch
                     )
                     #.sort(["LevelName_0"])
                     )
-                    polarsdata = mastersetkpifilterednotime.collect()
                     #polarsdata.with_columns(
                     #    pl.col("Period_int").str.to_datetime("%d %B %Y", strict=False)
                     #    )
-                    data000 = polarsdata.to_pandas()
+                    data000 = mastersetkpifilterednotime.to_pandas()
                     data000['Period_int'] = pd.to_datetime(data000['Period_int'])
                     data000 = data000.sort_values(by='Period_int')
                     for i in data000['LevelName_0'].unique():
@@ -3111,6 +3108,7 @@ def update_kpiagg(GrainSelect,KPISelect,graphlevel0datasetje,CumulativeSwitch,Pe
         LevelOrFilter = button_group.split('_')[0]
         LevelOrFilterNumber = button_group.split('_')[1]
         traces3 = []
+        print(graphlevel0datasetje)
         data000 = graphlevel0datasetje.to_pandas()
         data000['Period_int'] = pd.to_datetime(data000['Period_int'])
         data000 = data000.sort_values(by='Period_int')
@@ -4014,7 +4012,8 @@ def update_level0Graph_data(mastersetkpifilterednotimestore,button_group,button_
         )
         )
         mastersetkpifilterednotimeee.fill_null(0)
-        return Serverside(mastersetkpifilterednotimeee.collect())
+        export = mastersetkpifilterednotimeee.collect()
+        return Serverside(export)
     except Exception as e:
         logging.error(f"Exception in callback: {str(e)}")
         raise
@@ -4056,6 +4055,7 @@ def update_level0Graph(graphlevel0comparedataset,button_group,button_group1,Perc
                                      color=fontcolor,
                             ),
         )
+        print(graphlevel0comparedataset)
         data000 = graphlevel0comparedataset.to_pandas()
         traces = []
         iterationslist = data000.eval(button_group).unique()
