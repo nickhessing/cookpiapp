@@ -105,24 +105,23 @@ external_stylesheets = [
 if 'redis://red-clg96tf14gps73cecsvg:6379' in os.environ.values(): 
     print('os.environ in environment')
     # Use Redis & Celery if REDIS_URL set as an env variable
-   # from celery import Celery
-    #celery_app = Celery(__name__, broker=os.environ['redis://red-clg96tf14gps73cecsvg:6379'], backend=os.environ['redis://red-clg96tf14gps73cecsvg:6379'])
-   # background_callback_manager = CeleryManager(celery_app)
-   # backendRedis = 'redis://red-clg96tf14gps73cecsvg:6379'
+    from celery import Celery
+    celery_app = Celery(__name__, broker=os.environ['redis://red-clg96tf14gps73cecsvg:6379'], backend=os.environ['redis://red-clg96tf14gps73cecsvg:6379'])
+    background_callback_manager = CeleryManager(celery_app)
     one_backend = RedisBackend(host='red-clg96tf14gps73cecsvg', port=6379)
 
 else:
     print('host = localhost')
-    #from celery import Celery
-   # celery_app = Celery(__name__, broker='redis://127.0.0.1:6379', backend='redis://127.0.0.1:6379')
-    #background_callback_manager = CeleryManager(celery_app)
+    import diskcache
+    cache = diskcache.Cache("./cache")
+    background_callback_manager = DiskcacheManager(cache)
     one_backend = RedisBackend(host='localhost', port=6379)
 
 #app = dash.Dash(__name__)
 #app = dash.Dash(__name__,background_callback_manager=background_callback_manager,suppress_callback_exceptions=True)
 app = DashProxy(__name__,
                 transforms=[ServersideOutputTransform(backends=[one_backend])]#,]session_check=False, arg_check=False
-                #,background_callback_manager=background_callback_manager
+                ,background_callback_manager=background_callback_manager
                # ,session_check=False, arg_check=False
                 ,suppress_callback_exceptions=True,external_stylesheets=external_stylesheets
                 )
@@ -2039,7 +2038,10 @@ def coinsinwallet(coinsinwallet,CompetitorSwitch):
               Input('daterange','data')
               ,            
               State('dropdown0', 'value')
-              ,memoize=True)#,prevent_initial_callback=True
+              ,memoize=True
+              #,background=True
+              #,manager=background_callback_manager
+               )#,prevent_initial_callback=True
 def clean_data(dflmasterfrontpolarsRedis,GrainSelect,KPISelect,KPIGroupSelect,button_group,Level0NameSelect,Level1NameSelect,Level2NameSelect,Category1Select,WalletSwitch,CompetitorSwitch,coinsinwallet,coinsinwalletComp,daterange
                ,dropdown0State):#,*args,sweepl1 relayoutl1barclickdatal2bar,clickdatal0,clickdatal1,clickdatal2,relayoutDatal0
     print('bigboi')
@@ -2296,7 +2298,12 @@ def clean_data(dflmasterfrontpolarsRedis,GrainSelect,KPISelect,KPIGroupSelect,bu
     #Input("CompetitorSwitch", "label")
     #,
     State('cardsid', 'children')
-    ,session_check=False, prevent_initial_call=True
+    #,background=True
+    #,manager=background_callback_manager
+    #,running=[
+    #    (Output("dflcomparekpi", "disabled"), True, False),
+    #],
+    #,session_check=False, prevent_initial_call=True
 )
 
 def updatekpiindicator(dfgroups,dffcompare,KPISelect,KPIGroupSelect,widthBreakpoint,cardsidState):
@@ -2993,55 +3000,10 @@ def update_kpiagg_data(GrainSelect,KPISelect,mastersetkpifilteredstore,Cumulativ
     print('execute update_kpiagg data')
     try:
         print(mastersetkpifilteredstore)
-        changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
-        changed_id2 = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
-        #if not str(graphlevel0State)=='None' and len([item for item in ctx.triggered if 'prop_id' in item]) >1:
-        #    print('dash.exceptions.PreventUpdate')
-        #    raise dash.exceptions.PreventUpdate
-        #else:
-        #update_filter_l0(data0, GrainSelect, KPISelect)  # ,Level2NameSelect
         columns_to_removemasterset = mastersetkpifilteredstore.columns
         print(columns_to_removemasterset)
         noemer = f'pl.col("Denominator").{eval(AggregateNumDenom(KPIDenomAgg[KPISelect]))}()'
         teller = f'pl.col("Numerator").{eval(AggregateNumDenom(KPINumAgg[KPISelect]))}()'
-        dataframe = Cumloop0(CumulativeSwitch)
-        dataframe1 = Cumloop1(CumulativeSwitch)
-        dataframe2 = Cumloop2(CumulativeSwitch)
-        Notation = KPISelectedStyle(KPISelect)
-        Calculation = CalculationDEF(KPISelect)
-        Notation = KPISelectedStyle(KPISelect)
-        Calculation = CalculationDEF(KPISelect)
-        if widthBreakpoint=='sm':
-                title = ''
-        else:
-            title = dict(text=str(KPISelect),# + ' per ' + Level2Entitytype,
-                           # +' -     selected: '+str(Level2NameSelect),
-                           font=dict(#family='Montserrat',
-                                     size=22,
-                                     color=fontcolor,
-                            ),
-            ) 
-        if widthBreakpoint=='sm':
-            legend=dict(
-                        font=dict(
-                            size=15,
-                            color=fontcolor,
-                        ),
-                        orientation="h"
-                    )
-        else:
-            legend=dict(
-                        font=dict(
-                            size=15,
-                            color=fontcolor,
-                        ),
-                        yanchor="top",
-                        y=1,
-                        x=1.01,
-                        xanchor="left",
-                    )
-
-        data0 = mastersetkpifilteredstore.to_pandas()
         LevelOrFilter = button_group.split('_')[0]
         LevelOrFilterNumber = button_group.split('_')[1]
         columns_to_remove_dict = {
@@ -3147,37 +3109,7 @@ def update_kpiagg(GrainSelect,KPISelect,graphlevel0datasetje,CumulativeSwitch,Pe
         #data0 = graphlevel0datasetje.to_pandas()
         LevelOrFilter = button_group.split('_')[0]
         LevelOrFilterNumber = button_group.split('_')[1]
-        #columns_to_remove_dict = {
-        #    'LevelName_0': [column for column in columns_to_removemasterset if '_1' not in column and '_2' not in column and column not in ['d_level1_id', 'd_level2_id']],
-        #    'LevelName_1': [column for column in columns_to_removemasterset if '_0' not in column and '_2' not in column and column not in ['d_level0_id', 'd_level2_id']],
-        #    'LevelName_2': [column for column in columns_to_removemasterset if '_0' not in column and '_1' not in column and column not in ['d_level0_id', 'd_level1_id']],
-        #    'Filter1_0': [column for column in columns_to_removemasterset if '_0' not in column and '_1' not in column and '_2' not in column and column not in ['d_level0_id', 'd_level1_id', 'd_level2_id']]
-        #}
-        ## Check the value of LevelOrFilterNumber and select the appropriate list
-        #if button_group in columns_to_remove_dict:
-        #    columns_to_remove = columns_to_remove_dict[button_group]
-        #    if LevelOrFilter=='Filter1':
-        #        columns_to_remove.append('Filter1_0')
-        #else:
-        #    print(f"LevelOrFilterNumber '{LevelOrFilterNumber}' not found in the dictionary.")
         traces3 = []
-        #mastersetkpifilterednewcol = columns_to_remove#[column for column in columns_to_removemasterset if '_1' not in column and '_2' not in column and column not in ['d_level1_id', 'd_level2_id']]
-        ## Select only the filtered columns
-        #mastersetkpifilterednew = mastersetkpifiltered.select(columns_to_remove)
-        #mastersetkpifilterednewcol.remove('Numerator')
-        #mastersetkpifilterednewcol.remove('Denominator')
-        #mastersetkpifilterednotime = (
-        #mastersetkpifilterednew.lazy()
-        #.groupby(mastersetkpifilterednewcol)
-        #.agg(
-        #    [
-        #        eval(noemer),
-        #        eval(teller),
-        #    ]
-        #)
-        ##.sort(["LevelName_0"])
-        #)
-
         data000 = graphlevel0datasetje.to_pandas()
         data000['Period_int'] = pd.to_datetime(data000['Period_int'])
         data000 = data000.sort_values(by='Period_int')
@@ -4028,27 +3960,8 @@ def update_kpiagg(GrainSelect,KPISelect,graphlevel0datasetje,CumulativeSwitch,Pe
 def update_level0Graph_data(mastersetkpifilterednotimestore,button_group,button_group1,PercentageTotalSwitchNoTime,sweepertje,KPISelect,Totaalswitch,widthBreakpoint): #,hoverData,*args
     print('update_level0Graph dataset')
     try:
-        changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
-        changed_id2 = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
-        LevelOrFilterAttribuut = button_group.split('_')[0]
-        LevelOrFilterLegend = button_group1.split('_')[0]
         noemer = f'pl.col("Denominator").{eval(AggregateNumDenom(KPIDenomAgg[KPISelect]))}()'
         teller = f'pl.col("Numerator").{eval(AggregateNumDenom(KPINumAgg[KPISelect]))}()'
-        Notation = KPISelectedStyle(KPISelect)
-        Calculation = CalculationDEF(KPISelect)
-        AggregateNum = NumaggregateDEF(KPISelect)
-        AggregateDenom = DenomaggregateDEF(KPISelect)
-        totaaljanee = Totaalloop(Totaalswitch)
-        if widthBreakpoint=='sm':
-                title = ''
-        else:
-            title = dict(text=str(KPISelect),# + Level2Entitytype,
-                           # +' -     selected: '+str(Level2NameSelect),
-                           font=dict(#family='Montserrat',
-                                     size=22,
-                                     color=fontcolor,
-                            ),
-        )
         columns_to_removemasterset = mastersetkpifilterednotimestore.columns 
         if button_group1 == 'LevelName_0':
             columns_to_remove_dict = {
@@ -4094,22 +4007,7 @@ def update_level0Graph_data(mastersetkpifilterednotimestore,button_group,button_
                 eval(teller),
             ]
         )
-        #.sort(["LevelName_0"])
         )
-        #polarsdatatje = mastersetkpifilterednotimeee.collect()
-        #data000 = polarsdata.to_pandas()
-        #traces = []
-        #iterationslist = data000.eval(button_group).unique()
-        #countiterations = iterationslist.shape[0]
-        #print(mastersetkpifilterednotime)
-        #print(button_group)
-        #print(button_group1)
-        #print(changed_id)
-        #print(countiterations)
-        #print(countiterations)
-        #print(countiterations)
-        #print(countiterations)
-        #print('endprint')
         mastersetkpifilterednotimeee.fill_null(0)
         return Serverside(mastersetkpifilterednotimeee.collect())
     except Exception as e:
@@ -4123,14 +4021,10 @@ def update_level0Graph_data(mastersetkpifilterednotimestore,button_group,button_
      Input('button_group1','value'),
      Input("PercentageTotalSwitchNoTime", "label"),
      Input({'type': 'sweepertje', 'index': ALL}, 'n_clicks'),
-     #Input('graph-level0compare', 'hoverData'),
-    # Input('dfl1', 'data'),
      State("KPISelect", "value"),
 
-    # Input('graphlevel0', 'selectedData'),
      Input("Totaalswitch", "label"),
      State("breakpoints", "widthBreakpoint"),
-    # eval(kpigrouplistinput3[0]),  
      ],prevent_initial_call=True
 )
 def update_level0Graph(graphlevel0comparedataset,button_group,button_group1,PercentageTotalSwitchNoTime,sweepertje,KPISelect,Totaalswitch,widthBreakpoint): #,hoverData,*args
@@ -4157,53 +4051,6 @@ def update_level0Graph(graphlevel0comparedataset,button_group,button_group1,Perc
                                      color=fontcolor,
                             ),
         )
-        #columns_to_removemasterset = mastersetkpifilterednotime.columns 
-        #if button_group1 == 'LevelName_0':
-        #    columns_to_remove_dict = {
-        #    'LevelName_0': [column for column in columns_to_removemasterset if '_1' not in column and '_2' not in column and column not in ['d_level1_id', 'd_level2_id']],
-        #    'LevelName_1': [column for column in columns_to_removemasterset if '_2' not in column and column not in ['d_level2_id']],
-        #    'LevelName_2': [column for column in columns_to_removemasterset if '_1' not in column and column not in ['d_level1_id']],
-        #    'Filter1_0': [column for column in columns_to_removemasterset if '_2' not in column and '_1' not in column and column not in ['d_level2_id', 'd_level1_id']]
-        #    }
-        #elif button_group1 == 'LevelName_1':
-        #    columns_to_remove_dict = {
-        #    'LevelName_0': [column for column in columns_to_removemasterset if '_2' not in column and column not in ['d_level2_id']],
-        #    'LevelName_1': [column for column in columns_to_removemasterset if '_0' not in column and '_2' not in column and column not in ['d_level0_id', 'd_level2_id']],
-        #    'LevelName_2': [column for column in columns_to_removemasterset if '_0' not in column and column not in ['d_level0_id']],
-        #    'Filter1_0': [column for column in columns_to_removemasterset if '_0' not in column and '_2' not in column and column not in ['d_level0_id', 'd_level2_id']]
-        #    }
-        #elif button_group1 == 'LevelName_2':
-        #    columns_to_remove_dict = {
-        #    'LevelName_0': [column for column in columns_to_removemasterset if '_1' not in column and column not in ['d_level1_id']],
-        #    'LevelName_1': [column for column in columns_to_removemasterset if '_0' not in column and column not in ['d_level0_id']],
-        #    'LevelName_2': [column for column in columns_to_removemasterset if '_0' not in column and '_1' not in column and column not in ['d_level0_id', 'd_level1_id']],
-        #    'Filter1_0': [column for column in columns_to_removemasterset if '_0' not in column and '_1' not in column and column not in ['d_level0_id', 'd_level1_id']]
-        #    }
-        #elif button_group1 == 'Filter1_0':
-        #    columns_to_remove_dict = {
-        #    'LevelName_0': [column for column in columns_to_removemasterset if '_1' not in column and '_2' not in column and column not in ['d_level1_id', 'd_level2_id']],
-        #    'LevelName_1': [column for column in columns_to_removemasterset if '_0' not in column and '_2' not in column and column not in ['d_level0_id', 'd_level2_id']],
-        #    'LevelName_2':[column for column in columns_to_removemasterset if '_0' not in column and '_1' not in column and column not in ['d_level0_id', 'd_level1_id']],
-        #    'Filter1_0': [column for column in columns_to_removemasterset if '_0' not in column and '_1' not in column and '_2' not in column and column not in ['d_level0_id', 'd_level1_id', 'd_level2_id']]
-        #    }   
-        #columns_to_remove = columns_to_remove_dict[button_group] 
-        #if 'Filter1_0' not in columns_to_remove and (button_group == 'Filter1_0' or button_group1 == 'Filter1_0'):
-        #    columns_to_remove.append('Filter1_0')
-        #mastersetkpifilterednew = mastersetkpifilterednotime.select(columns_to_remove)
-        #columns_to_remove.remove('Numerator')
-        #columns_to_remove.remove('Denominator')
-#
-        #mastersetkpifilterednotime = (
-        #mastersetkpifilterednew.lazy()
-        #.groupby(columns_to_remove)
-        #.agg(
-        #    [
-        #        eval(noemer),
-        #        eval(teller),
-        #    ]
-        #)
-        ##.sort(["LevelName_0"])
-        #)
         data000 = graphlevel0comparedataset.to_pandas()
         traces = []
         iterationslist = data000.eval(button_group).unique()
