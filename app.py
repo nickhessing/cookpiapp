@@ -2729,6 +2729,8 @@ def allgraphsindiv(values):
 
 def update_kpiaggcontainer(graphsloop,GrainSelect,dflcomparekpi,CumulativeSwitch,PercentageTotalSwitch,ShowValueSwitch,widthBreakpoint,button_group,button_group1,Totaalswitch,collapse):  #,*args ,Level2NameSelect,toggle, relayoutData
     print('execute update_kpiaggcontainer')
+    print(dflcomparekpi)
+    print('execute update_kpiaggcontainer')
     print(collapse)
     print('collapse')
     try:
@@ -3037,6 +3039,9 @@ def update_kpiagg_data(GrainSelect,KPISelect,mastersetkpifilteredstore,Cumulativ
         )
         mastersetkpifilterednotimee.fill_null(0)
         mastersetkpifilterednotimeecollect = mastersetkpifilterednotimee.collect()
+        print('before update_kpiagg data')
+        print(mastersetkpifilterednotimeecollect)
+        print('before update_kpiagg data')
         return Serverside(mastersetkpifilterednotimeecollect)
     except Exception as e:
         logging.error(f"Exception in callback update_kpiagg_data: {str(e)}")
@@ -3108,7 +3113,9 @@ def update_kpiagg(graphlevel0datasetje,GrainSelect,KPISelect,CumulativeSwitch,Pe
         LevelOrFilter = button_group.split('_')[0]
         LevelOrFilterNumber = button_group.split('_')[1]
         traces3 = []
+        print('after update_kpiagg data')
         print(graphlevel0datasetje)
+        print('after update_kpiagg data')
         print(type(graphlevel0datasetje))
         data000 = graphlevel0datasetje.to_pandas()
         data000['Period_int'] = pd.to_datetime(data000['Period_int'])
@@ -4014,6 +4021,9 @@ def update_level0Graph_data(mastersetkpifilterednotime,button_group,button_group
         )
         mastersetkpifilterednotimeee.fill_null(0)
         export = mastersetkpifilterednotimeee.collect()
+        print('before graph-level0compare-dataset')
+        print(export)
+        print('before graph-level0compare-dataset')
         return Serverside(export)
     except Exception as e:
         logging.error(f"Exception in callback update_level0Graph_data: {str(e)}")
@@ -4056,7 +4066,9 @@ def update_level0Graph(graphlevel0comparedataset,button_group,button_group1,Perc
                                      color=fontcolor,
                             ),
         )
+        print('after graph-level0compare-dataset')
         print(graphlevel0comparedataset)
+        print('after graph-level0compare-dataset')
         data000 = graphlevel0comparedataset.to_pandas()
         traces = []
         iterationslist = data000.eval(button_group).unique()
