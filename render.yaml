@@ -4,7 +4,7 @@ services:
     region: ohio
     env: python
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "celery -A app celery_app worker --loglevel=INFO --concurrency=2"
+    startCommand: "celery -A src.app celery_app worker --loglevel=INFO --concurrency=2"
     autoDeploy: false
     envVars:
       - key: CELERY_BROKER_URL
