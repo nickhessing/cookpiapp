@@ -282,9 +282,9 @@ ListGrain = ['int_day', 'int_month', 'int_quarter', 'int_year']
 #dfl2polars = dfl2polars.with_columns(dfl2polars["Period_int"].cast(pl.Utf8))
 dflmasterfrontpolars = pl.scan_parquet('assets/Attributes/dashboard_data/dflmasterfront.parquet').collect()
 dflmasterfrontpolars = dflmasterfrontpolars.with_columns(dflmasterfrontpolars["Period_int"].cast(pl.Utf8))
-dflmasterfrontpolars = dflmasterfrontpolars.filter(
-    (pl.col("Grain") == "M") & (pl.col("LevelName_0").is_in(["uniswap", "synthetix","lido","rocketpool","kwenta"]))
-)
+#dflmasterfrontpolars = dflmasterfrontpolars.filter(
+#    (pl.col("Grain") == "M") & (pl.col("LevelName_0").is_in(["uniswap", "synthetix","lido","rocketpool","kwenta"]))
+#)
 
 GrainNameListtmp = pl.DataFrame(dflmasterfrontpolars["Grain"].unique())
 tmp =GrainNameListtmp.rows(named=True)
@@ -356,6 +356,9 @@ dflmasterfrontpolars.drop_in_place("Numerator_LP")
 colorframe = attributeframe1[~((attributeframe1['LevelColor'] == 'Overig') | (attributeframe1['Filter1Color'] == 'Overig'))]
 LevelNameColor = dict(zip(attributeframe1['LevelName'], attributeframe1['LevelColor']))
 FilterColor = dict(zip(attributeframe1['Filter1'], attributeframe1['Filter1Color']))
+LevelNameColorFiltered = {key: value for key, value in LevelNameColor.items() if value != 'Overig'}
+print(FilterColor)
+#LevelNameColorFilter = attributeframe1[attributeframe1['LevelColor'] != 'Overig']
 #FilterColortmp2 = {k: v for k, v in FilterColortmp.items() if v}
 ##Filter1Color = list({value for value in Filter1Colortmp.values()})
 #FilterColor = {}
@@ -386,6 +389,7 @@ KPICum = dict(d_kpi.set_index('KPIName')['IsCum'].to_dict())
 KPIColor = dict(d_kpi.set_index('KPIName')['kpicolor'].to_dict())
 visual = dict(d_kpi.set_index('KPIName')['visual'].to_dict())
 KPIGroupImage = dict(d_kpi.set_index('KPIGroup')['GroupImage'].to_dict())
+KPIImage = dict(d_kpi.set_index('KPIName')['KPIImage'].to_dict())
 
 GroupImage = d_kpi['GroupImage'].unique()
 KPICountPerGroup = dict(d_kpi.groupby('KPIGroup')['KPIName'].count().to_dict())
@@ -1418,7 +1422,16 @@ tabs = html.Div([
                         speed_multiplier=2,
                         size=100,
                         #debounce=1000
-                        )
+                        ),
+       # daq.BooleanSwitch(
+       #     id='AnimationSwitch',
+       #     on=False,
+       #     color=ProjectOrange,
+       #     label="Create nimation",
+       # labelPosition="right",
+       # )
+        html.Div([html.I("play_circle",className="material-icons",n_clicks=0),
+                                html.Span("Create animation",className='text nav-text')],id='animation',style={'position':'relative','z-index': '1'}),
         ],className="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 pretty_graph2"
         ),className="col-12 col-sm-12 col-md-12 col-lg-5 col-xl-5 empty_tab2"
         )
@@ -2034,6 +2047,7 @@ def change_KPI(dflmasterfrontpolarsRedis,KPISelect,Level0NameSelect,Level1NameSe
                                 & (pl.col("Filter1_0").is_in(Category1Select))
                                 )
         )
+    dff_sorted = dff.sort(pl.col("Period_int"))
     cookpi_attributes = cookpi_attributestmp[(cookpi_attributestmp.d_kpi_id == KPINameToID[KPISelect])]
     result = {}
     level0 =[]
@@ -2076,7 +2090,7 @@ def change_KPI(dflmasterfrontpolarsRedis,KPISelect,Level0NameSelect,Level1NameSe
         testlogo = {"label": html.Div([f'{b}  ',eval(f"""html.Div(html.I('filter_list_off',id='sweepl{Level}',className='material-icons',style={sweepstyle}),style={{'display': 'inline-block','padding':'0px','text-size':'14px'}},id=dict(type='sweepertje',index='{f}'))""")]),"value": f'{f}'}
         button_grouptmp.append(testlogo)
         cnt += 1
-    tmp = dff.unique(subset=["FilterName_0"],maintain_order=True)
+    tmp = dff_sorted.unique(subset=["FilterName_0"],maintain_order=True)
     FilterName_0_list = [row["FilterName_0"] for row in tmp.iter_rows(named=True)]
     for d in FilterName_0_list:
         if eval(f'Category1Select') == eval(f'list(Catergory0List)'):
@@ -2085,7 +2099,7 @@ def change_KPI(dflmasterfrontpolarsRedis,KPISelect,Level0NameSelect,Level1NameSe
             filter1 = {"label": html.Div([f'{d}  ',eval(f"""html.Div(html.I('filter_list_off',id='SweepFiltertje1_0',className='material-icons',style={sweepstyle}),style={{'display': 'inline-block','padding':'0px','text-size':'14px'}},id=dict(type='sweepertje',index='SweepFilter1_0'))""")]),"value": 'Filter1_0'}
         button_grouptmp.append(filter1)
     button_groups = sorted(button_grouptmp, key=lambda x: x['value'])
-    return Serverside(dff),'bs' if not level0 else level0[0],'bs' if not level1 else level1[0],'bs' if not level2 else level2[0],button_groups,button_groups
+    return Serverside(dff_sorted),'bs' if not level0 else level0[0],'bs' if not level1 else level1[0],'bs' if not level2 else level2[0],button_groups,button_groups
 
 """
 @app.callback([
@@ -2296,7 +2310,6 @@ def updatekpiindicator(dfgroups,dffcompare,KPISelect,KPIGroupSelect,widthBreakpo
         graphscontainer = []
         graphscontainer3 = []
         print('coparegraph')
-        print(type(dffcompare))
         dftouse = dffcompare.to_pandas()#pd.DataFrame(dffcompare)
         dfgroups = dfgroups.sort("KPIGroup") #pd.DataFrame(dfgroups)
         if kpicountout[0]<slides_to_show_ifenough:
@@ -2492,52 +2505,64 @@ def updatekpiindicator(dfgroups,dffcompare,KPISelect,KPIGroupSelect,widthBreakpo
                 numbertmp= i+1
                 number=str(numbertmp)
                 numberi=str(numbertmp)
+                KPIImageLogo = str(KPIImage[kpi])
+                if widthBreakpoint =='sm':
+                    logoclass='col-2'
+                    valueclass='col-10'
+                else:
+                    logoclass='col-4'
+                    valueclass='col-8'
                 graphscontainer.append(f"""dcc.Textarea(value='{kpi}',id=dict(type='graphsloop',index ='{kpi}'))""")
                 carousellistnew.append(
                 f"""html.Div(
-                        html.Div([
-                            html.I('info', className='material-icons md-18',style={{'text-align':'right','right':'4%','top':'4%','position':'absolute'}}, 
-                                       id='open-box{number}', n_clicks=0),
-                            dbc.Popover(
-                                [
-                                    dbc.PopoverBody('And heres some amazing content. Cool!',id='popbody{number}',className='h6'),
-                                ],
-                                target='open-box{number}',
-                                trigger='legacy',
-                                className='popupper',
-                                hide_arrow=False
-                                ),
-                            html.Div(id=dict(type='output-ex3',index = '{kpi}')),
-                            dcc.Textarea(value=f'{kpi}',
-                                         disabled=True,
-                                         draggable=False,
-                                         contentEditable=False,
-                                         id='Card{number}',
-                                         className='col-12 h6',
-                                         style={{'margin-top':'25px'}}),
-
-                            html.Div(children=[
-                                dcc.Textarea(value=f'{outputactualtxt}',
-                                    id='indicator-graph{number}TXT',
-                                    contentEditable=False,
-                                    disabled=True,
-                                    readOnly=True,
-                                    draggable=False,
-                                    className='col-12 h6'
-                                ),
-                                #html.Div([
-                                #     dcc.Textarea(value=f'', 
-                                #         id="indicatorlast-graph{number}TXT",
-                                #         contentEditable =False,
-                                #         disabled=True,
-                                #         readOnly=True,
-                                #         draggable=False,
-                                #         className='col-8 h7',
-                                #     ),
-                                #     html.I({arrow},className="material-icons icon",id="arrow{number}")
-                                #    ],id="indicatorlast-graph{number}TXTLogo",style={style})
-                                ])
-                        	],id='CardContent{number}'),id=dict(type='filter-dropdown-ex3',index = '{kpi}'),style={style111},className='carddiv')"""
+                        dbc.Row([
+                            dbc.Col([html.Div([html.I('{KPIImageLogo}', className='material-icons md-48',style={{'position':'absolute','top':'33%','text-align': 'center','padding':'0px','font-size': '54px'}},
+                                       id='iconid{number}', n_clicks=0),
+                                       ])],style={{'position':'relative','padding':'0px'}},className='{logoclass}'),
+                            #html.I('info', className='material-icons md-18',style={{'text-align':'right','right':'4%','top':'4%','position':'absolute'}}, 
+                            #           id='open-box{number}', n_clicks=0),
+                            dbc.Col([html.Div([
+                                dbc.Popover(
+                                    [
+                                        dbc.PopoverBody('And heres some amazing content. Cool!',id='popbody{number}',className='h6'),
+                                    ],
+                                    target='open-box{number}',
+                                    trigger='legacy',
+                                    className='popupper',
+                                    hide_arrow=False
+                                    ),
+                                html.Div(id=dict(type='output-ex3',index = '{kpi}')),
+                                dcc.Textarea(value=f'{kpi}',
+                                             disabled=True,
+                                             draggable=False,
+                                             contentEditable=False,
+                                             id='Card{number}',
+                                             className='col-12 h6',
+                                             style={{'margin-top':'25px'}}),
+                                html.Div(children=[
+                                    dcc.Textarea(value=f'{outputactualtxt}',
+                                        id='indicator-graph{number}TXT',
+                                        contentEditable=False,
+                                        disabled=True,
+                                        readOnly=True,
+                                        draggable=False,
+                                        className='col-12 h6'
+                                    ),
+                                    #html.Div([
+                                    #     dcc.Textarea(value=f'', 
+                                    #         id="indicatorlast-graph{number}TXT",
+                                    #         contentEditable =False,
+                                    #         disabled=True,
+                                    #         readOnly=True,
+                                    #         draggable=False,
+                                    #         className='col-8 h7',
+                                    #     ),
+                                    #     html.I({arrow},className="material-icons icon",id="arrow{number}")
+                                    #    ],id="indicatorlast-graph{number}TXTLogo",style={style})
+                                ]),
+                            ],id='CardContent{number}')],className='{valueclass}'),
+                        	])
+                        ,id=dict(type='filter-dropdown-ex3',index = '{kpi}'),style={style111},className='carddiv')"""
                 ) 
             else:
                 accordionlist.append(
@@ -2822,7 +2847,7 @@ def update_kpiaggcontainer(graphsloop,GrainSelect,dflcomparekpi,CumulativeSwitch
                             'layout': dict(
                                 clickmode='event+select',
                                 barmode='stack',
-                                showlegend=False if button_group1 == 'LevelName_0' else True,
+                                showlegend=True, #False if button_group1 == 'LevelName_0' else True,
                                 barnorm=eval(PercentageTotalSwitchDEF(PercentageTotalSwitch)),
                                 xaxis=dict(type='string',
                                            title='',
@@ -3383,12 +3408,25 @@ def update_kpiagg(graphlevel0datasetje,GrainSelect,KPISelect,CumulativeSwitch,Pe
         logging.error(f"Exception in callback: {str(e)}")
         raise
 
+"""
 @app.callback(
-    Output('graph-level0compare', 'figure'),
+    Output("animation", "is_open"),
+    [Input("animation", "n_clicks"), 
+     ],prevent_initial_callback=True
+)
+def toggle_modal(n1, n2, n3, is_open):
+    if n1 or n2 or n3:
+        return not is_open
+    return is_open
+"""
+
+@app.callback(
+    Output('graph-level0compare', 'figure', allow_duplicate=True),
     [Input('graph-level0compare-dataset', 'data'),
      Input('button_group','value'),
      Input('button_group1','value'),
      Input("PercentageTotalSwitchNoTime", "label"),
+     Input("animation",'n_clicks'),
      Input({'type': 'sweepertje', 'index': ALL}, 'n_clicks'),
      State("KPISelect", "value"),
 
@@ -3396,201 +3434,277 @@ def update_kpiagg(graphlevel0datasetje,GrainSelect,KPISelect,CumulativeSwitch,Pe
      State("breakpoints", "widthBreakpoint"),
      ],prevent_initial_call=True
 )
-def update_level0Graph(graphlevel0comparedataset,button_group,button_group1,PercentageTotalSwitchNoTime,sweepertje,KPISelect,Totaalswitch,widthBreakpoint): #,hoverData,*args
+def update_level0Graph(graphlevel0comparedataset,button_group,button_group1,PercentageTotalSwitchNoTime,animation,sweepertje,KPISelect,Totaalswitch,widthBreakpoint): #,hoverData,*args
     print('update_level0Graph cfpandacompare')
-    try:
-        #changed_id2 = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
-        LevelOrFilterAttribuut = button_group.split('_')[0]
-        LevelOrFilterLegend = button_group1.split('_')[0]
-        #noemer = f'pl.col("Denominator").{eval(AggregateNumDenom(KPIDenomAgg[KPISelect]))}()'
-        #teller = f'pl.col("Numerator").{eval(AggregateNumDenom(KPINumAgg[KPISelect]))}()'
-        Notation = KPISelectedStyle(KPISelect)
-        Calculation = CalculationDEF(KPISelect)
-        AggregateNum = NumaggregateDEF(KPISelect)
-        AggregateDenom = DenomaggregateDEF(KPISelect)
-        #totaaljanee = Totaalloop(Totaalswitch)
-        if widthBreakpoint=='sm':
-                title = ''
-        else:
-            title = dict(text=str(KPISelect),# + Level2Entitytype,
-                           # +' -     selected: '+str(Level2NameSelect),
-                           font=dict(#family='Montserrat',
-                                     size=22,
-                                     color=fontcolor,
-                            ),
-        )
-        print('after graph-level0compare-dataset')
-        print('after graph-level0compare-dataset')
-        data000 = graphlevel0comparedataset.to_pandas()
-        traces = []
-        countiterations = data000.eval(button_group).nunique()
-        #countiterations = iterationslist.shape[0]
-        print(countiterations)
-        print(countiterations)
-        print(countiterations)
-        print(countiterations)
-        df_by_Level0Name = data000
-        x2 = eval(CalculationLogic0(Calculation))
-        if countiterations==1:
-            print('countiterations==1 traces')
-            
-            traces.append(dict(
-                values=x2[0],
-                labels=df_by_Level0Name.eval(button_group1),
-                type = 'pie',
-                hole=.7,
-                margin=dict(t=50, b=30, l=0, r=0), 
-                showlegend=False,
-                font=dict(size=17, color='white'),
-                textposition='outside',
-                textinfo='percent+label', 
-                rotation=50,
-                marker=dict(
-                   # colors= FilterColor
-                )
-            ))
-        else:
-            print('countiterations>1 traces')
-            for j in data000.eval(button_group1).unique():
-                opacity = '1'
-                df_by_Level0Name = data000[data000[button_group1] == j]
-                x3 = eval(CalculationLogic0(Calculation))
+    print('update_level0Graph cfpandacompare')
+    print('update_level0Graph cfpandacompare')
+    print('update_level0Graph cfpandacompare')
+    if not animation or animation % 2 == 0:
+        try:
+            #changed_id2 = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
+            LevelOrFilterAttribuut = button_group.split('_')[0]
+            LevelOrFilterLegend = button_group1.split('_')[0]
+            #noemer = f'pl.col("Denominator").{eval(AggregateNumDenom(KPIDenomAgg[KPISelect]))}()'
+            #teller = f'pl.col("Numerator").{eval(AggregateNumDenom(KPINumAgg[KPISelect]))}()'
+            Notation = KPISelectedStyle(KPISelect)
+            Calculation = CalculationDEF(KPISelect)
+            AggregateNum = NumaggregateDEF(KPISelect)
+            AggregateDenom = DenomaggregateDEF(KPISelect)
+            #totaaljanee = Totaalloop(Totaalswitch)
+            if widthBreakpoint=='sm':
+                    title = ''
+            else:
+                title = dict(text=str(KPISelect),# + Level2Entitytype,
+                               # +' -     selected: '+str(Level2NameSelect),
+                               font=dict(#family='Montserrat',
+                                         size=22,
+                                         color=fontcolor,
+                                ),
+            )
+            data000 = graphlevel0comparedataset.to_pandas()
+            traces = []
+            countiterations = data000.eval(button_group).nunique()
+            #countiterations = iterationslist.shape[0]
+            df_by_Level0Name = data000
+            x2 = eval(CalculationLogic0(Calculation))
+            if countiterations==1:
+                print('countiterations==1 traces')
                 traces.append(dict(
-                    #df_by_Level0Name,
-                    y=df_by_Level0Name.eval(button_group), #Filter1_0,
-                    x=x3,
-                    text=x3,
-                    text_auto=True,
-                    texttemplate="%{value:" + eval(Notation[0]) + "}",  # "%{value:.01%}",
-                    textformat=eval(Notation[0]),
-                    type='bar',
+                    values=x2[0],
+                    labels=df_by_Level0Name.eval(button_group1),
+                    type = 'pie',
+                    hole=.7,
+                    margin=dict(t=50, b=30, l=0, r=0), 
+                    showlegend=False,
+                    font=dict(size=17, color='white'),
+                    textposition='outside',
+                    textinfo='percent+label', 
+                    rotation=50,
                     marker=dict(
-                        opacity=opacity,
-                        color=LevelNameColor[j] if LevelOrFilterLegend=='LevelName' else FilterColor[j], 
-                        color_discrete_map='identity',
-                        line=dict(width=0.1,
-                                  color=LevelNameColor[j] if LevelOrFilterLegend=='LevelName' else FilterColor[j], 
-                                  color_discrete_map='identity',
-                                  opacity=1,
-                                  ),
-                    ),
-                    #orientation="v",
-                    #orientation="h",
-                    orientation="h",
-                    name=j,
-                    transforms=[dict(
-                        type='aggregate',
-                        groups=df_by_Level0Name.eval(button_group),
-                        aggregations=[
-                            dict(target='Numerator', func=AggregateNumDenom(AggregateNum)),  
-                            dict(target='Denominator', func=AggregateNumDenom(AggregateDenom))  
-                        ]
-                    ),
-                    ]
-            ))
-        if data000.empty:
-            return {"layout": dict(
-                xaxis = dict(visible=False),
-                yaxis = dict(visible=False),
-                annotations=[
-                                dict(
-                                    xref="paper",
-                                    yref="paper",
-                                    x=0.5,
-                                    y=0.5,
-                                    text="No data available",
-                                    showarrow=False,
-                                    font=dict(size=26,color=fontcolor),
+                       # colors= FilterColor
                     )
-                ],
-                plot_bgcolor=graphcolor,
-                paper_bgcolor=graphcolor)
-            }
-        elif countiterations==1:
-            print('countiterations==1 layout')
-            return {
-                'data': traces,
-                'layout': dict(
-                    font=dict(
+                ))
+            elif countiterations != 1:
+                print('countiterations>1 traces')
+                for j in data000.eval(button_group1).unique():
+                    opacity = '1'
+                    df_by_Level0Name = data000[data000[button_group1] == j]
+                    x3 = eval(CalculationLogic0(Calculation))
+                    traces.append(dict(
+                        #df_by_Level0Name,
+                        y=df_by_Level0Name.eval(button_group), #Filter1_0,
+                        x=x3,
+                        #animation_group = df_by_Level0Name.eval(button_group),
+                        #animation_frame= df_by_Level0Name.Period_int,
+                        text=x3,
+                        text_auto=True,
+                        texttemplate="%{value:" + eval(Notation[0]) + "}",  # "%{value:.01%}",
+                        textformat=eval(Notation[0]),
+                        type='bar',
+                        marker=dict(
+                            opacity=opacity,
+                            color=LevelNameColor[j] if LevelOrFilterLegend=='LevelName' else FilterColor[j], 
+                            color_discrete_map='identity',
+                            line=dict(width=0.1,
+                                      color=LevelNameColor[j] if LevelOrFilterLegend=='LevelName' else FilterColor[j], 
+                                      color_discrete_map='identity',
+                                      opacity=1,
+                                      ),
+                        ),
+                        #orientation="v",
+                        #orientation="h",
+                        orientation="h",
+                        name=j,
+                        transforms=[dict(
+                            type='aggregate',
+                            groups=df_by_Level0Name.eval(button_group),
+                            aggregations=[
+                                dict(target='Numerator', func=AggregateNumDenom(AggregateNum)),  
+                                dict(target='Denominator', func=AggregateNumDenom(AggregateDenom))  
+                            ]
+                        ),
+                        ]
+                ))
+            if countiterations==1:
+                print('countiterations==1 layout')
+                returndit= {
+                    'data': traces,
+                    'layout': dict(
+                        font=dict(
+                                size=15,
+                            ),
+                        margin={'l': 140, 'b': 25, 't': 37, 'r': 40},
+                        annotations = [dict(
+                                 align='center',
+                                 xref = "paper", yref = "paper",
+                                 showarrow = False, 
+                                 font=dict(
+                                    family="Courier New, monospace",
+                                    size=26,
+                                    color="#ffffff"
+                                    ),
+                                 text=str(x2[0]),#<i class='material-icons'>gender</i>
+                        )],
+                        plot_bgcolor=graphcolor,
+                        paper_bgcolor=graphcolor
+                    )
+                } 
+            elif countiterations !=1:
+                print('countiterations>1 layout')
+                returndit = {
+                    'data': traces,
+                    'layout': dict(
+                        dragmode='select',
+                        clickmode='event+select',
+                        barnorm=eval(PercentageTotalSwitchDEF(PercentageTotalSwitchNoTime)),
+                        barmode='stack', #aanzetten indien tweede per
+                        clear_on_unhover=True,
+                        type='bar',
+                        xaxis=dict(type='string',
+                                   title='',
+                                   showgrid=False,
+                                   gridwidth=0,
+                                   fixedrange=True,
+                                   showline=False,
+                                   tickformat=eval(Notation[0]),
+                                   visible=False,
+                                   color=fontcolor,
+                                   font=dict(
+                                       size=14,
+                                   )
+                                   ),
+                        yaxis=dict(title='',
+                                   showline=False,
+                                   showgrid=False,
+                                   categoryorder="total ascending",
+                                   gridwidth=0,
+                                   color=fontcolor,
+                                   ),
+                        margin={'l': 140, 'b': 25, 't': 37, 'r': 40},
+                        showlegend=False if button_group1==button_group else True,
+                        legend=dict(
+                                font=dict(
+                                color=fontcolor  # Change the font color here
+                                    )
+                                ),
+                        autosize=True,
+                        plot_bgcolor=graphcolor,
+                        paper_bgcolor=graphcolor,
+                        modebar=dict(
+                            bgcolor='transparent',
+                            color=BeautifulSignalColor,
+                        ),
+                        font=dict(
                             size=15,
                         ),
-                    margin={'l': 140, 'b': 25, 't': 37, 'r': 40},
-                    annotations = [dict(
-                             align='center',
-                             xref = "paper", yref = "paper",
-                             showarrow = False, 
-                             font=dict(
-                                family="Courier New, monospace",
-                                size=26,
-                                color="#ffffff"
-                                ),
-                             text=str(x2[0]),#<i class='material-icons'>gender</i>
-                    )],
+                        title=title,
+                        hovermode='x-unified',
+                        transition={'duration': 500},
+                        style={'overflow': 'auto'}
+                    )
+                }
+            elif data000.empty:
+                print('returnemptybar')
+                returndit =  {"layout": dict(
+                    xaxis = dict(visible=False),
+                    yaxis = dict(visible=False),
+                    annotations=[
+                                    dict(
+                                        xref="paper",
+                                        yref="paper",
+                                        x=0.5,
+                                        y=0.5,
+                                        text="No data available",
+                                        showarrow=False,
+                                        font=dict(size=26,color=fontcolor),
+                        )
+                    ],
                     plot_bgcolor=graphcolor,
-                    paper_bgcolor=graphcolor
-                )
-            } 
-        else:
-            print('countiterations>1 layout')
-            returndit= {
-                'data': traces,
-                'layout': dict(
-                    dragmode='select',
-                    clickmode='event+select',
-                    barnorm=eval(PercentageTotalSwitchDEF(PercentageTotalSwitchNoTime)),
-                    barmode='stack', #aanzetten indien tweede per
-                    clear_on_unhover=True,
-                    type='bar',
-                    xaxis=dict(type='string',
-                               title='',
-                               showgrid=False,
-                               gridwidth=0,
-                               fixedrange=True,
-                               showline=False,
-                               tickformat=eval(Notation[0]),
-                               visible=False,
-                               color=fontcolor,
-                               font=dict(
-                                   size=14,
-                               )
-                               ),
-                    yaxis=dict(title='',
-                               showline=False,
-                               showgrid=False,
-                               categoryorder="total ascending",
-                               gridwidth=0,
-                               color=fontcolor,
-                               ),
-                    margin={'l': 140, 'b': 25, 't': 37, 'r': 40},
-                    showlegend=False if button_group1==button_group else True,
-                    legend=dict(
-                            font=dict(
-                            color=fontcolor  # Change the font color here
-                                )
-                            ),
-                    autosize=True,
-                    plot_bgcolor=graphcolor,
-                    paper_bgcolor=graphcolor,
-                    modebar=dict(
-                        bgcolor='transparent',
-                        color=BeautifulSignalColor,
-                    ),
-                    font=dict(
-                        size=15,
-                    ),
-                    title=title,
-                    hovermode='x-unified',
-                    transition={'duration': 500},
-                    style={'overflow': 'auto'}
-                )
-            }
-            print(returndit)
+                    paper_bgcolor=graphcolor)
+                }
             return returndit
-    except Exception as e:
-        logging.error(f"Exception in callback: {str(e)}")
-        raise
-
+        except Exception as e:
+            logging.error(f"Exception in callback: {str(e)}")
+            raise
+    else:
+        raise PreventUpdate
 #app.config['suppress_callback_exceptions'] = True
+
+
+
+@app.callback(
+    Output('graph-level0compare', 'figure', allow_duplicate=True),
+    [Input('mastersetkpifiltered', 'data'),
+     Input('button_group','value'),
+     Input('button_group1','value'),
+     Input("PercentageTotalSwitchNoTime", "label"),
+     Input({'type': 'sweepertje', 'index': ALL}, 'n_clicks'),
+     State("KPISelect", "value"),
+
+     Input("Totaalswitch", "label"),
+     Input("animation", "n_clicks"),
+     State("breakpoints", "widthBreakpoint"),
+     ],prevent_initial_call=True
+)
+def update_animation(mastersetkpifiltered,button_group,button_group1,PercentageTotalSwitchNoTime,sweepertje,KPISelect,Totaalswitch,animation,widthBreakpoint): #,hoverData,*args
+    #changed_id2 = [p['prop_id'] for p in dash.callback_context.triggered][0].split('.')[0]
+    #print(changed_id2)
+    if not animation or animation % 2 == 0:
+        raise PreventUpdate
+    else:
+        print('update_animation executed')
+        try:
+            data000 = mastersetkpifiltered.to_pandas()
+            pxbar = px.bar(data000,y=button_group,
+                    x="Numerator",
+                    color=button_group1,
+                    color_discrete_map= LevelNameColorFiltered,
+                    animation_group = button_group,
+                    animation_frame= "Period_int"
+            )
+            pxbar.update_layout(dict(
+                        dragmode='select',
+                        clickmode='event+select',
+                        barnorm=eval(PercentageTotalSwitchDEF(PercentageTotalSwitchNoTime)),
+                        barmode='stack', #aanzetten indien tweede per
+                        xaxis=dict(#type='string',
+                                   title='',
+                                   showgrid=False,
+                                   gridwidth=0,
+                                   fixedrange=True,
+                                   showline=False,
+                                   #tickformat=eval(Notation[0]),
+                                   visible=False,
+                                   color=fontcolor,
+                                   ),
+                        yaxis=dict(title='',
+                                   showline=False,
+                                   showgrid=False,
+                                   categoryorder="total ascending",
+                                   gridwidth=0,
+                                   color=fontcolor,
+                                   ),
+                        legend=dict(
+                              #  color=fontcolor  # Change the font color here
+                                ),
+                        margin={'l': 140, 'b': 25, 't': 37, 'r': 40},
+                        showlegend=False if button_group1==button_group else True,
+                        autosize=True,
+                        plot_bgcolor=graphcolor,
+                        paper_bgcolor=graphcolor,
+                        updatemenus=[dict(type='buttons',
+                            showactive=False,
+                            y=-0.10,
+                            x=-0.05,
+                            xanchor='left',
+                            yanchor='bottom')
+                                  ]
+                    ))
+            pxbar['layout']['sliders'][0]['pad']=dict(r= 70, t= 5)
+            return pxbar
+        except Exception as e:
+            logging.error(f"Exception in callback: {str(e)}")
+            raise
 
 
 @app.callback(
@@ -3615,8 +3729,17 @@ def toggle_modal(n1, n2, n3, is_open):
     if n1 or n2 or n3:
         return not is_open
     return is_open
-
-
+"""
+@app.callback(
+    Output("animation", "is_open"),
+    [Input("animation", "n_clicks"), 
+     ],prevent_initial_callback=True
+)
+def toggle_modal(n1, n2, n3, is_open):
+    if n1 or n2 or n3:
+        return not is_open
+    return is_open
+"""
 #app.clientside_callback(
 #    """
 #    function(className) {
