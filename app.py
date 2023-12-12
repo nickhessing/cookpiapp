@@ -66,7 +66,7 @@ import redis
 import dash_loading_spinners as dls
 import subprocess
 import numpy as np
-
+from flask import Flask
 
 # Usage example:
 def save_string_to_file(filename, content):
@@ -101,12 +101,11 @@ external_stylesheets = [
 
 # Connect to your internal Redis instance using the REDIS_URL environment variable
 # The REDIS_URL is set to the internal Redis URL e.g. redis://red-343245ndffg023:6379
-
-if 'redis://red-clg96tf14gps73cecsvg:6379' in os.environ.values(): 
+if 'redis://:vDzc42AZlVCiHn58bddYfUc5RLmvUkCKmAzCaJdPs8Q@cookpi.redis.cache.windows.net:6380/0?ssl=true' in os.environ.values():  
     print('os.environ in environment')
     # Use Redis & Celery if REDIS_URL set as an env variable
     from celery import Celery
-    celery_app = Celery(__name__, broker='redis://red-clg96tf14gps73cecsvg:6379', backend='redis://red-clg96tf14gps73cecsvg:6379')
+    celery_app = Celery(__name__, broker='redis://:vDzc42AZlVCiHn58bddYfUc5RLmvUkCKmAzCaJdPs8Q@cookpi.redis.cache.windows.net:6380/0?ssl=true', backend='redis://:vDzc42AZlVCiHn58bddYfUc5RLmvUkCKmAzCaJdPs8Q@cookpi.redis.cache.windows.net:6380/0?ssl=true')
     background_callback_manager = CeleryManager(celery_app)
     one_backend = RedisBackend(host='red-clg96tf14gps73cecsvg', port=6379)
 
@@ -117,14 +116,17 @@ else:
     background_callback_manager = DiskcacheManager(cache)
     one_backend = RedisBackend(host='localhost', port=6379)
 
+flask_server = Flask(__name__)
 #app = dash.Dash(__name__)
 #app = dash.Dash(__name__,background_callback_manager=background_callback_manager,suppress_callback_exceptions=True)
-app = DashProxy(__name__,
-                transforms=[ServersideOutputTransform(backends=[one_backend])]#,]session_check=False, arg_check=False
+app = DashProxy(__name__
+                ,server=flask_server
+                ,transforms=[ServersideOutputTransform(backends=[one_backend])]#,]session_check=False, arg_check=False
                 ,background_callback_manager=background_callback_manager
                # ,session_check=False, arg_check=False
                 ,suppress_callback_exceptions=True,external_stylesheets=external_stylesheets
                 )
+server=app.server
 initial_callback_executed = False
 
 #app = DashProxy(__name__,
