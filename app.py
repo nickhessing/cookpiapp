@@ -3798,5 +3798,5 @@ app.clientside_callback(
 
 if __name__ == "__main__":
     print('application loaded')
-    app.run_server(debug=True, port=8000, host='0.0.0.0') #,config=config
+    app.run_server(debug=True) # , port=8000, host='0.0.0.0'
 
