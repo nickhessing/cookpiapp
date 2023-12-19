@@ -98,7 +98,7 @@ external_stylesheets = [
     'rel': 'stylesheet',
 },
 ]
-
+print(os.environ.values())
 # Connect to your internal Redis instance using the REDIS_URL environment variable
 # The REDIS_URL is set to the internal Redis URL e.g. redis://red-343245ndffg023:6379
 if 'redis://:vDzc42AZlVCiHn58bddYfUc5RLmvUkCKmAzCaJdPs8Q@cookpi.redis.cache.windows.net:6380/0?ssl=true' in os.environ.values():  
