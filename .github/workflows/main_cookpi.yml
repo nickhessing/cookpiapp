@@ -66,4 +66,4 @@ jobs:
         with:
           app-name: 'Cookpi'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_415FB09971184662BD7867343639EA76 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_45D2C2C3F89D4ADC8F284111477C2B10 }}
