@@ -1,43 +1,4 @@
 
-"""
-from azure.storage.blob import BlobServiceClient
-from azure.identity import DefaultAzureCredential
-
-STORAGEACCOUNTURL= "DefaultEndpointsProtocol=https;AccountName=cookpiblob;AccountKey=xC6Vslgs0XuU5zLEyyaWv2IuQqbXLgcpfTtMlTXsuP8+hZWXBsGAagsWoxocqS5d2jX5XeIwETJ2+AStshqg+g==;EndpointSuffix=core.windows.net"
-STORAGEACCOUNTNAME = "cookpiblob"
-connection_string = "DefaultEndpointsProtocol=https;AccountName=cookpiblob;AccountKey=umLZxjua6ETzNaWbcMJB1ZY0Bpl+dTKJtRf7dQv8J1rgMmePN8y/TcJDTpwNt/cSwdA7Q13HvVzL+AStT4sl7g==;EndpointSuffix=core.windows.net"
-STORAGEACCOUNTKEY= "umLZxjua6ETzNaWbcMJB1ZY0Bpl+dTKJtRf7dQv8J1rgMmePN8y/TcJDTpwNt/cSwdA7Q13HvVzL+AStT4sl7g=="
-CREDENTIAL = {
-            "account_name": "cookpiblob",
-            "account_key": "umLZxjua6ETzNaWbcMJB1ZY0Bpl+dTKJtRf7dQv8J1rgMmePN8y/TcJDTpwNt/cSwdA7Q13HvVzL+AStT4sl7g=="
-            }
-LOCALFILENAME= "d_kpi_synthetix.csv"
-CONTAINERNAME= "exampleproject"
-BLOBNAME= "cookpiblob"
-
-print('1')
-#download from blob
-t1=datetime.datetime.now()
-print('2')
-blob_service_client_instance = BlobServiceClient(account_url=STORAGEACCOUNTURL, credential=CREDENTIAL)
-print('3')
-blob_client_instance = blob_service_client_instance.get_blob_client(CONTAINERNAME, BLOBNAME, snapshot=None)
-print('4')
-print(blob_client_instance)
-with open(LOCALFILENAME, "wb") as my_blob:
-    print('5')
-    print(my_blob)
-    print('5-5')
-    print(blob_client_instance)
-    print('-6')
-    blob_data = blob_client_instance.download_blob()
-    print('6')
-    blob_data.readinto(my_blob)
-t2=datetime.datetime.now()
-print(("It takes %s seconds to download "+BLOBNAME) % (t2 - t1))
-print(pd.read_csv(LOCALFILENAME))
-
-"""
 import logging
 import pandas as pd
 import datetime
@@ -123,8 +84,7 @@ else:
     one_backend = RedisBackend(host='localhost', port=6379)
 
 #flask_server = Flask(__name__)
-app = dash.Dash(__name__)
-app.config.prevent_initial_callbacks = 'initial_duplicate'
+#app = dash.Dash(__name__)
 #app = dash.Dash(__name__,background_callback_manager=background_callback_manager,suppress_callback_exceptions=True)
 app = DashProxy(__name__
                 #,server=flask_server
@@ -3180,6 +3140,12 @@ def update_kpiagg(graphlevel0datasetje,GrainSelect,KPISelect,CumulativeSwitch,Pe
         LevelOrFilterNumber = button_group.split('_')[1]
         traces3 = []
         print('after update_kpiagg data')
+        print('gimme OS ENVIRON VALUES')
+        print(os.environ.values())
+        print('gimme OS ENVIRON VALUES')
+        print('gimme OS ENVIRON')
+        print(os.environ)
+        print('gimme OS ENVIRON')
         data000 = graphlevel0datasetje.to_pandas()
         data000['Period_int'] = pd.to_datetime(data000['Period_int'])
         data000 = data000.sort_values(by='Period_int')
