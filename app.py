@@ -68,6 +68,10 @@ import subprocess
 import numpy as np
 from flask import Flask
 
+print('randomchange')
+print(os.environ.values())
+print('randomchange')
+
 # Usage example:
 def save_string_to_file(filename, content):
     with open(filename, 'w') as file:
@@ -99,20 +103,17 @@ external_stylesheets = [
 },
 ]
 
-print(os.environ.values())
-print('randomchange')
-print('randomchange')
-
 
 # Connect to your internal Redis instance using the REDIS_URL environment variable
 # The REDIS_URL is set to the internal Redis URL e.g. redis://red-343245ndffg023:6379
-if 'redis://:vDzc42AZlVCiHn58bddYfUc5RLmvUkCKmAzCaJdPs8Q@cookpi.redis.cache.windows.net:6380/0?ssl=true' in os.environ.values():  
+if 'REDIS_URL' in os.environ.values():  
     print('os.environ in environment')
     # Use Redis & Celery if REDIS_URL set as an env variable
+    redis_url = os.environ['REDIS_URL']
     from celery import Celery
-    celery_app = Celery(__name__, broker='redis://:vDzc42AZlVCiHn58bddYfUc5RLmvUkCKmAzCaJdPs8Q@cookpi.redis.cache.windows.net:6380/0?ssl=true', backend='redis://:vDzc42AZlVCiHn58bddYfUc5RLmvUkCKmAzCaJdPs8Q@cookpi.redis.cache.windows.net:6380/0?ssl=true')
+    celery_app = Celery(__name__, broker=redis_url, backend=redis_url)
     background_callback_manager = CeleryManager(celery_app)
-    one_backend = RedisBackend(host='red-clg96tf14gps73cecsvg', port=6379)
+    one_backend = RedisBackend(host=redis_url, port=6379)
 
 else:
     print('host = localhost')
@@ -121,18 +122,19 @@ else:
     background_callback_manager = DiskcacheManager(cache)
     one_backend = RedisBackend(host='localhost', port=6379)
 
-flask_server = Flask(__name__)
-#app = dash.Dash(__name__)
+#flask_server = Flask(__name__)
+app = dash.Dash(__name__)
+app.config.prevent_initial_callbacks = 'initial_duplicate'
 #app = dash.Dash(__name__,background_callback_manager=background_callback_manager,suppress_callback_exceptions=True)
 app = DashProxy(__name__
-                ,server=flask_server
+                #,server=flask_server
                 ,transforms=[ServersideOutputTransform(backends=[one_backend])]#,]session_check=False, arg_check=False
                 ,background_callback_manager=background_callback_manager
                # ,session_check=False, arg_check=False
                 ,suppress_callback_exceptions=True,external_stylesheets=external_stylesheets
                 )
-server=app.server
-initial_callback_executed = False
+#server=app.server
+#initial_callback_executed = False
 
 #app = DashProxy(__name__,
 #                transforms=[ServersideOutputTransform(session_check=False, arg_check=False,backend = RedisStore('redis://red-clg96tf14gps73cecsvg:6379'))]#,
@@ -1907,7 +1909,8 @@ def reset_clickDatal0(n_clicks):#,n_clicks2
                 Input("input-field", "value"),prevent_initial_callback=True
             )
 def wegschrijvendiehap(inputfield):
-    print('wegschrijvendiehap')
+    print('wegschrijvendiehappert')
+    #print(os.environ.values())
     try:
         if inputfield:
             with open('assets/Attributes/dashboard_data/contract_addresses_internal_toproject.json', 'r') as f:
@@ -2966,6 +2969,7 @@ def update_kpiagg_data(GrainSelect,KPISelect,mastersetkpifilteredstore,Cumulativ
     print('execute update_kpiagg data')
     try:
         columns_to_removemasterset = mastersetkpifilteredstore.columns
+        print(columns_to_removemasterset)
         noemer = f'pl.col("Denominator").{eval(AggregateNumDenom(KPIDenomAgg[KPISelect]))}()'
         teller = f'pl.col("Numerator").{eval(AggregateNumDenom(KPINumAgg[KPISelect]))}()'
         LevelOrFilter = button_group.split('_')[0]

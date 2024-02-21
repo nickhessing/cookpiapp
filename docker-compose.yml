@@ -6,3 +6,10 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
+  redis:
+    image: "redis:latest"
+    environment:
+      - REDIS_HOST=cookpi.redis.cache.windows.net
+      - REDIS_PORT=6380
+      - REDIS_SSL=True
+      - REDIS_PASSWORD=vDzc42AZlVCiHn58bddYfUc5RLmvUkCKmAzCaJdPs8Q=
