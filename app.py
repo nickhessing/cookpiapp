@@ -38,13 +38,6 @@ def save_string_to_file(filename, content):
     with open(filename, 'w') as file:
         file.write(content)
 
-#walletaddress = '0xDb9918673D782a8116f583937f2f4A32352F11A2'
-#walletaddress = '0x5D33Cc9F93adf8f6dF451DEDaA8f0f6bbc7003ae'
-#
-#walletaddress_str = str(walletaddress)
-#json_data_string = json.dumps(json_data_read)
-#print(json_data_string)
-#
 def execute_batchie(walletaddress_str, json_data_string):
     try:
         # Call the Node.js runtime with the batchrequest.js script
@@ -83,9 +76,6 @@ else:
     background_callback_manager = DiskcacheManager(cache)
     one_backend = RedisBackend(host='localhost', port=6379)
 
-#flask_server = Flask(__name__)
-#app = dash.Dash(__name__)
-#app = dash.Dash(__name__,background_callback_manager=background_callback_manager,suppress_callback_exceptions=True)
 app = DashProxy(__name__
                 #,server=flask_server
                 ,transforms=[ServersideOutputTransform(backends=[one_backend])]#,]session_check=False, arg_check=False
@@ -96,62 +86,9 @@ app = DashProxy(__name__
 #server=app.server
 #initial_callback_executed = False
 
-#app = DashProxy(__name__,
-#                transforms=[ServersideOutputTransform(session_check=False, arg_check=False,backend = RedisStore('redis://red-clg96tf14gps73cecsvg:6379'))]#,
-#                ,background_callback_manager=background_callback_manager
-#                ,suppress_callback_exceptions=True,external_stylesheets=external_stylesheets)
-#
-#def make_celery(server):
-#    celery = Celery(#app.import_name,
-#                    backend=server.config['CELERY_RESULT_BACKEND'],
-#                    broker=server.config['CELERY_BROKER_URL'])
-#    celery.conf.update(server.config)
-#    TaskBase = celery.Task
-#    class ContextTask(TaskBase):
-#        abstract = True
-#        def __call__(self, *args, **kwargs):
-#            with server.app_context():
-#                return TaskBase.__call__(self, *args, **kwargs)
-#    celery.Task = ContextTask
-#    return celery
-
-#celery = make_celery(app.server)
 
 server = app.server
 callback_triggered = False
-
-#app.css.config.serve_locally = True
-
-#CACHE_CONFIG = {
-#    # try 'FileSystemCache' if you don't want to setup redis
-#    'CACHE_TYPE': 'redis',
-#    'CACHE_REDIS_URL': os.environ.get('REDIS_URL', 'redis://localhost:6379')
-#}
-#cache = Cache()
-#cache.init_app(app.server, config=CACHE_CONFIG)
-
-#my_backend = FileSystemStore(cache_dir="C:/Users/nickh/OneDrive/Documents/Projects/cookkpi/dashboard/src/assets/Attributes/redis")
-
-"""
-launch_uid = uuid4()
-
-if 'REDIS_URL' in os.environ:
-    # Use Redis & Celery if REDIS_URL set as an env variable
-    from celery import Celery
-    celery_app = Celery(__name__, broker=os.environ['REDIS_URL'], backend=os.environ['REDIS_URL'])
-    background_callback_manager = CeleryManager(
-        celery_app, cache_by=[lambda: launch_uid], expire=60
-    )
-
-else:
-    # Diskcache for non-production apps when developing locally
-    import diskcache
-    cache = diskcache.Cache("./cache")
-    background_callback_manager = DiskcacheManager(
-        cache, cache_by=[lambda: launch_uid], expire=60
-    )
-
-"""
 
 BeautifulSignalColor="#f3f6d0"
 ProjectOrange="#f2730c"
@@ -240,15 +177,6 @@ def AggregateNumDenom(Calculation):
 keysl0 = ['d_kpi_id', 'd_level0_id']
 keysl1 = ['d_kpi_id', 'd_level0_id', 'd_level1_id']
 ListGrain = ['int_day', 'int_month', 'int_quarter', 'int_year']
-#dfl0polars = pl.read_csv(r"assets/Attributes/dashboard_data/dfl0.csv")
-#dfl0polars = pl.scan_parquet('assets/Attributes/dashboard_data/dfl0.parquet').collect()
-#dfl0polars = dfl0polars.with_columns(dfl0polars["Period_int"].cast(pl.Utf8))
-#dfl1polars = pl.read_csv(r"assets/Attributes/dashboard_data/dfl1.csv")
-#dfl1polars = pl.scan_parquet('assets/Attributes/dashboard_data/dfl1.parquet').collect()
-#dfl1polars = dfl1polars.with_columns(dfl1polars["Period_int"].cast(pl.Utf8))
-#dfl2polars = pl.read_csv(r"assets/Attributes/dashboard_data/dfl2.csv")
-#dfl2polars = pl.scan_parquet('assets/Attributes/dashboard_data/dfl2.parquet').collect()
-#dfl2polars = dfl2polars.with_columns(dfl2polars["Period_int"].cast(pl.Utf8))
 dflmasterfrontpolars = pl.scan_parquet('assets/Attributes/dashboard_data/dflmasterfront.parquet').collect()
 dflmasterfrontpolars = dflmasterfrontpolars.with_columns(dflmasterfrontpolars["Period_int"].cast(pl.Utf8))
 #dflmasterfrontpolars = dflmasterfrontpolars.filter(
@@ -258,7 +186,6 @@ dflmasterfrontpolars = dflmasterfrontpolars.with_columns(dflmasterfrontpolars["P
 GrainNameListtmp = pl.DataFrame(dflmasterfrontpolars["Grain"].unique())
 tmp =GrainNameListtmp.rows(named=True)
 GrainNameList = [i['Grain'] for i in tmp] 
-#Level0NameList = dfl0['LevelName_0'].unique()
 
 Level0NameListInitialShow = pl.DataFrame(dflmasterfrontpolars.filter(pl.col('InitialShow_0') ==1)["LevelName_0"].unique())
 Level0NameListtmp = pl.DataFrame(dflmasterfrontpolars["LevelName_0"].unique())
@@ -286,33 +213,10 @@ Catergory0Listtmp = pl.DataFrame(dflmasterfrontpolars["Filter1_0"].unique())
 tmp =Catergory0Listtmp.rows(named=True)
 Catergory0List = [i['Filter1_0'] for i in tmp] 
 print('Catergory0List boven')
-#Level1NameList = dfl1['LevelName_1'].unique()
-#Level2NameList = dfl2['LevelName_2'].unique().tolist()
 
 Level0Name = dflmasterfrontpolars.select(['LevelEntitytype_0','LevelName_0','LevelColor_0','KPIName','Filter1_0']).unique()
 Level1Name = dflmasterfrontpolars.select(['LevelEntitytype_1','LevelName_1','LevelColor_1','KPIName','Filter1_1']).unique()
 Level2Name = dflmasterfrontpolars.select(['LevelEntitytype_2','LevelName_2','LevelColor_2','KPIName','Filter1_2']).unique()
-
-#dfl0polars.drop_in_place("LevelColor_0")
-#dfl0polars.drop_in_place("LevelEntitytype_0")
-#dfl0polars.drop_in_place("LevelDescription_0")
-#dfl0polars.drop_in_place("KPIType")
-#dfl0polars.drop_in_place("Denominator_LP")
-#dfl0polars.drop_in_place("Numerator_LP")
-#
-#dfl1polars.drop_in_place("LevelColor_1")
-#dfl1polars.drop_in_place("LevelEntitytype_1")
-#dfl1polars.drop_in_place("LevelDescription_1")
-#dfl1polars.drop_in_place("KPIType")
-#dfl1polars.drop_in_place("Denominator_LP")
-#dfl1polars.drop_in_place("Numerator_LP")
-#
-#dfl2polars.drop_in_place("LevelColor_2")
-#dfl2polars.drop_in_place("LevelEntitytype_2")
-#dfl2polars.drop_in_place("LevelDescription_2")
-#dfl2polars.drop_in_place("KPIType")
-#dfl2polars.drop_in_place("Denominator_LP")
-#dfl2polars.drop_in_place("Numerator_LP")
 
 dflmasterfrontpolars.drop_in_place("LevelColor_2")
 dflmasterfrontpolars.drop_in_place("LevelEntitytype_2")
@@ -326,15 +230,6 @@ colorframe = attributeframe1[~((attributeframe1['LevelColor'] == 'Overig') | (at
 LevelNameColor = dict(zip(attributeframe1['LevelName'], attributeframe1['LevelColor']))
 FilterColor = dict(zip(attributeframe1['Filter1'], attributeframe1['Filter1Color']))
 LevelNameColorFiltered = {key: value for key, value in LevelNameColor.items() if value != 'Overig'}
-print(FilterColor)
-#LevelNameColorFilter = attributeframe1[attributeframe1['LevelColor'] != 'Overig']
-#FilterColortmp2 = {k: v for k, v in FilterColortmp.items() if v}
-##Filter1Color = list({value for value in Filter1Colortmp.values()})
-#FilterColor = {}
-#for value, label in FilterColortmp2.items():
-#    if value not in FilterColor:
-#        FilterColor[value] = label
-#print(FilterColor)
 Level0attrtmp = Level0Name.select(['KPIName','LevelEntitytype_0'])
 Level0attr =Level0attrtmp.rows(named=True)
 Level0attr = {level['KPIName']: level['LevelEntitytype_0'] for level in Level0attr}
